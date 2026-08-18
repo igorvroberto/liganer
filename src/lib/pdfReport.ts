@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtPct, fmtThickness } from "./format";
-import { BLANK_COLORS, type CoilInput, type RankedPlan } from "./types";
+import { lengthColor, widthColor, type CoilInput, type RankedPlan } from "./types";
 import { programLoss } from "./optimize";
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -41,31 +41,41 @@ function drawStripBar(
   const scale = 0.82;
   const barW = width * scale;
   const barX = x + (width - barW) / 2;
-  let cursor = barX;
-  for (const strip of program.pattern.strips) {
-    const w = (strip.stripWidth / coilWidth) * barW;
-    const rgb = hexToRgb(BLANK_COLORS[strip.productIndex % BLANK_COLORS.length]);
-    doc.setFillColor(...rgb);
-    doc.rect(cursor, y, w, height, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    if (w > 14) {
-      doc.text(fmtInt(strip.stripWidth), cursor + w / 2, y + height / 2 + 1, { align: "center" });
+
+  const paint = (
+    colorOf: (index: number) => string,
+    labelOf: (strip: (typeof program.pattern.strips)[number]) => string,
+    rowY: number,
+  ) => {
+    let cursor = barX;
+    for (const strip of program.pattern.strips) {
+      const w = (strip.stripWidth / coilWidth) * barW;
+      const rgb = hexToRgb(colorOf(strip.productIndex));
+      doc.setFillColor(...rgb);
+      doc.rect(cursor, rowY, w, height, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      if (w > 14) {
+        doc.text(labelOf(strip), cursor + w / 2, rowY + height / 2 + 1, { align: "center" });
+      }
+      cursor += w;
     }
-    cursor += w;
-  }
-  if (program.pattern.waste > 0.5) {
-    const w = Math.max((program.pattern.waste / coilWidth) * barW, 8);
-    doc.setFillColor(210, 214, 218);
-    doc.rect(cursor, y, w, height, "F");
-    doc.setTextColor(70, 80, 88);
-    doc.setFontSize(6.5);
-    doc.setFont("helvetica", "bold");
-    doc.text("sucata", cursor + w / 2, y + height / 2 + 1, { align: "center" });
-  }
-  doc.setDrawColor(213, 221, 228);
-  doc.rect(barX, y, barW, height, "S");
+    if (program.pattern.waste > 0.5) {
+      const w = Math.max((program.pattern.waste / coilWidth) * barW, 8);
+      doc.setFillColor(210, 214, 218);
+      doc.rect(cursor, rowY, w, height, "F");
+      doc.setTextColor(70, 80, 88);
+      doc.setFontSize(6.5);
+      doc.setFont("helvetica", "bold");
+      doc.text("sucata", cursor + w / 2, rowY + height / 2 + 1, { align: "center" });
+    }
+    doc.setDrawColor(213, 221, 228);
+    doc.rect(barX, rowY, barW, height, "S");
+  };
+
+  paint(widthColor, (strip) => fmtInt(strip.stripWidth), y);
+  paint(lengthColor, (strip) => fmtInt(strip.cutLength), y + height + 2);
   doc.setTextColor(27, 36, 44);
 }
 
@@ -138,7 +148,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
 
   y = lastTableY(doc) + 8;
   plan.programs.forEach((program, idx) => {
-    const needed = 48;
+    const needed = 58;
     if (y + needed > 275) {
       doc.addPage();
       y = 16;
@@ -150,7 +160,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     doc.text(`Programa ${idx + 1}  ·  ${fmtMeters(program.coilLengthMm)}  ·  ${strips}`, margin, y);
     y += 3;
     drawStripBar(doc, plan, coil.width, idx, margin, y, contentW, 8);
-    y += 11;
+    y += 20;
 
     autoTable(doc, {
       startY: y,

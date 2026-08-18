@@ -96,3 +96,15 @@ export const BLANK_COLORS = [
   "#3d5a80",
   "#6d597a",
 ];
+
+const LENGTH_SHIFT = 3;
+
+export function widthColor(productIndex: number): string {
+  return BLANK_COLORS[((productIndex % BLANK_COLORS.length) + BLANK_COLORS.length) % BLANK_COLORS.length];
+}
+
+export function lengthColor(productIndex: number): string {
+  return BLANK_COLORS[
+    (((productIndex + LENGTH_SHIFT) % BLANK_COLORS.length) + BLANK_COLORS.length) % BLANK_COLORS.length
+  ];
+}
