@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import BlankItemsTable from "./components/BlankItemsTable";
+import { resyncBlankDemand } from "./lib/blankSync";
 import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "./lib/format";
 import { optimizeCutting } from "./lib/optimize";
 import {
@@ -12,21 +14,6 @@ import {
   type RankedPlan,
 } from "./lib/types";
 
-let blankSeq = 3;
-
-function newBlank(partial?: Partial<BlankInput>): BlankInput {
-  blankSeq += 1;
-  return {
-    id: `blank-${blankSeq}`,
-    name: "",
-    width: 0,
-    length: 0,
-    minKg: 1000,
-    minQty: 0,
-    ...partial,
-  };
-}
-
 const EXAMPLE_COIL: CoilInput = {
   width: 1250,
   thickness: 0.4,
@@ -36,11 +23,18 @@ const EXAMPLE_COIL: CoilInput = {
 };
 
 const EXAMPLE_BLANKS: BlankInput[] = [
-  { id: "blank-1", name: "600×470", width: 600, length: 470, minKg: 1000, minQty: 0 },
-  { id: "blank-2", name: "700×500", width: 700, length: 500, minKg: 1000, minQty: 0 },
-  { id: "blank-3", name: "750×550", width: 750, length: 550, minKg: 1000, minQty: 0 },
-  { id: "blank-4", name: "650×530", width: 650, length: 530, minKg: 1000, minQty: 0 },
+  { id: "blank-1", name: "600×470", width: 600, length: 470, minKg: 1000, minQty: 1152 },
+  { id: "blank-2", name: "700×500", width: 700, length: 500, minKg: 1000, minQty: 928 },
+  { id: "blank-3", name: "750×550", width: 750, length: 550, minKg: 1000, minQty: 788 },
+  { id: "blank-4", name: "650×530", width: 650, length: 530, minKg: 1000, minQty: 943 },
 ];
+
+const EXAMPLE_MODES: Record<string, "qty" | "weight"> = {
+  "blank-1": "weight",
+  "blank-2": "weight",
+  "blank-3": "weight",
+  "blank-4": "weight",
+};
 
 function PatternBar({ pattern, coilWidth }: { pattern: Pattern; coilWidth: number }) {
   const total = coilWidth;
@@ -113,10 +107,7 @@ function ProgramTimeline({
   );
 }
 
-function patternSummary(
-  program: ProgramResult,
-  products: RankedPlan["products"],
-): string {
+function patternSummary(program: ProgramResult, products: RankedPlan["products"]): string {
   return program.pattern.strips
     .map((strip) => {
       const blank = products[strip.productIndex].blank;
@@ -130,10 +121,14 @@ export default function App() {
   const [coil, setCoil] = useState<CoilInput>(EXAMPLE_COIL);
   const [gradeId, setGradeId] = useState("430");
   const [blanks, setBlanks] = useState<BlankInput[]>(EXAMPLE_BLANKS);
+  const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(EXAMPLE_MODES);
   const [selectedAlt, setSelectedAlt] = useState(0);
-  const [printNote] = useState(
-    "O peso pode ultrapassar um pouco o mínimo informado, desde que cada blank atinja pelo menos o kg pedido.",
-  );
+
+  useEffect(() => {
+    setBlanks((prev) =>
+      prev.map((blank) => resyncBlankDemand(blank, coil, demandModes[blank.id] ?? "weight")),
+    );
+  }, [coil.thickness, coil.density]);
 
   const result = useMemo(() => optimizeCutting({ coil, blanks }), [coil, blanks]);
   const plan: RankedPlan | null = result.ok
@@ -145,9 +140,12 @@ export default function App() {
     setCoil((prev) => ({ ...prev, ...patch }));
   };
 
-  const updateBlank = (id: string, patch: Partial<BlankInput>) => {
+  const loadExample = () => {
+    setCoil(EXAMPLE_COIL);
+    setGradeId("430");
+    setBlanks(EXAMPLE_BLANKS);
+    setDemandModes(EXAMPLE_MODES);
     setSelectedAlt(0);
-    setBlanks((prev) => prev.map((b) => (b.id === id ? { ...b, ...patch } : b)));
   };
 
   return (
@@ -162,192 +160,126 @@ export default function App() {
             </div>
           </div>
           <p>
-            Combina largura e comprimento dos blanks na largura original da bobina, calcula peso em
-            kg e quantidade em peças, e monta um ou <strong>vários programas de corte</strong>{" "}
-            (setups diferentes ao longo do comprimento da bobina).
+            Cadastre os itens com largura, comprimento, quantidade e peso. Ao alterar quantidade ou
+            peso, o outro valor é recalculado automaticamente. O sistema monta um ou vários
+            programas de corte na bobina.
           </p>
         </div>
         <div className="hero-actions">
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              setCoil(EXAMPLE_COIL);
-              setGradeId("430");
-              setBlanks(EXAMPLE_BLANKS);
-              setSelectedAlt(0);
-            }}
-          >
+          <button className="btn btn-secondary" type="button" onClick={loadExample}>
             Carregar exemplo
           </button>
-          <button className="btn btn-secondary" onClick={() => window.print()}>
+          <button className="btn btn-secondary" type="button" onClick={() => window.print()}>
             Imprimir
           </button>
         </div>
       </header>
 
-      <div className="grid">
-        <section className="card">
-          <h2>Bobina e material</h2>
-          <div className="fields">
-            <label className="field">
-              <span>Largura original da bobina (mm)</span>
-              <input
-                type="number"
-                min={1}
-                value={coil.width || ""}
-                onChange={(e) => updateCoil({ width: Number(e.target.value) })}
-              />
-            </label>
-            <label className="field">
-              <span>Espessura (mm)</span>
-              <input
-                type="number"
-                min={0.1}
-                step={0.05}
-                value={coil.thickness || ""}
-                onChange={(e) => updateCoil({ thickness: Number(e.target.value) })}
-              />
-            </label>
-            <div className="field span-2">
-              <span>Espessuras comuns</span>
-              <div className="chips">
-                {COMMON_THICKNESSES.map((t) => (
-                  <button
-                    key={t}
-                    className={`chip ${coil.thickness === t ? "active" : ""}`}
-                    onClick={() => updateCoil({ thickness: t })}
-                    type="button"
-                  >
-                    {fmtNumber(t, 2)} mm
-                  </button>
-                ))}
-              </div>
-            </div>
-            <label className="field">
-              <span>Liga / densidade</span>
-              <select
-                value={gradeId}
-                onChange={(e) => {
-                  const grade = STAINLESS_GRADES.find((g) => g.id === e.target.value);
-                  setGradeId(e.target.value);
-                  if (grade) updateCoil({ density: grade.density });
-                }}
-              >
-                {STAINLESS_GRADES.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.label} ({fmtNumber(g.density, 2)} g/cm³)
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              <span>Densidade (g/cm³)</span>
-              <input
-                type="number"
-                min={1}
-                step={0.01}
-                value={coil.density || ""}
-                onChange={(e) => updateCoil({ density: Number(e.target.value) })}
-              />
-            </label>
-            <label className="field">
-              <span>Perda entre tiras / faca (mm)</span>
-              <input
-                type="number"
-                min={0}
-                step={0.5}
-                value={coil.kerf}
-                onChange={(e) => updateCoil({ kerf: Number(e.target.value) })}
-              />
-            </label>
-            <label className="field">
-              <span>Refile de borda (mm cada lado)</span>
-              <input
-                type="number"
-                min={0}
-                step={0.5}
-                value={coil.edgeTrim}
-                onChange={(e) => updateCoil({ edgeTrim: Number(e.target.value) })}
-              />
-            </label>
-          </div>
-
-          <h2 style={{ marginTop: 22 }}>Blanks</h2>
-          <div className="blank-head">
-            <span />
-            <span>Nome</span>
-            <span>Largura</span>
-            <span>Comprimento</span>
-            <span>Peso mín. kg</span>
-            <span>Qtd. mín.</span>
-            <span />
-          </div>
-          {blanks.map((blank, index) => (
-            <div className="blank-row" key={blank.id}>
-              <span
-                className="swatch"
-                style={{ background: BLANK_COLORS[index % BLANK_COLORS.length] }}
-              />
-              <input
-                placeholder={`Blank ${index + 1}`}
-                value={blank.name}
-                onChange={(e) => updateBlank(blank.id, { name: e.target.value })}
-              />
-              <input
-                type="number"
-                min={1}
-                placeholder="mm"
-                value={blank.width || ""}
-                onChange={(e) => updateBlank(blank.id, { width: Number(e.target.value) })}
-              />
-              <input
-                type="number"
-                min={1}
-                placeholder="mm"
-                value={blank.length || ""}
-                onChange={(e) => updateBlank(blank.id, { length: Number(e.target.value) })}
-              />
-              <input
-                type="number"
-                min={0}
-                value={blank.minKg || ""}
-                onChange={(e) => updateBlank(blank.id, { minKg: Number(e.target.value) })}
-              />
-              <input
-                type="number"
-                min={0}
-                value={blank.minQty || ""}
-                onChange={(e) => updateBlank(blank.id, { minQty: Number(e.target.value) })}
-              />
-              <button
-                className="btn-icon"
-                type="button"
-                aria-label="Remover blank"
-                onClick={() => {
-                  setSelectedAlt(0);
-                  setBlanks((prev) => (prev.length <= 1 ? prev : prev.filter((b) => b.id !== blank.id)));
-                }}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-          <div className="row-actions">
-            <button
-              className="btn btn-ghost"
-              type="button"
-              onClick={() => {
-                setSelectedAlt(0);
-                setBlanks((prev) => [...prev, newBlank({ name: `Blank ${prev.length + 1}` })]);
+      <section className="card coil-card">
+        <h2>Bobina e material</h2>
+        <div className="fields coil-fields">
+          <label className="field">
+            <span>Largura original da bobina (mm)</span>
+            <input
+              type="number"
+              min={1}
+              value={coil.width || ""}
+              onChange={(e) => updateCoil({ width: Number(e.target.value) })}
+            />
+          </label>
+          <label className="field">
+            <span>Espessura (mm)</span>
+            <input
+              type="number"
+              min={0.1}
+              step={0.05}
+              value={coil.thickness || ""}
+              onChange={(e) => updateCoil({ thickness: Number(e.target.value) })}
+            />
+          </label>
+          <label className="field">
+            <span>Liga / densidade</span>
+            <select
+              value={gradeId}
+              onChange={(e) => {
+                const grade = STAINLESS_GRADES.find((g) => g.id === e.target.value);
+                setGradeId(e.target.value);
+                if (grade) updateCoil({ density: grade.density });
               }}
             >
-              + Adicionar blank
-            </button>
-            <span className="note">Giro automático 90° se melhorar o encaixe na bobina.</span>
+              {STAINLESS_GRADES.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.label} ({fmtNumber(g.density, 2)} g/cm³)
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Densidade (g/cm³)</span>
+            <input
+              type="number"
+              min={1}
+              step={0.01}
+              value={coil.density || ""}
+              onChange={(e) => updateCoil({ density: Number(e.target.value) })}
+            />
+          </label>
+          <label className="field">
+            <span>Perda entre tiras / faca (mm)</span>
+            <input
+              type="number"
+              min={0}
+              step={0.5}
+              value={coil.kerf}
+              onChange={(e) => updateCoil({ kerf: Number(e.target.value) })}
+            />
+          </label>
+          <label className="field">
+            <span>Refile de borda (mm cada lado)</span>
+            <input
+              type="number"
+              min={0}
+              step={0.5}
+              value={coil.edgeTrim}
+              onChange={(e) => updateCoil({ edgeTrim: Number(e.target.value) })}
+            />
+          </label>
+        </div>
+        <div className="field span-all">
+          <span>Espessuras comuns</span>
+          <div className="chips">
+            {COMMON_THICKNESSES.map((t) => (
+              <button
+                key={t}
+                className={`chip ${coil.thickness === t ? "active" : ""}`}
+                onClick={() => updateCoil({ thickness: t })}
+                type="button"
+              >
+                {fmtNumber(t, 2)} mm
+              </button>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="card">
+      <section className="card">
+        <BlankItemsTable
+          blanks={blanks}
+          coil={coil}
+          demandModes={demandModes}
+          onDemandModesChange={(next) => {
+            setSelectedAlt(0);
+            setDemandModes(next);
+          }}
+          onBlanksChange={(next) => {
+            setSelectedAlt(0);
+            setBlanks(next);
+          }}
+        />
+      </section>
+
+      <div className="grid results-grid">
+        <section className="card span-all">
           <h2>Melhor aproveitamento</h2>
           {!result.ok && <div className="error">{result.message}</div>}
           {result.ok && plan && (
@@ -374,9 +306,6 @@ export default function App() {
               <p className="note">
                 Comprimento total: <strong>{fmtMeters(plan.totalCoilLengthMm)}</strong> ·{" "}
                 <strong>{plan.setupCount}</strong> programa{plan.setupCount > 1 ? "s" : ""} de corte
-                {plan.setupCount > 1
-                  ? " (cada um com arranjo de tiras na largura e um trecho de comprimento)"
-                  : ""}
               </p>
               <ProgramTimeline programs={plan.programs} totalLengthMm={plan.totalCoilLengthMm} />
 
@@ -403,7 +332,7 @@ export default function App() {
                         return (
                           <tr key={sIdx}>
                             <td>
-                              {blank.name || `Blank ${strip.productIndex + 1}`} · {fmtMm(strip.stripWidth)}
+                              {blank.name || `Item ${strip.productIndex + 1}`} · {fmtMm(strip.stripWidth)}
                             </td>
                             <td>
                               {fmtDim(strip.stripWidth, strip.cutLength)}
@@ -422,9 +351,10 @@ export default function App() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Blank</th>
+                      <th>Item</th>
+                      <th>Pedido</th>
                       <th>Peso un.</th>
-                      <th>Peças</th>
+                      <th>Produzido</th>
                       <th>Peso produzido</th>
                     </tr>
                   </thead>
@@ -433,17 +363,25 @@ export default function App() {
                       <tr key={product.blank.id}>
                         <td>
                           <strong style={{ color: BLANK_COLORS[i % BLANK_COLORS.length] }}>
-                            {product.blank.name || `Blank ${i + 1}`}
+                            {product.blank.name || `Item ${i + 1}`}
                           </strong>
                           <div className="note" style={{ marginTop: 0 }}>
-                            {fmtDim(product.blank.width, product.blank.length)} · mín. {fmtInt(product.minPieces)} un.
+                            {fmtDim(product.blank.width, product.blank.length)}
                           </div>
                         </td>
+                        <td>
+                          {fmtInt(product.blank.minQty)} un · {fmtKg(product.blank.minKg)}
+                        </td>
                         <td>{fmtKg(product.unitWeightKg)}</td>
-                        <td>{fmtInt(product.pieces)}</td>
+                        <td>
+                          {fmtInt(product.pieces)} un
+                          {product.pieces > product.blank.minQty
+                            ? ` (+${product.pieces - product.blank.minQty})`
+                            : ""}
+                        </td>
                         <td>
                           {fmtKg(product.weightKg)}
-                          {product.weightKg > product.blank.minKg && product.blank.minKg > 0
+                          {product.weightKg > product.blank.minKg
                             ? ` (+${fmtNumber(product.weightKg - product.blank.minKg, 1)} kg)`
                             : ""}
                         </td>
@@ -452,7 +390,10 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-              <p className="note">{printNote}</p>
+              <p className="note">
+                O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo
+                programa na bobina.
+              </p>
             </>
           )}
         </section>
@@ -473,17 +414,17 @@ export default function App() {
               type="button"
               onClick={() => setSelectedAlt(idx)}
             >
-              <strong>{idx === 0 ? "Recomendado · " : ""}{alt.label}</strong>
+              <strong>
+                {idx === 0 ? "Recomendado · " : ""}
+                {alt.label}
+              </strong>
               <div className="note" style={{ marginTop: 4 }}>
                 {fmtPct(alt.yieldPercent)} aproveit. · {fmtKg(alt.coilWeightKg)} bobina ·{" "}
                 {alt.setupCount} programa{alt.setupCount > 1 ? "s" : ""} · sucata {fmtKg(alt.scrapKg)}
                 {alt.programs.length > 1 && (
                   <>
                     {" "}
-                    ·{" "}
-                    {alt.programs
-                      .map((p, i) => `P${i + 1} ${fmtMeters(p.coilLengthMm)}`)
-                      .join(" + ")}
+                    · {alt.programs.map((p, i) => `P${i + 1} ${fmtMeters(p.coilLengthMm)}`).join(" + ")}
                   </>
                 )}
               </div>

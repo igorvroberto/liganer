@@ -123,6 +123,113 @@ p {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 20px;
+  margin-bottom: 20px;
+}
+
+.coil-card .coil-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.field.span-all {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.results-grid {
+  grid-template-columns: 1fr;
+}
+
+.span-all {
+  grid-column: 1 / -1;
+}
+
+.items-panel h2 {
+  margin-bottom: 4px;
+}
+
+.items-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.items-panel-head .note {
+  margin-top: 4px;
+  max-width: 52ch;
+}
+
+.items-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.items-table th {
+  background: #f6f8fa;
+  padding: 10px 12px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.items-table td {
+  padding: 8px 10px;
+  vertical-align: middle;
+  border-top: 1px solid var(--line);
+}
+
+.items-table input {
+  min-width: 88px;
+  padding: 8px 10px;
+}
+
+.items-table input.item-name {
+  min-width: 120px;
+}
+
+.items-table input.linked-active {
+  border-color: var(--brand-2);
+  background: #f3f8fb;
+  box-shadow: inset 0 0 0 1px rgba(31, 111, 139, 0.12);
+}
+
+.unit-cell {
+  white-space: nowrap;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.unit-cell strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+
+.unit-cell .muted,
+.muted {
+  color: var(--muted);
+}
+
+.items-footnote {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.btn-icon:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .card h2 {
@@ -192,17 +299,7 @@ select:focus {
 
 .blank-head,
 .blank-row {
-  display: grid;
-  grid-template-columns: 18px 1fr 88px 88px 92px 88px 36px;
-  gap: 8px;
-  align-items: center;
-}
-
-.blank-head {
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0 2px 8px;
+  display: none;
 }
 
 .swatch {
@@ -447,9 +544,9 @@ th {
   .hero,
   .grid,
   .fields,
+  .coil-fields,
   .kpis,
-  .blank-head,
-  .blank-row {
+  .items-panel-head {
     grid-template-columns: 1fr;
     display: grid;
   }
@@ -458,13 +555,9 @@ th {
     align-items: start;
   }
 
-  .blank-head {
-    display: none;
-  }
-
-  .blank-row {
-    padding: 10px 0;
-    border-top: 1px solid var(--line);
+  .items-panel-head {
+    display: flex;
+    flex-direction: column;
   }
 }
 
