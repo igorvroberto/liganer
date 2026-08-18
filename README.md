@@ -1,0 +1,1 @@
+# liganer-calculadora-blanks
