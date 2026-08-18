@@ -212,7 +212,7 @@ export default function BlankItemsTable({
       </div>
 
       <p className="note items-footnote">
-        Giro automático de 90° na bobina quando melhorar o aproveitamento. Espessura e liga entram no peso unitário.
+        Giro automático de 90° na bobina quando melhorar o aproveitamento. A espessura entra no peso unitário (densidade 8 g/cm³).
       </p>
     </div>
   );

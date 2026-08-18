@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import BlankItemsTable from "./components/BlankItemsTable";
 import { resyncBlankDemand } from "./lib/blankSync";
-import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "./lib/format";
+import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseThickness } from "./lib/format";
 import { optimizeCutting } from "./lib/optimize";
 import {
   BLANK_COLORS,
   COMMON_THICKNESSES,
-  STAINLESS_GRADES,
+  DEFAULT_DENSITY,
   type BlankInput,
   type CoilInput,
   type Pattern,
@@ -17,16 +17,16 @@ import {
 const EXAMPLE_COIL: CoilInput = {
   width: 1250,
   thickness: 0.4,
-  density: 7.7,
+  density: DEFAULT_DENSITY,
   kerf: 0,
   edgeTrim: 0,
 };
 
 const EXAMPLE_BLANKS: BlankInput[] = [
-  { id: "blank-1", name: "600×470", width: 600, length: 470, minKg: 1000, minQty: 1152 },
-  { id: "blank-2", name: "700×500", width: 700, length: 500, minKg: 1000, minQty: 928 },
-  { id: "blank-3", name: "750×550", width: 750, length: 550, minKg: 1000, minQty: 788 },
-  { id: "blank-4", name: "650×530", width: 650, length: 530, minKg: 1000, minQty: 943 },
+  { id: "blank-1", name: "600×470", width: 600, length: 470, minKg: 1000, minQty: 1109 },
+  { id: "blank-2", name: "700×500", width: 700, length: 500, minKg: 1000, minQty: 893 },
+  { id: "blank-3", name: "750×550", width: 750, length: 550, minKg: 1000, minQty: 758 },
+  { id: "blank-4", name: "650×530", width: 650, length: 530, minKg: 1000, minQty: 908 },
 ];
 
 const EXAMPLE_MODES: Record<string, "qty" | "weight"> = {
@@ -119,7 +119,7 @@ function patternSummary(program: ProgramResult, products: RankedPlan["products"]
 
 export default function App() {
   const [coil, setCoil] = useState<CoilInput>(EXAMPLE_COIL);
-  const [gradeId, setGradeId] = useState("430");
+  const [thicknessText, setThicknessText] = useState(fmtThickness(EXAMPLE_COIL.thickness));
   const [blanks, setBlanks] = useState<BlankInput[]>(EXAMPLE_BLANKS);
   const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(EXAMPLE_MODES);
   const [selectedAlt, setSelectedAlt] = useState(0);
@@ -128,7 +128,7 @@ export default function App() {
     setBlanks((prev) =>
       prev.map((blank) => resyncBlankDemand(blank, coil, demandModes[blank.id] ?? "weight")),
     );
-  }, [coil.thickness, coil.density]);
+  }, [coil.thickness]);
 
   const result = useMemo(() => optimizeCutting({ coil, blanks }), [coil, blanks]);
   const plan: RankedPlan | null = result.ok
@@ -137,15 +137,20 @@ export default function App() {
 
   const updateCoil = (patch: Partial<CoilInput>) => {
     setSelectedAlt(0);
-    setCoil((prev) => ({ ...prev, ...patch }));
+    setCoil((prev) => ({ ...prev, ...patch, density: DEFAULT_DENSITY }));
   };
 
   const loadExample = () => {
     setCoil(EXAMPLE_COIL);
-    setGradeId("430");
+    setThicknessText(fmtThickness(EXAMPLE_COIL.thickness));
     setBlanks(EXAMPLE_BLANKS);
     setDemandModes(EXAMPLE_MODES);
     setSelectedAlt(0);
+  };
+
+  const setThickness = (value: number) => {
+    updateCoil({ thickness: Number(value.toFixed(2)) });
+    setThicknessText(fmtThickness(value));
   };
 
   return (
@@ -176,7 +181,7 @@ export default function App() {
       </header>
 
       <section className="card coil-card">
-        <h2>Bobina e material</h2>
+        <h2>Bobina</h2>
         <div className="fields coil-fields">
           <label className="field">
             <span>Largura original da bobina (mm)</span>
@@ -190,38 +195,22 @@ export default function App() {
           <label className="field">
             <span>Espessura (mm)</span>
             <input
-              type="number"
-              min={0.1}
-              step={0.05}
-              value={coil.thickness || ""}
-              onChange={(e) => updateCoil({ thickness: Number(e.target.value) })}
-            />
-          </label>
-          <label className="field">
-            <span>Liga / densidade</span>
-            <select
-              value={gradeId}
+              inputMode="decimal"
+              value={thicknessText}
               onChange={(e) => {
-                const grade = STAINLESS_GRADES.find((g) => g.id === e.target.value);
-                setGradeId(e.target.value);
-                if (grade) updateCoil({ density: grade.density });
+                const raw = e.target.value.replace(".", ",");
+                if (!/^\d*(,\d{0,2})?$/.test(raw)) return;
+                setThicknessText(raw);
+                const parsed = parseThickness(raw);
+                if (parsed !== null) {
+                  updateCoil({ thickness: Number(parsed.toFixed(2)) });
+                }
               }}
-            >
-              {STAINLESS_GRADES.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.label} ({fmtNumber(g.density, 2)} g/cm³)
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Densidade (g/cm³)</span>
-            <input
-              type="number"
-              min={1}
-              step={0.01}
-              value={coil.density || ""}
-              onChange={(e) => updateCoil({ density: Number(e.target.value) })}
+              onBlur={() => {
+                const parsed = parseThickness(thicknessText);
+                if (parsed !== null) setThickness(parsed);
+                else setThicknessText(fmtThickness(coil.thickness));
+              }}
             />
           </label>
           <label className="field">
@@ -252,10 +241,10 @@ export default function App() {
               <button
                 key={t}
                 className={`chip ${coil.thickness === t ? "active" : ""}`}
-                onClick={() => updateCoil({ thickness: t })}
+                onClick={() => setThickness(t)}
                 type="button"
               >
-                {fmtNumber(t, 2)} mm
+                {fmtThickness(t)} mm
               </button>
             ))}
           </div>

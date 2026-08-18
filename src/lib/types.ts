@@ -79,12 +79,7 @@ export type RankedPlan = {
   overshootKg: number;
 };
 
-export const STAINLESS_GRADES: { id: string; label: string; density: number }[] = [
-  { id: "304", label: "AISI 304 / 304L", density: 7.93 },
-  { id: "316", label: "AISI 316 / 316L", density: 8.0 },
-  { id: "430", label: "AISI 430", density: 7.7 },
-  { id: "201", label: "AISI 201", density: 7.8 },
-];
+export const DEFAULT_DENSITY = 8;
 
 export const COMMON_THICKNESSES = [0.4, 0.45, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5, 2.0, 2.5, 3.0];
 

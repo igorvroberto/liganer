@@ -33,3 +33,19 @@ export function fmtPct(value: number): string {
 export function fmtDim(width: number, length: number): string {
   return `${fmtInt(width)} × ${fmtInt(length)} mm`;
 }
+
+const thicknessFmt = new Intl.NumberFormat("pt-BR", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+export function fmtThickness(value: number): string {
+  return thicknessFmt.format(value);
+}
+
+export function parseThickness(raw: string): number | null {
+  const normalized = raw.trim().replace(",", ".");
+  if (normalized === "") return null;
+  const n = Number(normalized);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}

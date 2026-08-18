@@ -145,9 +145,9 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     expect(multi!.programs.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("monta plano AISI 430 0,40 mm com 4 blanks e 2 programas", () => {
+  it("monta plano 0,40 mm com densidade 8 e 4 blanks em 2 programas", () => {
     const result = optimizeCutting({
-      coil: { width: 1250, thickness: 0.4, density: 7.7, kerf: 0, edgeTrim: 0 },
+      coil: { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 0 },
       blanks: [
         { id: "a", name: "600×470", width: 600, length: 470, minKg: 1000, minQty: 0 },
         { id: "b", name: "700×500", width: 700, length: 500, minKg: 1000, minQty: 0 },
@@ -164,7 +164,7 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     for (const product of best.products) {
       expect(product.weightKg).toBeGreaterThanOrEqual(1000 - 1e-6);
     }
-    expect(best.products[0].pieces).toBe(1152);
-    expect(best.products[2].pieces).toBe(788);
+    expect(best.products[0].pieces).toBe(1109);
+    expect(best.products[2].pieces).toBe(758);
   });
 });

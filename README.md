@@ -8,7 +8,7 @@ O cálculo considera:
 - peso mínimo em kg (pode ultrapassar um pouco, nunca fica abaixo)
 - quantidade mínima em unidades
 - largura original da bobina
-- espessura, liga/densidade, perda de faca e refile de borda
+- espessura (2 casas decimais), densidade fixa de 8 g/cm³, perda de faca e refile de borda
 - **um ou vários programas de corte** — setups diferentes na largura, executados em sequência ao longo do comprimento da bobina
 
 ## Exemplo
@@ -41,4 +41,4 @@ Peso da peça (kg):
 
 `largura(mm) × comprimento(mm) × espessura(mm) × densidade(g/cm³) / 1.000.000`
 
-Densidades padrão: AISI 304 = 7,93 · 316 = 8,00 · 430 = 7,70 · 201 = 7,80.
+Densidade usada no cálculo: **8 g/cm³**.
