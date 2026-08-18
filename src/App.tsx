@@ -36,8 +36,8 @@ const EXAMPLE_MODES: Record<string, "qty" | "weight"> = {
 };
 
 function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth: number }) {
-  const maxCut = Math.max(...program.pattern.strips.map((s) => s.cutLength));
   const repeats = 4;
+  const pieceHeight = 52;
 
   return (
     <div className="cut-preview">
@@ -67,7 +67,6 @@ function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth
       <div className="lanes" aria-hidden="true">
         {program.pattern.strips.map((strip, idx) => {
           const color = BLANK_COLORS[strip.productIndex % BLANK_COLORS.length];
-          const h = Math.max(42, (strip.cutLength / maxCut) * 52);
           return (
             <div
               key={`${strip.productIndex}-${idx}`}
@@ -75,7 +74,7 @@ function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth
               style={{ flex: `${strip.stripWidth} 1 0` }}
             >
               {Array.from({ length: repeats }, (_, n) => (
-                <div key={n} className="blank-rect" style={{ background: color, height: h }}>
+                <div key={n} className="blank-rect" style={{ background: color, height: pieceHeight }}>
                   {fmtInt(strip.stripWidth)}×{fmtInt(strip.cutLength)}
                 </div>
               ))}

@@ -512,6 +512,7 @@ select:focus {
   text-align: center;
   padding: 6px;
   box-sizing: border-box;
+  height: 52px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.22);
 }
 
