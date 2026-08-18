@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { jsPDF } from "jspdf";
+import { fmtInt } from "./format";
 import { optimizeCutting } from "./optimize";
 import { PDF_FONT_NAME, registerPdfFonts } from "./pdfFonts";
 import { buildPlanPdf, reportFileName } from "./pdfReport";
@@ -91,5 +92,27 @@ describe("pdfReport", () => {
     expect(text).toContain("P\u00e1gina");
     expect(text).toContain("s\u00e3o");
     expect(text).toContain("necess\u00e1rio");
+  });
+
+  it("mostra a sucata em mm na barra do programa", () => {
+    const coil = { width: 1250, thickness: 0.4, density: DEFAULT_DENSITY, kerf: 0, edgeTrim: 5 };
+    const result = optimizeCutting({
+      coil,
+      blanks: [
+        { id: "a", name: "", width: 600, length: 470, minKg: 1000, minQty: 0 },
+        { id: "b", name: "", width: 700, length: 500, minKg: 1000, minQty: 0 },
+        { id: "c", name: "", width: 750, length: 550, minKg: 1000, minQty: 0 },
+        { id: "d", name: "", width: 650, length: 530, minKg: 1000, minQty: 0 },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const plan = result.alternatives.find((alt) => alt.programs.some((p) => p.pattern.waste > 0.5)) ?? result.alternatives[0];
+    const wasteProgram = plan.programs.find((p) => p.pattern.waste > 0.5);
+    expect(wasteProgram).toBeTruthy();
+    if (!wasteProgram) return;
+
+    const text = decodePdfText(pdfLatin1(buildPlanPdf(plan, coil)));
+    expect(text).toContain(`sucata ${fmtInt(wasteProgram.pattern.waste)}`);
   });
 });

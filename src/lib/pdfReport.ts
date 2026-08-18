@@ -64,13 +64,19 @@ function drawStripBar(
       cursor += w;
     }
     if (program.pattern.waste > 0.5) {
-      const w = Math.max((program.pattern.waste / coilWidth) * barW, 8);
+      const w = (program.pattern.waste / coilWidth) * barW;
       doc.setFillColor(210, 214, 218);
-      doc.rect(cursor, rowY, w, height, "F");
+      doc.rect(cursor, rowY, Math.max(w, 0.8), height, "F");
       doc.setTextColor(70, 80, 88);
       doc.setFontSize(6.5);
       doc.setFont(fontName, "bold");
-      doc.text("sucata", cursor + w / 2, rowY + height / 2 + 1, { align: "center" });
+      const wasteLabel = `sucata ${fmtInt(program.pattern.waste)}`;
+      const labelW = doc.getTextWidth(wasteLabel);
+      if (w > labelW + 1.2) {
+        doc.text(wasteLabel, cursor + w / 2, rowY + height / 2 + 1, { align: "center" });
+      } else {
+        doc.text(wasteLabel, cursor + Math.max(w, 0.8) + 1.4, rowY + height / 2 + 1, { align: "left" });
+      }
     }
     doc.setDrawColor(213, 221, 228);
     doc.rect(barX, rowY, barW, height, "S");
