@@ -126,6 +126,11 @@ p {
   margin-bottom: 20px;
 }
 
+.card h2 {
+  font-size: 1.05rem;
+  margin-bottom: 14px;
+}
+
 .coil-card .coil-fields {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -228,9 +233,21 @@ p {
   cursor: not-allowed;
 }
 
-.card h2 {
-  font-size: 1.05rem;
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 14px;
+}
+
+.section-head h2 {
+  margin-bottom: 0;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .fields {

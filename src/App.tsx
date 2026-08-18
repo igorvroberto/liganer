@@ -3,6 +3,7 @@ import BlankItemsTable from "./components/BlankItemsTable";
 import { resyncBlankDemand } from "./lib/blankSync";
 import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseThickness } from "./lib/format";
 import { optimizeCutting } from "./lib/optimize";
+import { downloadPlanPdf } from "./lib/pdfReport";
 import {
   BLANK_COLORS,
   COMMON_THICKNESSES,
@@ -180,8 +181,15 @@ export default function App() {
           <button className="btn btn-secondary" type="button" onClick={loadExample}>
             Carregar exemplo
           </button>
-          <button className="btn btn-secondary" type="button" onClick={() => window.print()}>
-            Imprimir
+          <button
+            className="btn btn-primary"
+            type="button"
+            disabled={!plan}
+            onClick={() => {
+              if (plan) downloadPlanPdf(plan, coil);
+            }}
+          >
+            Gerar PDF
           </button>
         </div>
       </header>
@@ -275,7 +283,14 @@ export default function App() {
 
       <div className="grid results-grid">
         <section className="card span-all">
-          <h2>Melhor aproveitamento</h2>
+          <div className="section-head">
+            <h2>Melhor aproveitamento</h2>
+            {result.ok && plan && (
+              <button className="btn btn-primary" type="button" onClick={() => downloadPlanPdf(plan, coil)}>
+                Gerar PDF deste plano
+              </button>
+            )}
+          </div>
           {!result.ok && <div className="error">{result.message}</div>}
           {result.ok && plan && (
             <>
@@ -389,12 +404,19 @@ export default function App() {
 
       {result.ok && result.alternatives.length > 0 && (
         <section className="card" style={{ marginTop: 20 }}>
+        <div className="section-head">
           <h2>
             {result.alternatives.length > 1 ? "Planos de corte possíveis" : "Detalhe do plano"}
           </h2>
-          <p className="note" style={{ marginTop: 0, marginBottom: 12 }}>
-            Compare soluções com um único setup ou com vários programas (trocas de faca na largura).
-          </p>
+          {plan && (
+            <button className="btn btn-primary" type="button" onClick={() => downloadPlanPdf(plan, coil)}>
+              Gerar PDF do plano selecionado
+            </button>
+          )}
+        </div>
+        <p className="note" style={{ marginTop: 0, marginBottom: 12 }}>
+          Compare soluções com um único setup ou com vários programas (trocas de faca na largura). O PDF usa o plano marcado abaixo.
+        </p>
           {result.alternatives.map((alt, idx) => (
             <button
               key={alt.label + idx}
