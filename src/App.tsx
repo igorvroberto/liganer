@@ -20,6 +20,7 @@ const EXAMPLE_COIL: CoilInput = {
   density: DEFAULT_DENSITY,
   kerf: 0,
   edgeTrim: 0,
+  allowOvershoot: true,
 };
 
 const EXAMPLE_BLANKS: BlankInput[] = [
@@ -263,6 +264,30 @@ export default function App() {
             ))}
           </div>
         </div>
+        <div className="field span-all">
+          <span>O peso informado pode ser ultrapassado?</span>
+          <div className="chips">
+            <button
+              type="button"
+              className={`chip ${(coil.allowOvershoot ?? true) ? "active" : ""}`}
+              onClick={() => updateCoil({ allowOvershoot: true })}
+            >
+              Sim
+            </button>
+            <button
+              type="button"
+              className={`chip ${coil.allowOvershoot === false ? "active" : ""}`}
+              onClick={() => updateCoil({ allowOvershoot: false })}
+            >
+              Não
+            </button>
+          </div>
+          <p className="note" style={{ marginTop: 6 }}>
+            {coil.allowOvershoot === false
+              ? "O kg digitado em cada item é o máximo. Se um programa produzir além disso, as demais tiras são reduzidas."
+              : "O plano pode produzir um pouco acima do kg informado quando as tiras compartilham o mesmo comprimento de bobina."}
+          </p>
+        </div>
       </section>
 
       <section className="card">
@@ -376,13 +401,13 @@ export default function App() {
                         <td>{fmtKg(product.unitWeightKg)}</td>
                         <td>
                           {fmtInt(product.pieces)} un
-                          {product.pieces > product.blank.minQty
+                          {(coil.allowOvershoot ?? true) && product.pieces > product.blank.minQty
                             ? ` (+${product.pieces - product.blank.minQty})`
                             : ""}
                         </td>
                         <td>
                           {fmtKg(product.weightKg)}
-                          {product.weightKg > product.blank.minKg
+                          {(coil.allowOvershoot ?? true) && product.weightKg > product.blank.minKg
                             ? ` (+${fmtNumber(product.weightKg - product.blank.minKg, 1)} kg)`
                             : ""}
                         </td>
@@ -392,8 +417,9 @@ export default function App() {
                 </table>
               </div>
               <p className="note">
-                O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo
-                programa na bobina.
+                {coil.allowOvershoot === false
+                  ? "O peso de cada item não passa do valor digitado. Tiras do mesmo programa são ajustadas para baixo quando necessário."
+                  : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina."}
               </p>
             </>
           )}

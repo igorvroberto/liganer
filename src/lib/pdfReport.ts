@@ -103,7 +103,12 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     body: [
       ["Largura", fmtMm(coil.width), "Espessura", `${fmtThickness(coil.thickness)} mm`],
       ["Comprimento", fmtMeters(plan.totalCoilLengthMm), "Perda de faca", fmtMm(coil.kerf)],
-      ["Refile (cada lado)", fmtMm(coil.edgeTrim), "", ""],
+      [
+        "Refile (cada lado)",
+        fmtMm(coil.edgeTrim),
+        "Peso pode ultrapassar",
+        coil.allowOvershoot === false ? "Nao" : "Sim",
+      ],
     ],
   });
 
@@ -213,7 +218,9 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
   doc.setFontSize(8);
   doc.setTextColor(91, 103, 115);
   doc.text(
-    "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina.",
+    coil.allowOvershoot === false
+      ? "O peso de cada item nao ultrapassa o valor digitado. Tiras do mesmo programa sao reduzidas quando necessario."
+      : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina.",
     margin,
     y,
     { maxWidth: contentW },

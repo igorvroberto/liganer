@@ -13,6 +13,7 @@ export type CoilInput = {
   density: number;
   kerf: number;
   edgeTrim: number;
+  allowOvershoot?: boolean;
 };
 
 export type CalcInput = {
@@ -77,6 +78,7 @@ export type RankedPlan = {
   products: ProductResult[];
   setupCount: number;
   overshootKg: number;
+  shortfallKg: number;
 };
 
 export const DEFAULT_DENSITY = 8;
