@@ -321,16 +321,10 @@ export default function App() {
                     </thead>
                     <tbody>
                       {program.pattern.strips.map((strip, sIdx) => {
-                        const blank = plan.products[strip.productIndex].blank;
                         const n = Math.floor((program.coilLengthMm + 1e-6) / strip.cutLength);
                         return (
                           <tr key={sIdx}>
-                            <td>
-                              {blank.width && blank.length
-                                ? `${blank.width}×${blank.length}`
-                                : `Blank ${strip.productIndex + 1}`}{" "}
-                              · {fmtMm(strip.stripWidth)}
-                            </td>
+                            <td>{fmtMm(strip.stripWidth)}</td>
                             <td>
                               {fmtDim(strip.stripWidth, strip.cutLength)}
                               {strip.rotated ? " (girado)" : ""}
