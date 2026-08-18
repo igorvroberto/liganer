@@ -29,15 +29,17 @@ function newBlank(partial?: Partial<BlankInput>): BlankInput {
 
 const EXAMPLE_COIL: CoilInput = {
   width: 1250,
-  thickness: 1,
-  density: 7.93,
+  thickness: 0.4,
+  density: 7.7,
   kerf: 0,
   edgeTrim: 0,
 };
 
 const EXAMPLE_BLANKS: BlankInput[] = [
-  { id: "blank-1", name: "Blank A", width: 600, length: 470, minKg: 1000, minQty: 0 },
-  { id: "blank-2", name: "Blank B", width: 650, length: 500, minKg: 1000, minQty: 0 },
+  { id: "blank-1", name: "600×470", width: 600, length: 470, minKg: 1000, minQty: 0 },
+  { id: "blank-2", name: "700×500", width: 700, length: 500, minKg: 1000, minQty: 0 },
+  { id: "blank-3", name: "750×550", width: 750, length: 550, minKg: 1000, minQty: 0 },
+  { id: "blank-4", name: "650×530", width: 650, length: 530, minKg: 1000, minQty: 0 },
 ];
 
 function PatternBar({ pattern, coilWidth }: { pattern: Pattern; coilWidth: number }) {
@@ -126,7 +128,7 @@ function patternSummary(
 
 export default function App() {
   const [coil, setCoil] = useState<CoilInput>(EXAMPLE_COIL);
-  const [gradeId, setGradeId] = useState("304");
+  const [gradeId, setGradeId] = useState("430");
   const [blanks, setBlanks] = useState<BlankInput[]>(EXAMPLE_BLANKS);
   const [selectedAlt, setSelectedAlt] = useState(0);
   const [printNote] = useState(
@@ -170,7 +172,7 @@ export default function App() {
             className="btn btn-secondary"
             onClick={() => {
               setCoil(EXAMPLE_COIL);
-              setGradeId("304");
+              setGradeId("430");
               setBlanks(EXAMPLE_BLANKS);
               setSelectedAlt(0);
             }}

@@ -145,19 +145,26 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     expect(multi!.programs.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("monta vários programas quando blanks não cabem juntos na largura", () => {
+  it("monta plano AISI 430 0,40 mm com 4 blanks e 2 programas", () => {
     const result = optimizeCutting({
-      coil: { width: 1500, thickness: 1, density: 7.93, kerf: 0, edgeTrim: 0 },
+      coil: { width: 1250, thickness: 0.4, density: 7.7, kerf: 0, edgeTrim: 0 },
       blanks: [
-        { id: "a", name: "800×500", width: 800, length: 500, minKg: 600, minQty: 0 },
-        { id: "b", name: "750×500", width: 750, length: 500, minKg: 600, minQty: 0 },
-        { id: "c", name: "700×500", width: 700, length: 500, minKg: 600, minQty: 0 },
+        { id: "a", name: "600×470", width: 600, length: 470, minKg: 1000, minQty: 0 },
+        { id: "b", name: "700×500", width: 700, length: 500, minKg: 1000, minQty: 0 },
+        { id: "c", name: "750×550", width: 750, length: 550, minKg: 1000, minQty: 0 },
+        { id: "d", name: "650×530", width: 650, length: 530, minKg: 1000, minQty: 0 },
       ],
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.alternatives.some((alt) => alt.setupCount >= 2)).toBe(true);
+
     const best = result.alternatives[0];
-    expect(best.products.every((p) => p.weightKg >= 600 - 1e-6)).toBe(true);
+    expect(best.setupCount).toBe(2);
+    expect(best.yieldPercent).toBeGreaterThan(99.5);
+    for (const product of best.products) {
+      expect(product.weightKg).toBeGreaterThanOrEqual(1000 - 1e-6);
+    }
+    expect(best.products[0].pieces).toBe(1152);
+    expect(best.products[2].pieces).toBe(788);
   });
 });
