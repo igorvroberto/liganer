@@ -136,4 +136,28 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     if (!result.ok) return;
     expect(result.products[0].pieces).toBeGreaterThanOrEqual(100);
   });
+
+  it("lista alternativa com vários programas de corte", () => {
+    const result = optimizeCutting(exampleInput());
+    if (!result.ok) throw new Error(result.message);
+    const multi = result.alternatives.find((alt) => alt.setupCount >= 2);
+    expect(multi).toBeTruthy();
+    expect(multi!.programs.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("monta vários programas quando blanks não cabem juntos na largura", () => {
+    const result = optimizeCutting({
+      coil: { width: 1500, thickness: 1, density: 7.93, kerf: 0, edgeTrim: 0 },
+      blanks: [
+        { id: "a", name: "800×500", width: 800, length: 500, minKg: 600, minQty: 0 },
+        { id: "b", name: "750×500", width: 750, length: 500, minKg: 600, minQty: 0 },
+        { id: "c", name: "700×500", width: 700, length: 500, minKg: 600, minQty: 0 },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.alternatives.some((alt) => alt.setupCount >= 2)).toBe(true);
+    const best = result.alternatives[0];
+    expect(best.products.every((p) => p.weightKg >= 600 - 1e-6)).toBe(true);
+  });
 });

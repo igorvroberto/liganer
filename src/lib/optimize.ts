@@ -237,6 +237,63 @@ function planFromPrograms(
   };
 }
 
+function planLabel(programs: ProgramResult[], blanks: BlankInput[]): string {
+  if (programs.length === 1) {
+    return `1 programa · ${patternLabel(programs[0].pattern, blanks)}`;
+  }
+  return programs.map((p, i) => `P${i + 1}: ${patternLabel(p.pattern, blanks)}`).join(" · ");
+}
+
+function buildSequentialPlan(
+  candidates: Pattern[],
+  nMin: number[],
+  blanks: BlankInput[],
+  coil: CoilInput,
+): RankedPlan | null {
+  const remaining = [...nMin];
+  const chosen: { pattern: Pattern; lengthMm: number }[] = [];
+  const maxPrograms = Math.max(8, nMin.filter((v) => v > 0).length * 2);
+
+  while (remaining.some((r) => r > 0) && chosen.length < maxPrograms) {
+    let best: { pattern: Pattern; length: number; gain: number } | null = null;
+
+    for (const pattern of candidates) {
+      const rate = piecesPerMm(pattern, nMin.length);
+      if (!remaining.some((need, i) => need > 0 && rate[i] > 0)) continue;
+
+      const length = minLengthForPattern(
+        pattern,
+        remaining.map((need, i) => (rate[i] > 0 ? need : 0)),
+      );
+      if (!Number.isFinite(length) || length <= 0) continue;
+
+      const pieces = piecesFromLength(pattern, length, nMin.length);
+      const gain = pieces.reduce((sum, qty, i) => {
+        if (remaining[i] <= 0 || qty <= 0) return sum;
+        const unit = unitWeightKg(blanks[i].width, blanks[i].length, coil);
+        return sum + Math.min(qty, remaining[i]) * unit;
+      }, 0);
+
+      if (gain <= 0) continue;
+      if (!best || gain / length > best.gain / best.length) {
+        best = { pattern, length, gain };
+      }
+    }
+
+    if (!best) break;
+
+    chosen.push({ pattern: best.pattern, lengthMm: best.length });
+    const produced = piecesFromLength(best.pattern, best.length, nMin.length);
+    produced.forEach((qty, i) => {
+      remaining[i] = Math.max(0, remaining[i] - qty);
+    });
+  }
+
+  if (remaining.some((r) => r > 0)) return null;
+  const programs = toPrograms(chosen, nMin.length);
+  return planFromPrograms(planLabel(programs, blanks), programs, blanks, coil, nMin);
+}
+
 function patternLabel(pattern: Pattern, blanks: BlankInput[]): string {
   return pattern.strips
     .map((strip) => {
@@ -352,11 +409,7 @@ function evaluateSubset(
     subset.map((pattern, j) => ({ pattern, lengthMm: bumped[j] })),
     nMin.length,
   );
-  const label =
-    programs.length === 1
-      ? `1 programa · ${patternLabel(programs[0].pattern, blanks)}`
-      : `${programs.length} programas de corte`;
-  return planFromPrograms(label, programs, blanks, coil, nMin);
+  return planFromPrograms(planLabel(programs, blanks), programs, blanks, coil, nMin);
 }
 
 function rankPlans(plans: RankedPlan[]): RankedPlan[] {
@@ -435,10 +488,11 @@ export function optimizeCutting(input: CalcInput): CalcResult | CalcError {
   const candidates = filterPatterns(allPatterns, nMin);
   const plans: RankedPlan[] = [];
 
-  const maxK = Math.min(nMin.filter((v) => v > 0).length, candidates.length, 3);
+  const activeCount = nMin.filter((v) => v > 0).length;
+  const maxK = Math.min(activeCount, candidates.length, 5);
   for (let k = 1; k <= maxK; k++) {
     const combos = combinations(candidates, k);
-    const limit = k === 1 ? combos.length : k === 2 ? 220 : 80;
+    const limit = k === 1 ? combos.length : k === 2 ? 400 : k === 3 ? 200 : 100;
     const slice = combos.slice(0, limit);
     for (const subset of slice) {
       const plan = evaluateSubset(subset, nMin, blanks, coil);
@@ -455,11 +509,11 @@ export function optimizeCutting(input: CalcInput): CalcResult | CalcError {
   }
   if (dedicated.length >= 2) {
     const plan = evaluateSubset(dedicated, nMin, blanks, coil);
-    if (plan) {
-      plan.label = "Programas separados por blank";
-      plans.push(plan);
-    }
+    if (plan) plans.push(plan);
   }
+
+  const sequential = buildSequentialPlan(candidates, nMin, blanks, coil);
+  if (sequential) plans.push(sequential);
 
   const ranked = rankPlans(plans);
   if (ranked.length === 0) {

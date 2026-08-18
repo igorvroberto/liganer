@@ -6,8 +6,9 @@ import {
   COMMON_THICKNESSES,
   STAINLESS_GRADES,
   type BlankInput,
-  type CalcResult,
   type CoilInput,
+  type Pattern,
+  type ProgramResult,
   type RankedPlan,
 } from "./lib/types";
 
@@ -39,16 +40,7 @@ const EXAMPLE_BLANKS: BlankInput[] = [
   { id: "blank-2", name: "Blank B", width: 650, length: 500, minKg: 1000, minQty: 0 },
 ];
 
-function PatternBar({
-  plan,
-  coilWidth,
-}: {
-  plan: RankedPlan | CalcResult;
-  coilWidth: number;
-}) {
-  const program = plan.programs[0];
-  if (!program) return null;
-  const { pattern } = program;
+function PatternBar({ pattern, coilWidth }: { pattern: Pattern; coilWidth: number }) {
   const total = coilWidth;
   return (
     <div className="pattern-bar" title={`Largura da bobina ${fmtMm(coilWidth)}`}>
@@ -73,9 +65,7 @@ function PatternBar({
   );
 }
 
-function LanePreview({ plan }: { plan: RankedPlan | CalcResult }) {
-  const program = plan.programs[0];
-  if (!program) return null;
+function LanePreview({ program }: { program: ProgramResult }) {
   const maxCut = Math.max(...program.pattern.strips.map((s) => s.cutLength));
   const repeats = 4;
   return (
@@ -86,11 +76,7 @@ function LanePreview({ plan }: { plan: RankedPlan | CalcResult }) {
         return (
           <div key={`${strip.productIndex}-${idx}`} className="lane">
             {Array.from({ length: repeats }, (_, n) => (
-              <div
-                key={n}
-                className="blank-rect"
-                style={{ background: color, height: h }}
-              >
+              <div key={n} className="blank-rect" style={{ background: color, height: h }}>
                 {fmtInt(strip.stripWidth)}×{fmtInt(strip.cutLength)}
               </div>
             ))}
@@ -99,6 +85,43 @@ function LanePreview({ plan }: { plan: RankedPlan | CalcResult }) {
       })}
     </div>
   );
+}
+
+function ProgramTimeline({
+  programs,
+  totalLengthMm,
+}: {
+  programs: ProgramResult[];
+  totalLengthMm: number;
+}) {
+  if (programs.length <= 1) return null;
+  return (
+    <div className="timeline" aria-label="Sequência de programas na bobina">
+      {programs.map((program, idx) => (
+        <div
+          key={idx}
+          className="timeline-seg"
+          style={{ flex: program.coilLengthMm / totalLengthMm }}
+          title={`Programa ${idx + 1}: ${fmtMeters(program.coilLengthMm)}`}
+        >
+          P{idx + 1}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function patternSummary(
+  program: ProgramResult,
+  products: RankedPlan["products"],
+): string {
+  return program.pattern.strips
+    .map((strip) => {
+      const blank = products[strip.productIndex].blank;
+      const label = blank.name || `${blank.width}×${blank.length}`;
+      return `${label} ${fmtInt(strip.stripWidth)} mm`;
+    })
+    .join(" + ");
 }
 
 export default function App() {
@@ -138,7 +161,8 @@ export default function App() {
           </div>
           <p>
             Combina largura e comprimento dos blanks na largura original da bobina, calcula peso em
-            kg e quantidade em peças, e escolhe o plano de corte com melhor aproveitamento.
+            kg e quantidade em peças, e monta um ou <strong>vários programas de corte</strong>{" "}
+            (setups diferentes ao longo do comprimento da bobina).
           </p>
         </div>
         <div className="hero-actions">
@@ -345,18 +369,23 @@ export default function App() {
                 </div>
               </div>
 
-              <PatternBar plan={plan} coilWidth={coil.width} />
               <p className="note">
-                Comprimento necessário: <strong>{fmtMeters(plan.totalCoilLengthMm)}</strong> ·{" "}
-                {plan.setupCount} programa{plan.setupCount > 1 ? "s" : ""} de corte
+                Comprimento total: <strong>{fmtMeters(plan.totalCoilLengthMm)}</strong> ·{" "}
+                <strong>{plan.setupCount}</strong> programa{plan.setupCount > 1 ? "s" : ""} de corte
+                {plan.setupCount > 1
+                  ? " (cada um com arranjo de tiras na largura e um trecho de comprimento)"
+                  : ""}
               </p>
-              <LanePreview plan={plan} />
+              <ProgramTimeline programs={plan.programs} totalLengthMm={plan.totalCoilLengthMm} />
 
               {plan.programs.map((program, idx) => (
                 <div className="program" key={idx}>
                   <h3>
-                    Programa {idx + 1} · {fmtMeters(program.coilLengthMm)} de bobina
+                    Programa {idx + 1} · {fmtMeters(program.coilLengthMm)} de bobina ·{" "}
+                    {patternSummary(program, plan.products)}
                   </h3>
+                  <PatternBar pattern={program.pattern} coilWidth={coil.width} />
+                  <LanePreview program={program} />
                   <table>
                     <thead>
                       <tr>
@@ -427,9 +456,14 @@ export default function App() {
         </section>
       </div>
 
-      {result.ok && result.alternatives.length > 1 && (
+      {result.ok && result.alternatives.length > 0 && (
         <section className="card" style={{ marginTop: 20 }}>
-          <h2>Outros planos possíveis</h2>
+          <h2>
+            {result.alternatives.length > 1 ? "Planos de corte possíveis" : "Detalhe do plano"}
+          </h2>
+          <p className="note" style={{ marginTop: 0, marginBottom: 12 }}>
+            Compare soluções com um único setup ou com vários programas (trocas de faca na largura).
+          </p>
           {result.alternatives.map((alt, idx) => (
             <button
               key={alt.label + idx}
@@ -439,8 +473,17 @@ export default function App() {
             >
               <strong>{idx === 0 ? "Recomendado · " : ""}{alt.label}</strong>
               <div className="note" style={{ marginTop: 4 }}>
-                {fmtPct(alt.yieldPercent)} de aproveitamento · {fmtKg(alt.coilWeightKg)} de bobina ·{" "}
-                {alt.setupCount} setup{alt.setupCount > 1 ? "s" : ""} · sucata {fmtKg(alt.scrapKg)}
+                {fmtPct(alt.yieldPercent)} aproveit. · {fmtKg(alt.coilWeightKg)} bobina ·{" "}
+                {alt.setupCount} programa{alt.setupCount > 1 ? "s" : ""} · sucata {fmtKg(alt.scrapKg)}
+                {alt.programs.length > 1 && (
+                  <>
+                    {" "}
+                    ·{" "}
+                    {alt.programs
+                      .map((p, i) => `P${i + 1} ${fmtMeters(p.coilLengthMm)}`)
+                      .join(" + ")}
+                  </>
+                )}
               </div>
             </button>
           ))}
