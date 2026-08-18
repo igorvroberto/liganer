@@ -313,14 +313,24 @@ export default function App() {
                 Comprimento total: <strong>{fmtMeters(plan.totalCoilLengthMm)}</strong> ·{" "}
                 <strong>{plan.setupCount}</strong> programa{plan.setupCount > 1 ? "s" : ""} de corte
               </p>
+              <div className="pdf-bar">
+                <button className="btn btn-primary btn-pdf" type="button" onClick={() => downloadPlanPdf(plan, coil)}>
+                  Gerar relatório PDF
+                </button>
+                <span className="note" style={{ marginTop: 0 }}>
+                  Inclui bobina, programas de corte, peças e pesos do plano em tela.
+                </span>
+              </div>
               <ProgramTimeline programs={plan.programs} totalLengthMm={plan.totalCoilLengthMm} />
 
               {plan.programs.map((program, idx) => (
                 <div className="program" key={idx}>
+                <div className="program-head">
                   <h3>
                     Programa {idx + 1} · {fmtMeters(program.coilLengthMm)} de bobina ·{" "}
                     {patternSummary(program, plan.products)}
                   </h3>
+                </div>
                   <LanePreview program={program} coilWidth={coil.width} />
                   <table>
                     <thead>
@@ -437,6 +447,14 @@ export default function App() {
             </button>
           ))}
         </section>
+      )}
+
+      {plan && (
+        <div className="pdf-dock">
+          <button className="btn btn-primary btn-pdf" type="button" onClick={() => downloadPlanPdf(plan, coil)}>
+            Gerar relatório PDF
+          </button>
+        </div>
       )}
     </div>
   );
