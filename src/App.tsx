@@ -37,8 +37,6 @@ const EXAMPLE_MODES: Record<string, "qty" | "weight"> = {
 };
 
 function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth: number }) {
-  const repeats = 4;
-  const pieceHeight = 52;
 
   return (
     <div className="cut-preview">
@@ -74,11 +72,9 @@ function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth
               className="lane"
               style={{ flex: `${strip.stripWidth} 1 0` }}
             >
-              {Array.from({ length: repeats }, (_, n) => (
-                <div key={n} className="blank-rect" style={{ background: color, height: pieceHeight }}>
-                  {fmtInt(strip.stripWidth)}×{fmtInt(strip.cutLength)}
-                </div>
-              ))}
+              <div className="blank-rect" style={{ background: color }}>
+                {fmtInt(strip.stripWidth)}×{fmtInt(strip.cutLength)}
+              </div>
             </div>
           );
         })}
@@ -404,19 +400,19 @@ export default function App() {
 
       {result.ok && result.alternatives.length > 0 && (
         <section className="card" style={{ marginTop: 20 }}>
-        <div className="section-head">
-          <h2>
-            {result.alternatives.length > 1 ? "Planos de corte possíveis" : "Detalhe do plano"}
-          </h2>
-          {plan && (
-            <button className="btn btn-primary" type="button" onClick={() => downloadPlanPdf(plan, coil)}>
-              Gerar PDF do plano selecionado
-            </button>
-          )}
-        </div>
-        <p className="note" style={{ marginTop: 0, marginBottom: 12 }}>
-          Compare soluções com um único setup ou com vários programas (trocas de faca na largura). O PDF usa o plano marcado abaixo.
-        </p>
+          <div className="section-head">
+            <h2>
+              {result.alternatives.length > 1 ? "Planos de corte possíveis" : "Detalhe do plano"}
+            </h2>
+            {plan && (
+              <button className="btn btn-primary" type="button" onClick={() => downloadPlanPdf(plan, coil)}>
+                Gerar PDF do plano selecionado
+              </button>
+            )}
+          </div>
+          <p className="note" style={{ marginTop: 0, marginBottom: 12 }}>
+            Compare soluções com um único setup ou com vários programas (trocas de faca na largura). O PDF usa o plano marcado abaixo.
+          </p>
           {result.alternatives.map((alt, idx) => (
             <button
               key={alt.label + idx}

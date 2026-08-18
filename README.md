@@ -10,6 +10,7 @@ O cálculo considera:
 - largura original da bobina
 - espessura (2 casas decimais), densidade fixa de 8 g/cm³, perda de faca e refile de borda
 - **um ou vários programas de corte** — setups diferentes na largura, executados em sequência ao longo do comprimento da bobina
+- **relatório em PDF** do plano selecionado (bobina, programas, peças e pesos)
 
 ## Exemplo
 
