@@ -9,7 +9,6 @@ import {
   DEFAULT_DENSITY,
   type BlankInput,
   type CoilInput,
-  type Pattern,
   type ProgramResult,
   type RankedPlan,
 } from "./lib/types";
@@ -36,49 +35,56 @@ const EXAMPLE_MODES: Record<string, "qty" | "weight"> = {
   "blank-4": "weight",
 };
 
-function PatternBar({ pattern, coilWidth }: { pattern: Pattern; coilWidth: number }) {
-  const total = coilWidth;
-  return (
-    <div className="pattern-bar" title={`Largura da bobina ${fmtMm(coilWidth)}`}>
-      {pattern.strips.map((strip, idx) => (
-        <div
-          key={`${strip.productIndex}-${idx}`}
-          className="pattern-seg"
-          style={{
-            width: `${(strip.stripWidth / total) * 100}%`,
-            background: BLANK_COLORS[strip.productIndex % BLANK_COLORS.length],
-          }}
-        >
-          {fmtInt(strip.stripWidth)}
-        </div>
-      ))}
-      {pattern.waste > 0.5 && (
-        <div className="pattern-seg waste" style={{ width: `${(pattern.waste / total) * 100}%` }}>
-          sucata {fmtInt(pattern.waste)}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function LanePreview({ program }: { program: ProgramResult }) {
+function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth: number }) {
   const maxCut = Math.max(...program.pattern.strips.map((s) => s.cutLength));
   const repeats = 4;
+
   return (
-    <div className="lanes" aria-hidden="true">
-      {program.pattern.strips.map((strip, idx) => {
-        const color = BLANK_COLORS[strip.productIndex % BLANK_COLORS.length];
-        const h = Math.max(42, (strip.cutLength / maxCut) * 52);
-        return (
-          <div key={`${strip.productIndex}-${idx}`} className="lane">
-            {Array.from({ length: repeats }, (_, n) => (
-              <div key={n} className="blank-rect" style={{ background: color, height: h }}>
-                {fmtInt(strip.stripWidth)}×{fmtInt(strip.cutLength)}
-              </div>
-            ))}
+    <div className="cut-preview">
+      <div className="pattern-bar" title={`Largura da bobina ${fmtMm(coilWidth)}`}>
+        {program.pattern.strips.map((strip, idx) => (
+          <div
+            key={`bar-${strip.productIndex}-${idx}`}
+            className="pattern-seg"
+            style={{
+              width: `${(strip.stripWidth / coilWidth) * 100}%`,
+              background: BLANK_COLORS[strip.productIndex % BLANK_COLORS.length],
+            }}
+          >
+            {fmtInt(strip.stripWidth)}
           </div>
-        );
-      })}
+        ))}
+        {program.pattern.waste > 0.5 && (
+          <div
+            className="pattern-seg waste"
+            style={{ width: `${(program.pattern.waste / coilWidth) * 100}%` }}
+          >
+            sucata {fmtInt(program.pattern.waste)}
+          </div>
+        )}
+      </div>
+      <div className="lanes" aria-hidden="true">
+        {program.pattern.strips.map((strip, idx) => {
+          const color = BLANK_COLORS[strip.productIndex % BLANK_COLORS.length];
+          const h = Math.max(42, (strip.cutLength / maxCut) * 52);
+          return (
+            <div
+              key={`${strip.productIndex}-${idx}`}
+              className="lane"
+              style={{ flex: `${strip.stripWidth} 1 0` }}
+            >
+              {Array.from({ length: repeats }, (_, n) => (
+                <div key={n} className="blank-rect" style={{ background: color, height: h }}>
+                  {fmtInt(strip.stripWidth)}×{fmtInt(strip.cutLength)}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+        {program.pattern.waste > 0.5 && (
+          <div className="lane lane-waste" style={{ flex: `${program.pattern.waste} 1 0` }} aria-hidden="true" />
+        )}
+      </div>
     </div>
   );
 }
@@ -304,8 +310,7 @@ export default function App() {
                     Programa {idx + 1} · {fmtMeters(program.coilLengthMm)} de bobina ·{" "}
                     {patternSummary(program, plan.products)}
                   </h3>
-                  <PatternBar pattern={program.pattern} coilWidth={coil.width} />
-                  <LanePreview program={program} />
+                  <LanePreview program={program} coilWidth={coil.width} />
                   <table>
                     <thead>
                       <tr>

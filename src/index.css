@@ -452,28 +452,64 @@ select:focus {
   border-right: 0;
 }
 
-.program .pattern-bar {
+.program .cut-preview {
   margin-bottom: 10px;
 }
 
-.program .lanes {
-  margin-bottom: 10px;
+.program .cut-preview .pattern-bar {
+  margin-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  border-bottom: 0;
+}
+
+.program .cut-preview .lanes {
   min-height: 140px;
+  border: 1px solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+  background: repeating-linear-gradient(
+    45deg,
+    #eceff2,
+    #eceff2 8px,
+    #e4e8ec 8px,
+    #e4e8ec 16px
+  );
+}
+
+.program .cut-preview .lane .blank-rect {
+  border-radius: 0;
+}
+
+.program .cut-preview .lane .blank-rect:first-child {
+  border-radius: 0;
 }
 
 .lanes {
   display: flex;
-  gap: 8px;
+  gap: 0;
   align-items: flex-end;
-  margin-top: 12px;
+  margin-top: 0;
   min-height: 180px;
 }
 
 .lane {
-  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column-reverse;
   gap: 3px;
+}
+
+.lane-waste {
+  background: repeating-linear-gradient(
+    45deg,
+    #eceff2,
+    #eceff2 8px,
+    #e4e8ec 8px,
+    #e4e8ec 16px
+  );
+  border-radius: 0 0 8px 8px;
+  min-height: 42px;
 }
 
 .blank-rect {
