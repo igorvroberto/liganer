@@ -63,6 +63,7 @@ function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth
           </div>
         )}
       </div>
+      <div className="cut-preview-gap" aria-hidden="true" />
       <div className="lanes" aria-hidden="true">
         {program.pattern.strips.map((strip, idx) => {
           const color = BLANK_COLORS[strip.productIndex % BLANK_COLORS.length];

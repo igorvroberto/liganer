@@ -458,17 +458,20 @@ select:focus {
 
 .program .cut-preview .pattern-bar {
   margin-bottom: 0;
-  border-radius: 12px 12px 0 0;
-  border-bottom: 0;
+  border-radius: 12px;
+}
+
+.cut-preview-gap {
+  height: 12px;
 }
 
 .program .cut-preview .lanes {
   min-height: 0;
   border: 1px solid var(--line);
-  border-top: 0;
-  border-radius: 0 0 12px 12px;
+  border-radius: 12px;
   overflow: hidden;
   background: #f7f8fa;
+  align-items: flex-start;
 }
 
 .program .cut-preview .lane .blank-rect {
@@ -478,7 +481,7 @@ select:focus {
 .lanes {
   display: flex;
   gap: 0;
-  align-items: stretch;
+  align-items: flex-start;
   margin-top: 0;
 }
 
