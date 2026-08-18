@@ -8,8 +8,6 @@ import {
   BLANK_COLORS,
   COMMON_THICKNESSES,
   DEFAULT_DENSITY,
-  lengthColor,
-  widthColor,
   type BlankInput,
   type CoilInput,
   type ProgramResult,
@@ -51,7 +49,7 @@ function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth
             className="pattern-seg"
             style={{
               width: `${(strip.stripWidth / coilWidth) * 100}%`,
-              background: widthColor(strip.productIndex),
+              background: BLANK_COLORS[strip.productIndex % BLANK_COLORS.length],
             }}
           >
             {fmtInt(strip.stripWidth)}
@@ -69,7 +67,7 @@ function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth
       <div className="cut-preview-gap" aria-hidden="true" />
       <div className="lanes" aria-hidden="true">
         {program.pattern.strips.map((strip, idx) => {
-          const color = lengthColor(strip.productIndex);
+          const color = BLANK_COLORS[strip.productIndex % BLANK_COLORS.length];
           return (
             <div
               key={`${strip.productIndex}-${idx}`}

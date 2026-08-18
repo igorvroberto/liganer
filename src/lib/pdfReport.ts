@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtPct, fmtThickness } from "./format";
-import { lengthColor, widthColor, type CoilInput, type RankedPlan } from "./types";
+import { BLANK_COLORS, type CoilInput, type RankedPlan } from "./types";
 import { programLoss } from "./optimize";
 import { registerPdfFonts } from "./pdfFonts";
 
@@ -76,8 +76,9 @@ function drawStripBar(
     doc.rect(barX, rowY, barW, height, "S");
   };
 
-  paint(widthColor, (strip) => fmtInt(strip.stripWidth), y);
-  paint(lengthColor, (strip) => fmtInt(strip.cutLength), y + height + 2);
+  const colorOf = (index: number) => BLANK_COLORS[index % BLANK_COLORS.length];
+  paint(colorOf, (strip) => fmtInt(strip.stripWidth), y);
+  paint(colorOf, (strip) => fmtInt(strip.cutLength), y + height + 2);
   doc.setTextColor(27, 36, 44);
 }
 
