@@ -473,9 +473,14 @@ select:focus {
   margin-top: 12px;
 }
 
-.program h3 {
-  font-size: 0.95rem;
-  margin-bottom: 10px;
+.program-loss {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.program-loss strong {
+  color: var(--ink);
 }
 
 .timeline {

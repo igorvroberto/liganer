@@ -4,6 +4,7 @@ import {
   generatePatterns,
   minPiecesForBlank,
   optimizeCutting,
+  programLoss,
   stripTypesForBlank,
   unitWeightKg,
   usableWidth,
@@ -166,5 +167,14 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     }
     expect(best.products[0].pieces).toBe(1109);
     expect(best.products[2].pieces).toBe(758);
+    const loss = programLoss(best.programs[0], {
+      width: 1250,
+      thickness: 0.4,
+      density: 8,
+      kerf: 0,
+      edgeTrim: 0,
+    });
+    expect(loss.widthLossPercent).toBeCloseTo(0, 5);
+    expect(loss.lossPercent).toBeGreaterThanOrEqual(0);
   });
 });

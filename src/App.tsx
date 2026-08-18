@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import BlankItemsTable from "./components/BlankItemsTable";
 import { resyncBlankDemand } from "./lib/blankSync";
 import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseThickness } from "./lib/format";
-import { optimizeCutting } from "./lib/optimize";
+import { optimizeCutting, programLoss } from "./lib/optimize";
 import { downloadPlanPdf } from "./lib/pdfReport";
 import {
   BLANK_COLORS,
@@ -110,6 +110,20 @@ function ProgramTimeline({
   );
 }
 
+function ProgramLossNote({ program, coil }: { program: ProgramResult; coil: CoilInput }) {
+  const loss = programLoss(program, coil);
+  return (
+    <p className="program-loss">
+      Perda: <strong>{fmtPct(loss.lossPercent)}</strong>
+      <span>
+        {" "}
+        · sucata {fmtKg(loss.scrapKg)} · largura não usada {fmtMm(loss.widthWasteMm)} (
+        {fmtPct(loss.widthLossPercent)})
+      </span>
+    </p>
+  );
+}
+
 function patternSummary(program: ProgramResult, products: RankedPlan["products"]): string {
   return program.pattern.strips
     .map((strip) => {
@@ -176,16 +190,6 @@ export default function App() {
         <div className="hero-actions">
           <button className="btn btn-secondary" type="button" onClick={loadExample}>
             Carregar exemplo
-          </button>
-          <button
-            className="btn btn-primary"
-            type="button"
-            disabled={!plan}
-            onClick={() => {
-              if (plan) downloadPlanPdf(plan, coil);
-            }}
-          >
-            Gerar PDF
           </button>
         </div>
       </header>
@@ -281,11 +285,6 @@ export default function App() {
         <section className="card span-all">
           <div className="section-head">
             <h2>Melhor aproveitamento</h2>
-            {result.ok && plan && (
-              <button className="btn btn-primary" type="button" onClick={() => downloadPlanPdf(plan, coil)}>
-                Gerar PDF deste plano
-              </button>
-            )}
           </div>
           {!result.ok && <div className="error">{result.message}</div>}
           {result.ok && plan && (
@@ -313,14 +312,6 @@ export default function App() {
                 Comprimento total: <strong>{fmtMeters(plan.totalCoilLengthMm)}</strong> ·{" "}
                 <strong>{plan.setupCount}</strong> programa{plan.setupCount > 1 ? "s" : ""} de corte
               </p>
-              <div className="pdf-bar">
-                <button className="btn btn-primary btn-pdf" type="button" onClick={() => downloadPlanPdf(plan, coil)}>
-                  Gerar relatório PDF
-                </button>
-                <span className="note" style={{ marginTop: 0 }}>
-                  Inclui bobina, programas de corte, peças e pesos do plano em tela.
-                </span>
-              </div>
               <ProgramTimeline programs={plan.programs} totalLengthMm={plan.totalCoilLengthMm} />
 
               {plan.programs.map((program, idx) => (
@@ -356,6 +347,7 @@ export default function App() {
                       })}
                     </tbody>
                   </table>
+                  <ProgramLossNote program={program} coil={coil} />
                 </div>
               ))}
 
@@ -414,14 +406,9 @@ export default function App() {
             <h2>
               {result.alternatives.length > 1 ? "Planos de corte possíveis" : "Detalhe do plano"}
             </h2>
-            {plan && (
-              <button className="btn btn-primary" type="button" onClick={() => downloadPlanPdf(plan, coil)}>
-                Gerar PDF do plano selecionado
-              </button>
-            )}
           </div>
           <p className="note" style={{ marginTop: 0, marginBottom: 12 }}>
-            Compare soluções com um único setup ou com vários programas (trocas de faca na largura). O PDF usa o plano marcado abaixo.
+            Compare soluções com um único setup ou com vários programas (trocas de faca na largura).
           </p>
           {result.alternatives.map((alt, idx) => (
             <button

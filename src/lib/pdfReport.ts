@@ -1,7 +1,8 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness } from "./format";
-import { BLANK_COLORS, DEFAULT_DENSITY, type CoilInput, type RankedPlan } from "./types";
+import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtPct, fmtThickness } from "./format";
+import { BLANK_COLORS, type CoilInput, type RankedPlan } from "./types";
+import { programLoss } from "./optimize";
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
@@ -101,8 +102,8 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     styles: { fontSize: 9, cellPadding: 1.6 },
     body: [
       ["Largura", fmtMm(coil.width), "Espessura", `${fmtThickness(coil.thickness)} mm`],
-      ["Densidade", `${fmtNumber(DEFAULT_DENSITY, 0)} g/cm³`, "Comprimento", fmtMeters(plan.totalCoilLengthMm)],
-      ["Perda de faca", fmtMm(coil.kerf), "Refile (cada lado)", fmtMm(coil.edgeTrim)],
+      ["Comprimento", fmtMeters(plan.totalCoilLengthMm), "Perda de faca", fmtMm(coil.kerf)],
+      ["Refile (cada lado)", fmtMm(coil.edgeTrim), "", ""],
     ],
   });
 
@@ -168,7 +169,17 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       styles: { fontSize: 9, cellPadding: 2 },
       columnStyles: { 2: { halign: "right" } },
     });
-    y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+    y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 5;
+    const loss = programLoss(program, coil);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(91, 103, 115);
+    doc.text(
+      `Perda: ${fmtPct(loss.lossPercent)}  ·  sucata ${fmtKg(loss.scrapKg)}  ·  largura não usada ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})`,
+      margin,
+      y,
+    );
+    y += 8;
   });
 
   if (y + 40 > 280) {
@@ -202,7 +213,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
   doc.setFontSize(8);
   doc.setTextColor(91, 103, 115);
   doc.text(
-    "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina. Densidade 8 g/cm³.",
+    "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina.",
     margin,
     y,
     { maxWidth: contentW },

@@ -23,6 +23,16 @@ export function coilWeightKg(coilLengthMm: number, coil: CoilInput): number {
   return (coil.width * coilLengthMm * coil.thickness * coil.density) / MM_TO_KG;
 }
 
+export function programLoss(program: ProgramResult, coil: CoilInput) {
+  const coilKg = coilWeightKg(program.coilLengthMm, coil);
+  const usefulKg = program.weightPerProductKg.reduce((sum, kg) => sum + kg, 0);
+  const scrapKg = Math.max(0, coilKg - usefulKg);
+  const lossPercent = coilKg > 0 ? (scrapKg / coilKg) * 100 : 0;
+  const widthWasteMm = program.pattern.waste;
+  const widthLossPercent = coil.width > 0 ? (widthWasteMm / coil.width) * 100 : 0;
+  return { coilKg, usefulKg, scrapKg, lossPercent, widthWasteMm, widthLossPercent };
+}
+
 export function minPiecesForBlank(blank: BlankInput, unitKg: number): number {
   const fromKg = blank.minKg > 0 && unitKg > 0 ? Math.ceil(blank.minKg / unitKg - 1e-9) : 0;
   return Math.max(fromKg, Math.max(0, Math.floor(blank.minQty)) || 0);
