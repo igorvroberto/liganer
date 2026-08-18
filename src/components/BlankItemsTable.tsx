@@ -12,12 +12,11 @@ type Props = {
   onBlanksChange: (next: BlankInput[]) => void;
 };
 
-function itemLabel(blank: BlankInput, index: number): string {
-  if (blank.name.trim()) return blank.name.trim();
+function dimLabel(blank: BlankInput): string {
   if (blank.width > 0 && blank.length > 0) {
     return `${blank.width}×${blank.length}`;
   }
-  return `Item ${index + 1}`;
+  return "item";
 }
 
 export default function BlankItemsTable({
@@ -114,7 +113,6 @@ export default function BlankItemsTable({
           <thead>
             <tr>
               <th />
-              <th>Item</th>
               <th>Largura (mm)</th>
               <th>Comprimento (mm)</th>
               <th>Quantidade (un)</th>
@@ -133,14 +131,6 @@ export default function BlankItemsTable({
                     <span
                       className="swatch"
                       style={{ background: BLANK_COLORS[index % BLANK_COLORS.length] }}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      className="item-name"
-                      placeholder={itemLabel(blank, index)}
-                      value={blank.name}
-                      onChange={(e) => updateBlank(blank.id, { name: e.target.value })}
                     />
                   </td>
                   <td>
@@ -197,7 +187,7 @@ export default function BlankItemsTable({
                     <button
                       className="btn-icon"
                       type="button"
-                      aria-label={`Remover ${itemLabel(blank, index)}`}
+                      aria-label={`Remover ${dimLabel(blank)}`}
                       onClick={() => removeItem(blank.id)}
                       disabled={blanks.length <= 1}
                     >

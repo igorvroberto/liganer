@@ -195,10 +195,6 @@ p {
   padding: 8px 10px;
 }
 
-.items-table input.item-name {
-  min-width: 120px;
-}
-
 .items-table input.linked-active {
   border-color: var(--brand-2);
   background: #f3f8fb;

@@ -300,7 +300,7 @@ function patternLabel(pattern: Pattern, blanks: BlankInput[]): string {
       const blank = blanks[strip.productIndex];
       const w = strip.stripWidth;
       const l = strip.cutLength;
-      const name = blank.name || `${blank.width}×${blank.length}`;
+      const name = `${blank.width}×${blank.length}`;
       return `${name} ${w}×${l}${strip.rotated ? " girado" : ""}`;
     })
     .join(" + ");

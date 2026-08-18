@@ -23,10 +23,10 @@ const EXAMPLE_COIL: CoilInput = {
 };
 
 const EXAMPLE_BLANKS: BlankInput[] = [
-  { id: "blank-1", name: "600×470", width: 600, length: 470, minKg: 1000, minQty: 1109 },
-  { id: "blank-2", name: "700×500", width: 700, length: 500, minKg: 1000, minQty: 893 },
-  { id: "blank-3", name: "750×550", width: 750, length: 550, minKg: 1000, minQty: 758 },
-  { id: "blank-4", name: "650×530", width: 650, length: 530, minKg: 1000, minQty: 908 },
+  { id: "blank-1", name: "", width: 600, length: 470, minKg: 1000, minQty: 1109 },
+  { id: "blank-2", name: "", width: 700, length: 500, minKg: 1000, minQty: 893 },
+  { id: "blank-3", name: "", width: 750, length: 550, minKg: 1000, minQty: 758 },
+  { id: "blank-4", name: "", width: 650, length: 530, minKg: 1000, minQty: 908 },
 ];
 
 const EXAMPLE_MODES: Record<string, "qty" | "weight"> = {
@@ -111,7 +111,7 @@ function patternSummary(program: ProgramResult, products: RankedPlan["products"]
   return program.pattern.strips
     .map((strip) => {
       const blank = products[strip.productIndex].blank;
-      const label = blank.name || `${blank.width}×${blank.length}`;
+      const label = `${blank.width}×${blank.length}`;
       return `${label} ${fmtInt(strip.stripWidth)} mm`;
     })
     .join(" + ");
@@ -321,7 +321,10 @@ export default function App() {
                         return (
                           <tr key={sIdx}>
                             <td>
-                              {blank.name || `Item ${strip.productIndex + 1}`} · {fmtMm(strip.stripWidth)}
+                              {blank.width && blank.length
+                                ? `${blank.width}×${blank.length}`
+                                : `Blank ${strip.productIndex + 1}`}{" "}
+                              · {fmtMm(strip.stripWidth)}
                             </td>
                             <td>
                               {fmtDim(strip.stripWidth, strip.cutLength)}
@@ -340,7 +343,7 @@ export default function App() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Item</th>
+                      <th>Blank</th>
                       <th>Pedido</th>
                       <th>Peso un.</th>
                       <th>Produzido</th>
@@ -352,11 +355,8 @@ export default function App() {
                       <tr key={product.blank.id}>
                         <td>
                           <strong style={{ color: BLANK_COLORS[i % BLANK_COLORS.length] }}>
-                            {product.blank.name || `Item ${i + 1}`}
-                          </strong>
-                          <div className="note" style={{ marginTop: 0 }}>
                             {fmtDim(product.blank.width, product.blank.length)}
-                          </div>
+                          </strong>
                         </td>
                         <td>
                           {fmtInt(product.blank.minQty)} un · {fmtKg(product.blank.minKg)}
