@@ -14,6 +14,7 @@ export type CoilInput = {
   kerf: number;
   edgeTrim: number;
   allowOvershoot?: boolean;
+  line?: string;
 };
 
 export type CalcInput = {

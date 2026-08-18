@@ -23,6 +23,10 @@ function reportFileName(plan: RankedPlan): string {
   return `liganer-corte-blanks-${plan.setupCount}prog-${stamp}.pdf`;
 }
 
+function lastTableY(doc: jsPDF): number {
+  return (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+}
+
 function drawStripBar(
   doc: jsPDF,
   plan: RankedPlan,
@@ -34,134 +38,124 @@ function drawStripBar(
   height: number,
 ) {
   const program = plan.programs[programIndex];
-  let cursor = x;
+  const scale = 0.82;
+  const barW = width * scale;
+  const barX = x + (width - barW) / 2;
+  let cursor = barX;
   for (const strip of program.pattern.strips) {
-    const w = (strip.stripWidth / coilWidth) * width;
+    const w = (strip.stripWidth / coilWidth) * barW;
     const rgb = hexToRgb(BLANK_COLORS[strip.productIndex % BLANK_COLORS.length]);
     doc.setFillColor(...rgb);
     doc.rect(cursor, y, w, height, "F");
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont("helvetica", "bold");
-    if (w > 18) {
-      doc.text(fmtInt(strip.stripWidth), cursor + w / 2, y + height / 2 + 1.2, { align: "center" });
+    if (w > 14) {
+      doc.text(fmtInt(strip.stripWidth), cursor + w / 2, y + height / 2 + 1, { align: "center" });
     }
     cursor += w;
   }
   if (program.pattern.waste > 0.5) {
-    const w = (program.pattern.waste / coilWidth) * width;
-    doc.setFillColor(236, 239, 242);
+    const w = Math.max((program.pattern.waste / coilWidth) * barW, 8);
+    doc.setFillColor(210, 214, 218);
     doc.rect(cursor, y, w, height, "F");
-    doc.setTextColor(91, 103, 115);
-    doc.setFontSize(8);
-    if (w > 22) {
-      doc.text(`sucata ${fmtInt(program.pattern.waste)}`, cursor + w / 2, y + height / 2 + 1.2, {
-        align: "center",
-      });
-    }
+    doc.setTextColor(70, 80, 88);
+    doc.setFontSize(6.5);
+    doc.setFont("helvetica", "bold");
+    doc.text("sucata", cursor + w / 2, y + height / 2 + 1, { align: "center" });
   }
   doc.setDrawColor(213, 221, 228);
-  doc.rect(x, y, width, height, "S");
+  doc.rect(barX, y, barW, height, "S");
   doc.setTextColor(27, 36, 44);
 }
 
 export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
-  const margin = 16;
+  const margin = 14;
   const contentW = pageW - margin * 2;
-  let y = 18;
+  let y = 16;
 
   doc.setFillColor(22, 56, 74);
-  doc.rect(0, 0, pageW, 28, "F");
+  doc.rect(0, 0, pageW, 24, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text("Liganer", margin, 12);
+  doc.setFontSize(13);
+  doc.text("Liganer", margin, 10);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text("Relatório de corte de blanks", margin, 19);
+  doc.setFontSize(9);
+  doc.text("Relatorio de corte de blanks", margin, 17);
   const generated = new Date().toLocaleString("pt-BR");
   doc.setFontSize(8);
-  doc.text(generated, pageW - margin, 12, { align: "right" });
-  doc.text(`${plan.setupCount} programa${plan.setupCount > 1 ? "s" : ""}`, pageW - margin, 19, {
+  doc.text(generated, pageW - margin, 10, { align: "right" });
+  doc.text(`${plan.setupCount} programa${plan.setupCount > 1 ? "s" : ""}`, pageW - margin, 17, {
     align: "right",
   });
 
-  y = 38;
+  y = 32;
   doc.setTextColor(27, 36, 44);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.text("Bobina", margin, y);
-  y += 3;
+  y += 2;
 
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
     theme: "plain",
-    styles: { fontSize: 9, cellPadding: 1.6 },
+    styles: { fontSize: 8.5, cellPadding: 1.2 },
+    columnStyles: {
+      0: { fontStyle: "bold", cellWidth: 42 },
+      1: { cellWidth: contentW - 42 },
+    },
     body: [
-      ["Largura", fmtMm(coil.width), "Espessura", `${fmtThickness(coil.thickness)} mm`],
-      ["Comprimento", fmtMeters(plan.totalCoilLengthMm), "Perda de faca", fmtMm(coil.kerf)],
-      [
-        "Refile (cada lado)",
-        fmtMm(coil.edgeTrim),
-        "Peso pode ultrapassar",
-        coil.allowOvershoot === false ? "Nao" : "Sim",
-      ],
+      ["Linha", coil.line?.trim() ? coil.line.trim() : "-"],
+      ["Espessura", `${fmtThickness(coil.thickness)} mm`],
+      ["Largura", fmtMm(coil.width)],
+      ["Refile (cada lado)", fmtMm(coil.edgeTrim)],
+      ["Perda entre tiras / faca", fmtMm(coil.kerf)],
+      ["Comprimento", fmtMeters(plan.totalCoilLengthMm)],
+      ["Peso pode ultrapassar", coil.allowOvershoot === false ? "Nao" : "Sim"],
     ],
   });
 
-  y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+  y = lastTableY(doc) + 6;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(27, 36, 44);
   doc.text("Resumo do plano", margin, y);
-  y += 4;
+  y += 2;
 
-  const kpis = [
-    ["Aproveitamento", fmtPct(plan.yieldPercent)],
-    ["Peso da bobina", fmtKg(plan.coilWeightKg)],
-    ["Peso útil", fmtKg(plan.usefulWeightKg)],
-    ["Sucata", fmtKg(plan.scrapKg)],
-  ];
-  const boxW = contentW / 4 - 2;
-  kpis.forEach((kpi, i) => {
-    const x = margin + i * (boxW + 2.6);
-    doc.setFillColor(i === 0 ? 231 : 246, i === 0 ? 244 : 248, i === 0 ? 236 : 250);
-    doc.roundedRect(x, y, boxW, 16, 2, 2, "F");
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(91, 103, 115);
-    doc.text(kpi[0], x + 3, y + 5.5);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(i === 0 ? 45 : 27, i === 0 ? 106 : 36, i === 0 ? 79 : 44);
-    doc.text(kpi[1], x + 3, y + 12);
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    head: [["Aproveitamento", "Peso da bobina", "Peso util", "Sucata"]],
+    body: [[fmtPct(plan.yieldPercent), fmtKg(plan.coilWeightKg), fmtKg(plan.usefulWeightKg), fmtKg(plan.scrapKg)]],
+    headStyles: { fillColor: [22, 56, 74], textColor: 255, fontSize: 7.5, halign: "center" },
+    bodyStyles: { fontSize: 9, halign: "center", fontStyle: "bold" },
+    styles: { cellPadding: 2 },
   });
 
-  y += 24;
+  y = lastTableY(doc) + 8;
   plan.programs.forEach((program, idx) => {
-    const needed = 52;
-    if (y + needed > 280) {
+    const needed = 48;
+    if (y + needed > 275) {
       doc.addPage();
-      y = 18;
+      y = 16;
     }
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(27, 36, 44);
-    const strips = program.pattern.strips
-      .map((s) => `${fmtInt(s.stripWidth)} mm`)
-      .join(" + ");
+    const strips = program.pattern.strips.map((s) => `${fmtInt(s.stripWidth)} mm`).join(" + ");
     doc.text(`Programa ${idx + 1}  ·  ${fmtMeters(program.coilLengthMm)}  ·  ${strips}`, margin, y);
-    y += 4;
-    drawStripBar(doc, plan, coil.width, idx, margin, y, contentW, 10);
-    y += 14;
+    y += 3;
+    drawStripBar(doc, plan, coil.width, idx, margin, y, contentW, 8);
+    y += 11;
 
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [["Tira", "Orientação", "Peças nesta tira"]],
+      head: [["Tira", "Orientacao", "Pecas nesta tira"]],
       body: program.pattern.strips.map((strip) => {
         const n = Math.floor((program.coilLengthMm + 1e-6) / strip.cutLength);
         return [
@@ -170,32 +164,37 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
           fmtInt(n),
         ];
       }),
-      headStyles: { fillColor: [22, 56, 74], textColor: 255, fontSize: 8 },
-      styles: { fontSize: 9, cellPadding: 2 },
+      headStyles: { fillColor: [22, 56, 74], textColor: 255, fontSize: 7.5 },
+      styles: { fontSize: 8, cellPadding: 1.6 },
       columnStyles: { 2: { halign: "right" } },
     });
-    y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 5;
+    y = lastTableY(doc) + 4;
     const loss = programLoss(program, coil);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(91, 103, 115);
-    doc.text(
-      `Perda: ${fmtPct(loss.lossPercent)}  ·  sucata ${fmtKg(loss.scrapKg)}  ·  largura não usada ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})`,
-      margin,
-      y,
-    );
-    y += 8;
+    autoTable(doc, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      theme: "plain",
+      styles: { fontSize: 8, cellPadding: 1, textColor: [91, 103, 115] },
+      body: [
+        [
+          `Perda: ${fmtPct(loss.lossPercent)}`,
+          `Sucata: ${fmtKg(loss.scrapKg)}`,
+          `Largura nao usada: ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})`,
+        ],
+      ],
+    });
+    y = lastTableY(doc) + 7;
   });
 
-  if (y + 40 > 280) {
+  if (y + 36 > 275) {
     doc.addPage();
-    y = 18;
+    y = 16;
   }
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(27, 36, 44);
-  doc.text("Produção por blank", margin, y);
-  y += 3;
+  doc.text("Producao por blank", margin, y);
+  y += 2;
 
   autoTable(doc, {
     startY: y,
@@ -208,14 +207,14 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       `${fmtInt(product.pieces)} un`,
       fmtKg(product.weightKg),
     ]),
-    headStyles: { fillColor: [22, 56, 74], textColor: 255, fontSize: 8 },
-    styles: { fontSize: 9, cellPadding: 2.2 },
+    headStyles: { fillColor: [22, 56, 74], textColor: 255, fontSize: 7.5 },
+    styles: { fontSize: 8, cellPadding: 1.8 },
     columnStyles: { 3: { halign: "right" }, 4: { halign: "right" } },
   });
 
-  y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+  y = lastTableY(doc) + 6;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(91, 103, 115);
   doc.text(
     coil.allowOvershoot === false
@@ -231,7 +230,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(140, 148, 156);
-    doc.text(`Página ${i} de ${pageCount}`, pageW / 2, 291, { align: "center" });
+    doc.text(`Pagina ${i} de ${pageCount}`, pageW / 2, 291, { align: "center" });
   }
 
   return doc;

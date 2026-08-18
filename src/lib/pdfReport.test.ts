@@ -5,7 +5,7 @@ import { DEFAULT_DENSITY } from "./types";
 
 describe("pdfReport", () => {
   it("gera um PDF do plano selecionado", () => {
-    const coil = { width: 1250, thickness: 0.4, density: DEFAULT_DENSITY, kerf: 0, edgeTrim: 0 };
+    const coil = { width: 1250, thickness: 0.4, density: DEFAULT_DENSITY, kerf: 0, edgeTrim: 0, line: "430 2B" };
     const result = optimizeCutting({
       coil,
       blanks: [

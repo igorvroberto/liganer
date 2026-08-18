@@ -21,6 +21,7 @@ const EXAMPLE_COIL: CoilInput = {
   kerf: 0,
   edgeTrim: 0,
   allowOvershoot: true,
+  line: "",
 };
 
 const EXAMPLE_BLANKS: BlankInput[] = [
@@ -199,12 +200,12 @@ export default function App() {
         <h2>Bobina</h2>
         <div className="fields coil-fields">
           <label className="field">
-            <span>Largura original da bobina (mm)</span>
+            <span>Linha</span>
             <input
-              type="number"
-              min={1}
-              value={coil.width || ""}
-              onChange={(e) => updateCoil({ width: Number(e.target.value) })}
+              type="text"
+              placeholder="Ex.: 430 2B"
+              value={coil.line ?? ""}
+              onChange={(e) => updateCoil({ line: e.target.value })}
             />
           </label>
           <label className="field">
@@ -229,13 +230,12 @@ export default function App() {
             />
           </label>
           <label className="field">
-            <span>Perda entre tiras / faca (mm)</span>
+            <span>Largura original da bobina (mm)</span>
             <input
               type="number"
-              min={0}
-              step={0.5}
-              value={coil.kerf}
-              onChange={(e) => updateCoil({ kerf: Number(e.target.value) })}
+              min={1}
+              value={coil.width || ""}
+              onChange={(e) => updateCoil({ width: Number(e.target.value) })}
             />
           </label>
           <label className="field">
@@ -246,6 +246,16 @@ export default function App() {
               step={0.5}
               value={coil.edgeTrim}
               onChange={(e) => updateCoil({ edgeTrim: Number(e.target.value) })}
+            />
+          </label>
+          <label className="field">
+            <span>Perda entre tiras / faca (mm)</span>
+            <input
+              type="number"
+              min={0}
+              step={0.5}
+              value={coil.kerf}
+              onChange={(e) => updateCoil({ kerf: Number(e.target.value) })}
             />
           </label>
         </div>
