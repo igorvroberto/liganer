@@ -43,6 +43,7 @@ function drawStripBar(
   const program = plan.programs[programIndex];
   const barW = width;
   const barX = x;
+  const stripColor = (idx: number) => BLANK_COLORS[idx % BLANK_COLORS.length];
 
   const paint = (
     colorOf: (index: number) => string,
@@ -63,9 +64,9 @@ function drawStripBar(
       cursor += w;
     }
 
-    for (const strip of program.pattern.strips) {
+    for (const [idx, strip] of program.pattern.strips.entries()) {
       const w = (strip.stripWidth / coilWidth) * barW;
-      const rgb = hexToRgb(colorOf(strip.productIndex));
+      const rgb = hexToRgb(colorOf(idx));
       doc.setFillColor(...rgb);
       doc.rect(cursor, rowY, w, height, "F");
       doc.setTextColor(255, 255, 255);
@@ -109,17 +110,16 @@ function drawStripBar(
     doc.rect(barX, rowY, barW, height, "S");
   };
 
-  const colorOf = (index: number) => BLANK_COLORS[index % BLANK_COLORS.length];
-  paint(colorOf, (strip) => fmtInt(strip.stripWidth), y);
+  paint(stripColor, (strip) => fmtInt(strip.stripWidth), y);
 
   // segunda linha: apenas os blanks, sem refile nem sucata, escala pela largura útil
   const usableWidth = coilWidth - 2 * edgeTrim;
   const usedWidth = program.pattern.strips.reduce((s, strip) => s + strip.stripWidth, 0);
   const blankScale = usedWidth > 0 ? usableWidth / usedWidth : 1;
   let cursor2 = barX;
-  for (const strip of program.pattern.strips) {
+  for (const [idx, strip] of program.pattern.strips.entries()) {
     const w = (strip.stripWidth * blankScale / coilWidth) * barW;
-    const rgb = hexToRgb(colorOf(strip.productIndex));
+    const rgb = hexToRgb(stripColor(idx));
     doc.setFillColor(...rgb);
     doc.rect(cursor2, y + height + 2, w, height, "F");
     doc.setTextColor(255, 255, 255);

@@ -39,6 +39,7 @@ const EXAMPLE_MODES: Record<string, "qty" | "weight"> = {
 
 function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult; coilWidth: number; edgeTrim: number }) {
   const pct = (mm: number) => `${(mm / coilWidth) * 100}%`;
+  const stripColor = (idx: number) => BLANK_COLORS[idx % BLANK_COLORS.length];
 
   return (
     <div className="cut-preview">
@@ -54,7 +55,7 @@ function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult;
             className="pattern-seg"
             style={{
               width: pct(strip.stripWidth),
-              background: BLANK_COLORS[strip.productIndex % BLANK_COLORS.length],
+              background: stripColor(idx),
             }}
           >
             {fmtInt(strip.stripWidth)}
@@ -77,7 +78,7 @@ function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult;
           <div className="lane lane-spacer" style={{ flex: `${edgeTrim} 0 0` }} />
         )}
         {program.pattern.strips.map((strip, idx) => {
-          const color = BLANK_COLORS[strip.productIndex % BLANK_COLORS.length];
+          const color = stripColor(idx);
           return (
             <div
               key={`${strip.productIndex}-${idx}`}
