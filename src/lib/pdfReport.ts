@@ -174,7 +174,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Preço bobina fator 100", coil.priceFactor100 != null ? fmtCurrency(coil.priceFactor100, 4) : "-"],
       ["Tipo de bobina", coil.coilType === "reduzida" ? "Reduzida" : "Inteira"],
       ["Fator utilizado", coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-"],
-      ["Preço fator utilizado", usedFactorPrice != null ? fmtCurrency(usedFactorPrice, 4) : "-"],
+      ["Preço fator utilizado", usedFactorPrice != null ? fmtCurrency(usedFactorPrice) : "-"],
       ["Perda longitudinal", `${fmtNumber(transversalPct, 2)}%`],
       ["Perda transversal", `${fmtNumber(Math.max(0, lossPct - transversalPct), 2)}%`],
       ["Perda total", `${fmtNumber(lossPct, 2)}%`],

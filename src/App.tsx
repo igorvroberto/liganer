@@ -345,7 +345,7 @@ export default function App() {
               className="input-readonly"
               value={(() => {
                 const p = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
-                return p !== null ? fmtCurrency(p, 4) : "—";
+                return p !== null ? fmtCurrency(p) : "—";
               })()}
             />
           </label>
