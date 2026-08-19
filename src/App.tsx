@@ -37,17 +37,23 @@ const EXAMPLE_MODES: Record<string, "qty" | "weight"> = {
   "blank-4": "weight",
 };
 
-function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth: number }) {
+function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult; coilWidth: number; edgeTrim: number }) {
+  const pct = (mm: number) => `${(mm / coilWidth) * 100}%`;
 
   return (
     <div className="cut-preview">
       <div className="pattern-bar" title={`Largura da bobina ${fmtMm(coilWidth)}`}>
+        {edgeTrim > 0 && (
+          <div className="pattern-seg refile" style={{ width: pct(edgeTrim) }}>
+            {edgeTrim >= 8 ? `${fmtInt(edgeTrim)}` : ""}
+          </div>
+        )}
         {program.pattern.strips.map((strip, idx) => (
           <div
             key={`bar-${strip.productIndex}-${idx}`}
             className="pattern-seg"
             style={{
-              width: `${(strip.stripWidth / coilWidth) * 100}%`,
+              width: pct(strip.stripWidth),
               background: BLANK_COLORS[strip.productIndex % BLANK_COLORS.length],
             }}
           >
@@ -55,16 +61,21 @@ function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth
           </div>
         ))}
         {program.pattern.waste > 0.5 && (
-          <div
-            className="pattern-seg waste"
-            style={{ width: `${(program.pattern.waste / coilWidth) * 100}%` }}
-          >
+          <div className="pattern-seg waste" style={{ width: pct(program.pattern.waste) }}>
             sucata {fmtInt(program.pattern.waste)}
+          </div>
+        )}
+        {edgeTrim > 0 && (
+          <div className="pattern-seg refile" style={{ width: pct(edgeTrim) }}>
+            {edgeTrim >= 8 ? `${fmtInt(edgeTrim)}` : ""}
           </div>
         )}
       </div>
       <div className="cut-preview-gap" aria-hidden="true" />
       <div className="lanes" aria-hidden="true">
+        {edgeTrim > 0 && (
+          <div className="lane lane-refile" style={{ flex: `${edgeTrim} 0 0` }} />
+        )}
         {program.pattern.strips.map((strip, idx) => {
           const color = BLANK_COLORS[strip.productIndex % BLANK_COLORS.length];
           return (
@@ -81,6 +92,9 @@ function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth
         })}
         {program.pattern.waste > 0.5 && (
           <div className="lane lane-waste" style={{ flex: `${program.pattern.waste} 1 0` }} aria-hidden="true" />
+        )}
+        {edgeTrim > 0 && (
+          <div className="lane lane-refile" style={{ flex: `${edgeTrim} 0 0` }} />
         )}
       </div>
     </div>
@@ -491,7 +505,7 @@ export default function App() {
                     {patternSummary(program, plan.products)}
                   </h3>
                 </div>
-                  <LanePreview program={program} coilWidth={coil.width} />
+                  <LanePreview program={program} coilWidth={coil.width} edgeTrim={coil.edgeTrim} />
                   <table>
                     <thead>
                       <tr>

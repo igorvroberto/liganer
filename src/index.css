@@ -505,6 +505,31 @@ select:focus {
   font-weight: 650;
 }
 
+.pattern-seg.refile {
+  background: repeating-linear-gradient(
+    45deg,
+    #c8d0d8,
+    #c8d0d8 4px,
+    #b8c2cc 4px,
+    #b8c2cc 8px
+  );
+  color: #5b6773;
+  font-size: 0.65rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.lane-refile {
+  background: repeating-linear-gradient(
+    45deg,
+    #c8d0d8,
+    #c8d0d8 4px,
+    #b8c2cc 4px,
+    #b8c2cc 8px
+  );
+  flex-shrink: 0;
+}
+
 .program {
   border: 1px solid var(--line);
   border-radius: 14px;
