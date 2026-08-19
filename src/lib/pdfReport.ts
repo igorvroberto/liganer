@@ -32,6 +32,7 @@ function drawStripBar(
   doc: jsPDF,
   plan: RankedPlan,
   coilWidth: number,
+  edgeTrim: number,
   programIndex: number,
   x: number,
   y: number,
@@ -40,9 +41,9 @@ function drawStripBar(
   fontName: string,
 ) {
   const program = plan.programs[programIndex];
-  const scale = 0.82;
-  const barW = width * scale;
-  const barX = x + (width - barW) / 2;
+  const barW = width;
+  const barX = x;
+  const stripColor = (idx: number) => BLANK_COLORS[idx % BLANK_COLORS.length];
 
   const paint = (
     colorOf: (index: number) => string,
@@ -50,9 +51,22 @@ function drawStripBar(
     rowY: number,
   ) => {
     let cursor = barX;
-    for (const strip of program.pattern.strips) {
+
+    // refile esquerdo
+    if (edgeTrim > 0) {
+      const w = (edgeTrim / coilWidth) * barW;
+      doc.setFillColor(180, 188, 196);
+      doc.rect(cursor, rowY, w, height, "F");
+      doc.setTextColor(70, 80, 88);
+      doc.setFontSize(5.5);
+      doc.setFont(fontName, "bold");
+      if (w > 6) doc.text(`${fmtInt(edgeTrim)}`, cursor + w / 2, rowY + height / 2 + 1, { align: "center" });
+      cursor += w;
+    }
+
+    for (const [idx, strip] of program.pattern.strips.entries()) {
       const w = (strip.stripWidth / coilWidth) * barW;
-      const rgb = hexToRgb(colorOf(strip.productIndex));
+      const rgb = hexToRgb(colorOf(idx));
       doc.setFillColor(...rgb);
       doc.rect(cursor, rowY, w, height, "F");
       doc.setTextColor(255, 255, 255);
@@ -63,6 +77,7 @@ function drawStripBar(
       }
       cursor += w;
     }
+
     if (program.pattern.waste > 0.5) {
       const w = (program.pattern.waste / coilWidth) * barW;
       doc.setFillColor(210, 214, 218);
@@ -70,21 +85,55 @@ function drawStripBar(
       doc.setTextColor(70, 80, 88);
       doc.setFontSize(6.5);
       doc.setFont(fontName, "bold");
-      const wasteLabel = `sucata ${fmtInt(program.pattern.waste)}`;
+      const wasteLabel = `sobra ${fmtInt(program.pattern.waste)}`;
       const labelW = doc.getTextWidth(wasteLabel);
       if (w > labelW + 1.2) {
         doc.text(wasteLabel, cursor + w / 2, rowY + height / 2 + 1, { align: "center" });
       } else {
         doc.text(wasteLabel, cursor + Math.max(w, 0.8) + 1.4, rowY + height / 2 + 1, { align: "left" });
       }
+      cursor += Math.max(w, 0.8);
     }
+
+    // refile direito
+    if (edgeTrim > 0) {
+      const w = (edgeTrim / coilWidth) * barW;
+      doc.setFillColor(180, 188, 196);
+      doc.rect(cursor, rowY, w, height, "F");
+      doc.setTextColor(70, 80, 88);
+      doc.setFontSize(5.5);
+      doc.setFont(fontName, "bold");
+      if (w > 6) doc.text(`${fmtInt(edgeTrim)}`, cursor + w / 2, rowY + height / 2 + 1, { align: "center" });
+    }
+
     doc.setDrawColor(213, 221, 228);
     doc.rect(barX, rowY, barW, height, "S");
   };
 
-  const colorOf = (index: number) => BLANK_COLORS[index % BLANK_COLORS.length];
-  paint(colorOf, (strip) => fmtInt(strip.stripWidth), y);
-  paint(colorOf, (strip) => fmtInt(strip.cutLength), y + height + 2);
+  paint(stripColor, (strip) => fmtInt(strip.stripWidth), y);
+
+  // segunda linha: apenas os blanks, sem refile nem sucata, escala pela largura útil
+  const usableWidth = coilWidth - 2 * edgeTrim;
+  const usedWidth = program.pattern.strips.reduce((s, strip) => s + strip.stripWidth, 0);
+  const blankScale = usedWidth > 0 ? usableWidth / usedWidth : 1;
+  let cursor2 = barX;
+  for (const [idx, strip] of program.pattern.strips.entries()) {
+    const w = (strip.stripWidth * blankScale / coilWidth) * barW;
+    const rgb = hexToRgb(stripColor(idx));
+    doc.setFillColor(...rgb);
+    doc.rect(cursor2, y + height + 2, w, height, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
+    doc.setFont(fontName, "bold");
+    const label = `${fmtInt(strip.stripWidth)}×${fmtInt(strip.cutLength)}`;
+    if (w > doc.getTextWidth(label) + 2) {
+      doc.text(label, cursor2 + w / 2, y + height + 2 + height / 2 + 1, { align: "center" });
+    }
+    cursor2 += w;
+  }
+  doc.setDrawColor(213, 221, 228);
+  doc.rect(barX, y + height + 2, cursor2 - barX, height, "S");
+
   doc.setTextColor(27, 36, 44);
 }
 
@@ -135,33 +184,52 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Largura", fmtMm(coil.width)],
       ["Refile (cada lado)", fmtMm(coil.edgeTrim)],
       ["Perda entre tiras/faca", fmtMm(coil.kerf)],
-      ["Comprimento", fmtMeters(plan.totalCoilLengthMm)],
       ["Peso pode ultrapassar", coil.allowOvershoot === false ? "Não" : "Sim"],
-      ...((coil.priceFactor100 ?? 0) > 0
-        ? [
-            ["Preço fator 100", fmtCurrency(coil.priceFactor100!, 4)],
-            [
-              "Fator utilizado",
-              coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-",
-            ],
-            [
-              "Preço fator utilizado",
-              coil.priceFactor100 != null && coil.usedFactor != null && coil.usedFactor > 0
-                ? fmtCurrency(coil.priceFactor100 / (coil.usedFactor / 100), 4)
-                : "-",
-            ],
-          ]
-        : []),
-      ...((coil.servicePrice ?? 0) > 0 || coil.serviceDescription
-        ? [
-            ...(coil.serviceDescription?.trim()
-              ? [["Serviço", coil.serviceDescription.trim()]]
-              : []),
-            ...(coil.servicePrice != null && coil.servicePrice > 0
-              ? [["Preço serviço", fmtCurrency(coil.servicePrice)]]
-              : []),
-          ]
-        : []),
+    ],
+  });
+
+  y = lastTableY(doc) + 6;
+  doc.setFont(fontName, "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(27, 36, 44);
+  doc.text("Formação de preço", margin, y);
+  y += 2;
+
+  const usedFactorPrice = coil.priceFactor100 != null && coil.usedFactor != null && coil.usedFactor > 0
+    ? coil.priceFactor100 / (coil.usedFactor / 100)
+    : null;
+  const servicePrice = coil.servicePrice ?? 0;
+  const lossPct = 100 - plan.yieldPercent;
+  const totalLength = plan.programs.reduce((s, p) => s + p.coilLengthMm, 0);
+  const weightedWaste = plan.programs.reduce((s, p) => s + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
+  const transversalPct = totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
+  const priceWithTotalLoss = usedFactorPrice != null ? usedFactorPrice * (1 + lossPct / 100) + servicePrice : null;
+  const priceWithLongLoss = usedFactorPrice != null ? usedFactorPrice * (1 + transversalPct / 100) + servicePrice : null;
+  const priceWithoutLoss = usedFactorPrice != null ? usedFactorPrice + servicePrice : null;
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    theme: "plain",
+    styles: { font: fontName, fontSize: 8.5, cellPadding: 1.2 },
+    bodyStyles: { font: fontName },
+    columnStyles: {
+      0: { fontStyle: "bold", cellWidth: 52 },
+      1: { cellWidth: contentW - 52 },
+    },
+    body: [
+      ["Preço bobina fator 100", coil.priceFactor100 != null ? fmtCurrency(coil.priceFactor100, 4) : "-"],
+      ["Tipo de bobina", coil.coilType === "reduzida" ? "Reduzida" : "Inteira"],
+      ["Fator utilizado", coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-"],
+      ["Preço fator utilizado", usedFactorPrice != null ? fmtCurrency(usedFactorPrice) : "-"],
+      ["Perda longitudinal", `${fmtNumber(transversalPct, 2)}%`],
+      ["Perda transversal", `${fmtNumber(Math.max(0, lossPct - transversalPct), 2)}%`],
+      ["Perda total", `${fmtNumber(lossPct, 2)}%`],
+      ["Preço serviço", servicePrice > 0 ? fmtCurrency(servicePrice) : "-"],
+      ["Descrição serviço", coil.serviceDescription?.trim() || "-"],
+      ["Preço considerando perda total", priceWithTotalLoss != null ? fmtCurrency(priceWithTotalLoss) : "-"],
+      ["Preço considerando perda longitudinal", priceWithLongLoss != null ? fmtCurrency(priceWithLongLoss) : "-"],
+      ["Preço desconsiderando perda", priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss) : "-"],
     ],
   });
 
@@ -195,7 +263,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     const strips = program.pattern.strips.map((s) => `${fmtInt(s.stripWidth)} mm`).join(" + ");
     doc.text(`Programa ${idx + 1}  ·  ${fmtMeters(program.coilLengthMm)}  ·  ${strips}`, margin, y);
     y += 3;
-    drawStripBar(doc, plan, coil.width, idx, margin, y, contentW, 8, fontName);
+    drawStripBar(doc, plan, coil.width, coil.edgeTrim, idx, margin, y, contentW, 8, fontName);
     y += 20;
 
     autoTable(doc, {
@@ -227,7 +295,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
         [
           `Perda: ${fmtPct(loss.lossPercent)}`,
           `Sucata: ${fmtKg(loss.scrapKg)}`,
-          `Largura não usada: ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})`,
+          `Sobra: ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})${coil.edgeTrim > 0 ? ` · Refile: ${fmtMm(coil.edgeTrim * 2)} (2×${fmtMm(coil.edgeTrim)})` : ""}`,
         ],
       ],
     });

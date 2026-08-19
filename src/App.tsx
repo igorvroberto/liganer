@@ -37,36 +37,48 @@ const EXAMPLE_MODES: Record<string, "qty" | "weight"> = {
   "blank-4": "weight",
 };
 
-function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth: number }) {
+function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult; coilWidth: number; edgeTrim: number }) {
+  const pct = (mm: number) => `${(mm / coilWidth) * 100}%`;
+  const stripColor = (idx: number) => BLANK_COLORS[idx % BLANK_COLORS.length];
 
   return (
     <div className="cut-preview">
       <div className="pattern-bar" title={`Largura da bobina ${fmtMm(coilWidth)}`}>
+        {edgeTrim > 0 && (
+          <div className="pattern-seg refile" style={{ width: pct(edgeTrim) }}>
+            {edgeTrim >= 8 ? `${fmtInt(edgeTrim)}` : ""}
+          </div>
+        )}
         {program.pattern.strips.map((strip, idx) => (
           <div
             key={`bar-${strip.productIndex}-${idx}`}
             className="pattern-seg"
             style={{
-              width: `${(strip.stripWidth / coilWidth) * 100}%`,
-              background: BLANK_COLORS[strip.productIndex % BLANK_COLORS.length],
+              width: pct(strip.stripWidth),
+              background: stripColor(idx),
             }}
           >
             {fmtInt(strip.stripWidth)}
           </div>
         ))}
         {program.pattern.waste > 0.5 && (
-          <div
-            className="pattern-seg waste"
-            style={{ width: `${(program.pattern.waste / coilWidth) * 100}%` }}
-          >
-            sucata {fmtInt(program.pattern.waste)}
+          <div className="pattern-seg waste" style={{ width: pct(program.pattern.waste) }}>
+            sobra {fmtInt(program.pattern.waste)}
+          </div>
+        )}
+        {edgeTrim > 0 && (
+          <div className="pattern-seg refile" style={{ width: pct(edgeTrim) }}>
+            {edgeTrim >= 8 ? `${fmtInt(edgeTrim)}` : ""}
           </div>
         )}
       </div>
       <div className="cut-preview-gap" aria-hidden="true" />
       <div className="lanes" aria-hidden="true">
+        {edgeTrim > 0 && (
+          <div className="lane lane-spacer" style={{ flex: `${edgeTrim} 0 0` }} />
+        )}
         {program.pattern.strips.map((strip, idx) => {
-          const color = BLANK_COLORS[strip.productIndex % BLANK_COLORS.length];
+          const color = stripColor(idx);
           return (
             <div
               key={`${strip.productIndex}-${idx}`}
@@ -74,13 +86,16 @@ function LanePreview({ program, coilWidth }: { program: ProgramResult; coilWidth
               style={{ flex: `${strip.stripWidth} 1 0` }}
             >
               <div className="blank-rect" style={{ background: color }}>
-                {fmtInt(strip.stripWidth)}×{fmtInt(strip.cutLength)}
+                {fmtDim(strip.stripWidth, strip.cutLength)}
               </div>
             </div>
           );
         })}
         {program.pattern.waste > 0.5 && (
-          <div className="lane lane-waste" style={{ flex: `${program.pattern.waste} 1 0` }} aria-hidden="true" />
+          <div className="lane lane-spacer" style={{ flex: `${program.pattern.waste} 0 0` }} />
+        )}
+        {edgeTrim > 0 && (
+          <div className="lane lane-spacer" style={{ flex: `${edgeTrim} 0 0` }} />
         )}
       </div>
     </div>
@@ -118,8 +133,8 @@ function ProgramLossNote({ program, coil }: { program: ProgramResult; coil: Coil
       Perda: <strong>{fmtPct(loss.lossPercent)}</strong>
       <span>
         {" "}
-        · sucata {fmtKg(loss.scrapKg)} · largura não usada {fmtMm(loss.widthWasteMm)} (
-        {fmtPct(loss.widthLossPercent)})
+        · sucata {fmtKg(loss.scrapKg)} · sobra {fmtMm(loss.widthWasteMm)} ({fmtPct(loss.widthLossPercent)})
+        {coil.edgeTrim > 0 && ` · refile ${fmtMm(coil.edgeTrim * 2)} (2×${fmtMm(coil.edgeTrim)})`}
       </span>
     </p>
   );
@@ -300,7 +315,7 @@ export default function App() {
         <h2>Formação de preço</h2>
         <div className="fields coil-fields">
           <label className="field">
-            <span>Preço fator 100 (R$/Kg)</span>
+            <span>Preço bobina fator 100 (R$/Kg)</span>
             <input
               inputMode="decimal"
               placeholder="Ex.: 45,00"
@@ -312,6 +327,16 @@ export default function App() {
                 updateCoil({ priceFactor100: v ?? undefined });
               }}
             />
+          </label>
+          <label className="field">
+            <span>Tipo de bobina</span>
+            <select
+              value={coil.coilType ?? "inteira"}
+              onChange={(e) => updateCoil({ coilType: e.target.value as "inteira" | "reduzida" })}
+            >
+              <option value="inteira">Inteira</option>
+              <option value="reduzida">Reduzida</option>
+            </select>
           </label>
           <label className="field">
             <span>Fator utilizado</span>
@@ -335,8 +360,36 @@ export default function App() {
               className="input-readonly"
               value={(() => {
                 const p = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
-                return p !== null ? fmtCurrency(p, 4) : "—";
+                return p !== null ? fmtCurrency(p) : "—";
               })()}
+            />
+          </label>
+          <label className="field">
+            <span>Perda longitudinal (%)</span>
+            <input
+              readOnly
+              tabIndex={-1}
+              className="input-readonly"
+              value={plan ? (() => {
+                const weightedWaste = plan.programs.reduce((sum, p) => sum + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
+                const totalLength = plan.programs.reduce((sum, p) => sum + p.coilLengthMm, 0);
+                return fmtPct(totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0);
+              })() : "—"}
+            />
+          </label>
+          <label className="field">
+            <span>Perda transversal (%)</span>
+            <input
+              readOnly
+              tabIndex={-1}
+              className="input-readonly"
+              value={plan ? (() => {
+                const totalLossPct = 100 - plan.yieldPercent;
+                const weightedWaste = plan.programs.reduce((sum, p) => sum + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
+                const totalLength = plan.programs.reduce((sum, p) => sum + p.coilLengthMm, 0);
+                const longitudinalPct = totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
+                return fmtPct(Math.max(0, totalLossPct - longitudinalPct));
+              })() : "—"}
             />
           </label>
           <label className="field">
@@ -377,20 +430,28 @@ export default function App() {
         {(() => {
           const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
           const servicePrice = coil.servicePrice ?? 0;
-          const wasteMm = plan ? plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0) : 0;
-          const lossPct = plan ? (100 - plan.yieldPercent) : 0;
-          const lossMultiplier = wasteMm < 100 ? 1 : wasteMm < 300 ? 0.30 : 0.20;
-          const priceWithLoss = usedPrice != null ? usedPrice + servicePrice + lossPct * lossMultiplier : null;
+          const totalLossPct = plan ? (100 - plan.yieldPercent) : 0;
+          const longitudinalPct = plan ? (() => {
+            const totalLength = plan.programs.reduce((s, p) => s + p.coilLengthMm, 0);
+            const weightedWaste = plan.programs.reduce((s, p) => s + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
+            return totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
+          })() : 0;
+          const priceWithTotalLoss = usedPrice != null ? usedPrice * (1 + totalLossPct / 100) + servicePrice : null;
+          const priceWithLongLoss = usedPrice != null ? usedPrice * (1 + longitudinalPct / 100) + servicePrice : null;
           const priceWithoutLoss = usedPrice != null ? usedPrice + servicePrice : null;
           return (
             <div className="pricing-results" style={{ marginTop: 16 }}>
               <div className="pricing-result highlight">
-                <span>Preço considerando perda (R$/Kg)</span>
-                <b>{priceWithLoss != null && plan ? fmtCurrency(priceWithLoss, 4) : "—"}</b>
+                <span>Preço considerando perda total (R$/Kg)</span>
+                <b>{priceWithTotalLoss != null && plan ? fmtCurrency(priceWithTotalLoss) : "—"}</b>
+              </div>
+              <div className="pricing-result highlight">
+                <span>Preço considerando perda longitudinal (R$/Kg)</span>
+                <b>{priceWithLongLoss != null && plan ? fmtCurrency(priceWithLongLoss) : "—"}</b>
               </div>
               <div className="pricing-result">
                 <span>Preço desconsiderando perda (R$/Kg)</span>
-                <b>{priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss, 4) : "—"}</b>
+                <b>{priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss) : "—"}</b>
               </div>
             </div>
           );
@@ -455,7 +516,7 @@ export default function App() {
                     {patternSummary(program, plan.products)}
                   </h3>
                 </div>
-                  <LanePreview program={program} coilWidth={coil.width} />
+                  <LanePreview program={program} coilWidth={coil.width} edgeTrim={coil.edgeTrim} />
                   <table>
                     <thead>
                       <tr>

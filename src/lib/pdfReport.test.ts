@@ -87,7 +87,7 @@ describe("pdfReport", () => {
     expect(text).toContain("Peso \u00fatil");
     expect(text).toContain("Orienta\u00e7\u00e3o");
     expect(text).toContain("Pe\u00e7as nesta tira");
-    expect(text).toContain("Largura n\u00e3o usada");
+    expect(text).toContain("Sobra");
     expect(text).toContain("Produ\u00e7\u00e3o por blank");
     expect(text).toContain("P\u00e1gina");
     expect(text).toContain("s\u00e3o");
@@ -113,6 +113,6 @@ describe("pdfReport", () => {
     if (!wasteProgram) return;
 
     const text = decodePdfText(pdfLatin1(buildPlanPdf(plan, coil)));
-    expect(text).toContain(`sucata ${fmtInt(wasteProgram.pattern.waste)}`);
+    expect(text).toContain(`sobra ${fmtInt(wasteProgram.pattern.waste)}`);
   });
 });
