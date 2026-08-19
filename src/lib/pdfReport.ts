@@ -135,7 +135,6 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Largura", fmtMm(coil.width)],
       ["Refile (cada lado)", fmtMm(coil.edgeTrim)],
       ["Perda entre tiras/faca", fmtMm(coil.kerf)],
-      ["Comprimento", fmtMeters(plan.totalCoilLengthMm)],
       ["Peso pode ultrapassar", coil.allowOvershoot === false ? "Não" : "Sim"],
     ],
   });
