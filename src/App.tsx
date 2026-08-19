@@ -23,36 +23,12 @@ const EMPTY_COIL: CoilInput = {
   line: "",
 };
 
-const EXAMPLE_COIL: CoilInput = {
-  width: 1250,
-  thickness: 0.4,
-  density: DEFAULT_DENSITY,
-  kerf: 0,
-  edgeTrim: 0,
-  allowOvershoot: true,
-  line: "",
-};
-
 const EMPTY_BLANKS: BlankInput[] = [
   { id: "blank-1", name: "", width: 0, length: 0, minKg: 0, minQty: 0 },
 ];
 
 const EMPTY_MODES: Record<string, "qty" | "weight"> = {
   "blank-1": "weight",
-};
-
-const EXAMPLE_BLANKS: BlankInput[] = [
-  { id: "blank-1", name: "", width: 600, length: 470, minKg: 1000, minQty: 1109 },
-  { id: "blank-2", name: "", width: 700, length: 500, minKg: 1000, minQty: 893 },
-  { id: "blank-3", name: "", width: 750, length: 550, minKg: 1000, minQty: 758 },
-  { id: "blank-4", name: "", width: 650, length: 530, minKg: 1000, minQty: 908 },
-];
-
-const EXAMPLE_MODES: Record<string, "qty" | "weight"> = {
-  "blank-1": "weight",
-  "blank-2": "weight",
-  "blank-3": "weight",
-  "blank-4": "weight",
 };
 
 function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult; coilWidth: number; edgeTrim: number }) {
@@ -199,17 +175,6 @@ export default function App() {
     setCoil((prev) => ({ ...prev, ...patch, density: DEFAULT_DENSITY }));
   };
 
-  const loadExample = () => {
-    setCoil(EXAMPLE_COIL);
-    setThicknessText(fmtThickness(EXAMPLE_COIL.thickness));
-    setPriceFactor100Text("");
-    setUsedFactorText("");
-    setServicePriceText("");
-    setBlanks(EXAMPLE_BLANKS);
-    setDemandModes(EXAMPLE_MODES);
-    setSelectedAlt(0);
-  };
-
   const setThickness = (value: number) => {
     updateCoil({ thickness: Number(value.toFixed(2)) });
     setThicknessText(fmtThickness(value));
@@ -231,11 +196,6 @@ export default function App() {
             peso, o outro valor é recalculado automaticamente. O sistema monta um ou vários
             programas de corte na bobina.
           </p>
-        </div>
-        <div className="hero-actions">
-          <button className="btn btn-secondary" type="button" onClick={loadExample}>
-            Carregar exemplo
-          </button>
         </div>
       </header>
 
