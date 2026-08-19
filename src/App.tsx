@@ -399,6 +399,27 @@ export default function App() {
             />
           </label>
         </div>
+        {(() => {
+          const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
+          const servicePrice = coil.servicePrice ?? 0;
+          const lossWasteMm = plan ? plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0) : 0;
+          const lossPct = plan ? (100 - plan.yieldPercent) : 0;
+          const lossMultiplier = lossWasteMm < 100 ? 1 : lossWasteMm < 300 ? 0.30 : 0.20;
+          const priceWithLoss = usedPrice != null ? usedPrice + servicePrice + lossPct * lossMultiplier : null;
+          const priceWithoutLoss = usedPrice != null ? usedPrice + servicePrice : null;
+          return (
+            <div className="pricing-results" style={{ marginTop: 16 }}>
+              <div className="pricing-result highlight">
+                <span>Preço considerando perda (R$/Kg)</span>
+                <b>{priceWithLoss != null && plan ? fmtCurrency(priceWithLoss, 4) : "—"}</b>
+              </div>
+              <div className="pricing-result">
+                <span>Preço desconsiderando perda (R$/Kg)</span>
+                <b>{priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss, 4) : "—"}</b>
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       <section className="card">
