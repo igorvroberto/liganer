@@ -73,6 +73,9 @@ function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult;
       </div>
       <div className="cut-preview-gap" aria-hidden="true" />
       <div className="lanes" aria-hidden="true">
+        {edgeTrim > 0 && (
+          <div className="lane lane-spacer" style={{ flex: `${edgeTrim} 0 0` }} />
+        )}
         {program.pattern.strips.map((strip, idx) => {
           const color = BLANK_COLORS[strip.productIndex % BLANK_COLORS.length];
           return (
@@ -87,6 +90,12 @@ function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult;
             </div>
           );
         })}
+        {program.pattern.waste > 0.5 && (
+          <div className="lane lane-spacer" style={{ flex: `${program.pattern.waste} 0 0` }} />
+        )}
+        {edgeTrim > 0 && (
+          <div className="lane lane-spacer" style={{ flex: `${edgeTrim} 0 0` }} />
+        )}
       </div>
     </div>
   );
