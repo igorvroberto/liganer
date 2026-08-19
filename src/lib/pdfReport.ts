@@ -111,7 +111,29 @@ function drawStripBar(
 
   const colorOf = (index: number) => BLANK_COLORS[index % BLANK_COLORS.length];
   paint(colorOf, (strip) => fmtInt(strip.stripWidth), y);
-  paint(colorOf, (strip) => fmtInt(strip.cutLength), y + height + 2);
+
+  // segunda linha: apenas os blanks, sem refile nem sucata, escala pela largura útil
+  const usableWidth = coilWidth - 2 * edgeTrim;
+  const usedWidth = program.pattern.strips.reduce((s, strip) => s + strip.stripWidth, 0);
+  const blankScale = usedWidth > 0 ? usableWidth / usedWidth : 1;
+  let cursor2 = barX;
+  for (const strip of program.pattern.strips) {
+    const w = (strip.stripWidth * blankScale / coilWidth) * barW;
+    const rgb = hexToRgb(colorOf(strip.productIndex));
+    doc.setFillColor(...rgb);
+    doc.rect(cursor2, y + height + 2, w, height, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
+    doc.setFont(fontName, "bold");
+    const label = `${fmtInt(strip.stripWidth)}×${fmtInt(strip.cutLength)}`;
+    if (w > doc.getTextWidth(label) + 2) {
+      doc.text(label, cursor2 + w / 2, y + height + 2 + height / 2 + 1, { align: "center" });
+    }
+    cursor2 += w;
+  }
+  doc.setDrawColor(213, 221, 228);
+  doc.rect(barX, y + height + 2, cursor2 - barX, height, "S");
+
   doc.setTextColor(27, 36, 44);
 }
 
