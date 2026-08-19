@@ -32,6 +32,7 @@ function drawStripBar(
   doc: jsPDF,
   plan: RankedPlan,
   coilWidth: number,
+  edgeTrim: number,
   programIndex: number,
   x: number,
   y: number,
@@ -40,9 +41,8 @@ function drawStripBar(
   fontName: string,
 ) {
   const program = plan.programs[programIndex];
-  const scale = 0.82;
-  const barW = width * scale;
-  const barX = x + (width - barW) / 2;
+  const barW = width;
+  const barX = x;
 
   const paint = (
     colorOf: (index: number) => string,
@@ -50,6 +50,19 @@ function drawStripBar(
     rowY: number,
   ) => {
     let cursor = barX;
+
+    // refile esquerdo
+    if (edgeTrim > 0) {
+      const w = (edgeTrim / coilWidth) * barW;
+      doc.setFillColor(180, 188, 196);
+      doc.rect(cursor, rowY, w, height, "F");
+      doc.setTextColor(70, 80, 88);
+      doc.setFontSize(5.5);
+      doc.setFont(fontName, "bold");
+      if (w > 6) doc.text(`${fmtInt(edgeTrim)}`, cursor + w / 2, rowY + height / 2 + 1, { align: "center" });
+      cursor += w;
+    }
+
     for (const strip of program.pattern.strips) {
       const w = (strip.stripWidth / coilWidth) * barW;
       const rgb = hexToRgb(colorOf(strip.productIndex));
@@ -63,6 +76,7 @@ function drawStripBar(
       }
       cursor += w;
     }
+
     if (program.pattern.waste > 0.5) {
       const w = (program.pattern.waste / coilWidth) * barW;
       doc.setFillColor(210, 214, 218);
@@ -77,7 +91,20 @@ function drawStripBar(
       } else {
         doc.text(wasteLabel, cursor + Math.max(w, 0.8) + 1.4, rowY + height / 2 + 1, { align: "left" });
       }
+      cursor += Math.max(w, 0.8);
     }
+
+    // refile direito
+    if (edgeTrim > 0) {
+      const w = (edgeTrim / coilWidth) * barW;
+      doc.setFillColor(180, 188, 196);
+      doc.rect(cursor, rowY, w, height, "F");
+      doc.setTextColor(70, 80, 88);
+      doc.setFontSize(5.5);
+      doc.setFont(fontName, "bold");
+      if (w > 6) doc.text(`${fmtInt(edgeTrim)}`, cursor + w / 2, rowY + height / 2 + 1, { align: "center" });
+    }
+
     doc.setDrawColor(213, 221, 228);
     doc.rect(barX, rowY, barW, height, "S");
   };
@@ -212,7 +239,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     const strips = program.pattern.strips.map((s) => `${fmtInt(s.stripWidth)} mm`).join(" + ");
     doc.text(`Programa ${idx + 1}  ·  ${fmtMeters(program.coilLengthMm)}  ·  ${strips}`, margin, y);
     y += 3;
-    drawStripBar(doc, plan, coil.width, idx, margin, y, contentW, 8, fontName);
+    drawStripBar(doc, plan, coil.width, coil.edgeTrim, idx, margin, y, contentW, 8, fontName);
     y += 20;
 
     autoTable(doc, {
