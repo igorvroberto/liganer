@@ -15,7 +15,7 @@ export type CoilInput = {
   edgeTrim: number;
   allowOvershoot?: boolean;
   line?: string;
-  /** Preço na tabela fator 100 (R$/kg) */
+  /** Preço na tabela fator 100 (R$/Kg) */
   priceFactor100?: number;
   /** Fator comercial utilizado (ex.: 170 = divide por 1,70) */
   usedFactor?: number;

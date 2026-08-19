@@ -116,7 +116,7 @@ export default function BlankItemsTable({
               <th>Largura (mm)</th>
               <th>Comprimento (mm)</th>
               <th>Quantidade (un)</th>
-              <th>Peso (kg)</th>
+              <th>Peso (Kg)</th>
               <th>Peso un.</th>
               <th />
             </tr>
@@ -176,7 +176,7 @@ export default function BlankItemsTable({
                   <td className="unit-cell">
                     {unitKg > 0 ? (
                       <>
-                        <strong>{fmtNumber(unitKg, 3)} kg</strong>
+                        <strong>{fmtNumber(unitKg, 3)} Kg</strong>
                         <span>por peça</span>
                       </>
                     ) : (
