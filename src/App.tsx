@@ -13,6 +13,16 @@ import {
   type RankedPlan,
 } from "./lib/types";
 
+const EMPTY_COIL: CoilInput = {
+  width: 0,
+  thickness: 0,
+  density: DEFAULT_DENSITY,
+  kerf: 0,
+  edgeTrim: 0,
+  allowOvershoot: true,
+  line: "",
+};
+
 const EXAMPLE_COIL: CoilInput = {
   width: 1250,
   thickness: 0.4,
@@ -21,6 +31,14 @@ const EXAMPLE_COIL: CoilInput = {
   edgeTrim: 0,
   allowOvershoot: true,
   line: "",
+};
+
+const EMPTY_BLANKS: BlankInput[] = [
+  { id: "blank-1", name: "", width: 0, length: 0, minKg: 0, minQty: 0 },
+];
+
+const EMPTY_MODES: Record<string, "qty" | "weight"> = {
+  "blank-1": "weight",
 };
 
 const EXAMPLE_BLANKS: BlankInput[] = [
@@ -156,13 +174,13 @@ function calcUsedFactorPrice(priceFactor100: number | undefined, usedFactor: num
 }
 
 export default function App() {
-  const [coil, setCoil] = useState<CoilInput>(EXAMPLE_COIL);
-  const [thicknessText, setThicknessText] = useState(fmtThickness(EXAMPLE_COIL.thickness));
+  const [coil, setCoil] = useState<CoilInput>(EMPTY_COIL);
+  const [thicknessText, setThicknessText] = useState("");
   const [priceFactor100Text, setPriceFactor100Text] = useState("");
   const [usedFactorText, setUsedFactorText] = useState("");
   const [servicepriceText, setServicePriceText] = useState("");
-  const [blanks, setBlanks] = useState<BlankInput[]>(EXAMPLE_BLANKS);
-  const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(EXAMPLE_MODES);
+  const [blanks, setBlanks] = useState<BlankInput[]>(EMPTY_BLANKS);
+  const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(EMPTY_MODES);
   const [selectedAlt, setSelectedAlt] = useState(0);
 
   useEffect(() => {

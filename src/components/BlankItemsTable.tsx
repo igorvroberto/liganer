@@ -82,7 +82,7 @@ export default function BlankItemsTable({
         name: "",
         width: 0,
         length: 0,
-        minKg: 1000,
+        minKg: 0,
         minQty: 0,
       },
     ]);
