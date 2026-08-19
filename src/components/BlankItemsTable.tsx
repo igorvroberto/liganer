@@ -138,7 +138,6 @@ export default function BlankItemsTable({
                       type="number"
                       min={1}
                       step={1}
-                      placeholder="600"
                       value={blank.width || ""}
                       onChange={(e) => updateBlank(blank.id, { width: Number(e.target.value) })}
                     />
@@ -148,7 +147,6 @@ export default function BlankItemsTable({
                       type="number"
                       min={1}
                       step={1}
-                      placeholder="470"
                       value={blank.length || ""}
                       onChange={(e) => updateBlank(blank.id, { length: Number(e.target.value) })}
                     />
