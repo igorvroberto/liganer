@@ -6,7 +6,6 @@ import { optimizeCutting, programLoss } from "./lib/optimize";
 import { downloadPlanPdf } from "./lib/pdfReport";
 import {
   BLANK_COLORS,
-  COMMON_THICKNESSES,
   DEFAULT_DENSITY,
   type BlankInput,
   type CoilInput,
@@ -269,21 +268,6 @@ export default function App() {
               onChange={(e) => updateCoil({ kerf: Number(e.target.value) })}
             />
           </label>
-        </div>
-        <div className="field span-all">
-          <span>Espessuras comuns</span>
-          <div className="chips">
-            {COMMON_THICKNESSES.map((t) => (
-              <button
-                key={t}
-                className={`chip ${coil.thickness === t ? "active" : ""}`}
-                onClick={() => setThickness(t)}
-                type="button"
-              >
-                {fmtThickness(t)} mm
-              </button>
-            ))}
-          </div>
         </div>
         <div className="field span-all">
           <span>O peso informado pode ser ultrapassado?</span>
