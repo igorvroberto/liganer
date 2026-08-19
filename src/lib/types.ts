@@ -19,10 +19,6 @@ export type CoilInput = {
   priceFactor100?: number;
   /** Fator comercial utilizado (ex.: 170 = divide por 1,70) */
   usedFactor?: number;
-  /** Perda adicional em mm informada manualmente */
-  lossWidthMm?: number;
-  /** Perda em % informada manualmente */
-  lossPct?: number;
   /** Preço do serviço de corte (R$) */
   servicePrice?: number;
   /** Descrição do serviço de corte */
