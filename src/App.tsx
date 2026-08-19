@@ -260,7 +260,7 @@ export default function App() {
             />
           </label>
           <label className="field">
-            <span>Perda entre tiras / faca (mm)</span>
+            <span>Perda entre tiras/faca (mm)</span>
             <input
               type="number"
               min={0}
@@ -305,8 +305,8 @@ export default function App() {
           </div>
           <p className="note" style={{ marginTop: 6 }}>
             {coil.allowOvershoot === false
-              ? "O kg digitado em cada item é o máximo. Se um programa produzir além disso, as demais tiras são reduzidas."
-              : "O plano pode produzir um pouco acima do kg informado quando as tiras compartilham o mesmo comprimento de bobina."}
+              ? "O Kg digitado em cada item é o máximo. Se um programa produzir além disso, as demais tiras são reduzidas."
+              : "O plano pode produzir um pouco acima do Kg informado quando as tiras compartilham o mesmo comprimento de bobina."}
           </p>
         </div>
 
@@ -316,7 +316,7 @@ export default function App() {
         <h2>Formação de preço</h2>
         <div className="fields coil-fields">
           <label className="field">
-            <span>Preço fator 100 (R$/kg)</span>
+            <span>Preço fator 100 (R$/Kg)</span>
             <input
               inputMode="decimal"
               placeholder="Ex.: 12,50"
@@ -344,7 +344,7 @@ export default function App() {
             />
           </label>
           <label className="field">
-            <span>Preço fator utilizado (R$/kg)</span>
+            <span>Preço fator utilizado (R$/Kg)</span>
             <input
               readOnly
               tabIndex={-1}
@@ -399,6 +399,27 @@ export default function App() {
             />
           </label>
         </div>
+        {(() => {
+          const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
+          const servicePrice = coil.servicePrice ?? 0;
+          const lossWasteMm = plan ? plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0) : 0;
+          const lossPct = plan ? (100 - plan.yieldPercent) : 0;
+          const lossMultiplier = lossWasteMm < 100 ? 1 : lossWasteMm < 300 ? 0.30 : 0.20;
+          const priceWithLoss = usedPrice != null ? usedPrice + servicePrice + lossPct * lossMultiplier : null;
+          const priceWithoutLoss = usedPrice != null ? usedPrice + servicePrice : null;
+          return (
+            <div className="pricing-results" style={{ marginTop: 16 }}>
+              <div className="pricing-result highlight">
+                <span>Preço considerando perda (R$/Kg)</span>
+                <b>{priceWithLoss != null && plan ? fmtCurrency(priceWithLoss, 4) : "—"}</b>
+              </div>
+              <div className="pricing-result">
+                <span>Preço desconsiderando perda (R$/Kg)</span>
+                <b>{priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss, 4) : "—"}</b>
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       <section className="card">
@@ -521,7 +542,7 @@ export default function App() {
                         <td>
                           {fmtKg(product.weightKg)}
                           {(coil.allowOvershoot ?? true) && product.weightKg > product.blank.minKg
-                            ? ` (+${fmtNumber(product.weightKg - product.blank.minKg, 1)} kg)`
+                            ? ` (+${fmtNumber(product.weightKg - product.blank.minKg, 1)} Kg)`
                             : ""}
                         </td>
                       </tr>

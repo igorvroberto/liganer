@@ -547,7 +547,7 @@ function validateInput(input: CalcInput): string | null {
   const usable = usableWidth(coil);
   if (usable <= 0) return "O refile de borda deixa a largura útil zerada.";
   const active = blanks.filter((b) => b.minKg > 0 || b.minQty > 0);
-  if (active.length === 0) return "Informe peso mínimo (kg) ou quantidade para pelo menos um blank.";
+  if (active.length === 0) return "Informe peso mínimo (Kg) ou quantidade para pelo menos um blank.";
   for (const blank of blanks) {
     if (!(blank.width > 0) || !(blank.length > 0)) {
       return "Cada blank precisa de largura e comprimento maiores que zero.";
@@ -572,7 +572,7 @@ export function optimizeCutting(input: CalcInput): CalcResult | CalcError {
 
   const activeIdx = nTarget.map((v, i) => (v > 0 ? i : -1)).filter((i) => i >= 0);
   if (activeIdx.length === 0) {
-    return { ok: false, message: "Informe peso (kg) ou quantidade para pelo menos um blank." };
+    return { ok: false, message: "Informe peso (Kg) ou quantidade para pelo menos um blank." };
   }
 
   const types = blanks.flatMap((blank, i) =>

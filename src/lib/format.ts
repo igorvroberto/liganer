@@ -11,7 +11,7 @@ export function fmtNumber(value: number, digits = 2): string {
 }
 
 export function fmtKg(value: number): string {
-  return `${kgFmt.format(value)} kg`;
+  return `${kgFmt.format(value)} Kg`;
 }
 
 export function fmtMm(value: number): string {
