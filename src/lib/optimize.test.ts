@@ -4,6 +4,7 @@ import {
   generatePatterns,
   minPiecesForBlank,
   optimizeCutting,
+  programLoss,
   stripTypesForBlank,
   unitWeightKg,
   usableWidth,
@@ -166,5 +167,32 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     }
     expect(best.products[0].pieces).toBe(1109);
     expect(best.products[2].pieces).toBe(758);
+    const loss = programLoss(best.programs[0], {
+      width: 1250,
+      thickness: 0.4,
+      density: 8,
+      kerf: 0,
+      edgeTrim: 0,
+    });
+    expect(loss.widthLossPercent).toBeCloseTo(0, 5);
+    expect(loss.lossPercent).toBeGreaterThanOrEqual(0);
+  });
+
+  it("não ultrapassa o peso quando allowOvershoot é falso", () => {
+    const coil = { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 0, allowOvershoot: false };
+    const result = optimizeCutting({
+      coil,
+      blanks: [
+        { id: "a", name: "600×470", width: 600, length: 470, minKg: 1000, minQty: 0 },
+        { id: "b", name: "700×500", width: 700, length: 500, minKg: 1000, minQty: 0 },
+        { id: "c", name: "750×550", width: 750, length: 550, minKg: 1000, minQty: 0 },
+        { id: "d", name: "650×530", width: 650, length: 530, minKg: 1000, minQty: 0 },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    for (const product of result.alternatives[0].products) {
+      expect(product.weightKg).toBeLessThanOrEqual(1000 + 1e-6);
+    }
   });
 });

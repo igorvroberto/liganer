@@ -23,9 +23,34 @@ export function coilWeightKg(coilLengthMm: number, coil: CoilInput): number {
   return (coil.width * coilLengthMm * coil.thickness * coil.density) / MM_TO_KG;
 }
 
+export function programLoss(program: ProgramResult, coil: CoilInput) {
+  const coilKg = coilWeightKg(program.coilLengthMm, coil);
+  const usefulKg = program.weightPerProductKg.reduce((sum, kg) => sum + kg, 0);
+  const scrapKg = Math.max(0, coilKg - usefulKg);
+  const lossPercent = coilKg > 0 ? (scrapKg / coilKg) * 100 : 0;
+  const widthWasteMm = program.pattern.waste;
+  const widthLossPercent = coil.width > 0 ? (widthWasteMm / coil.width) * 100 : 0;
+  return { coilKg, usefulKg, scrapKg, lossPercent, widthWasteMm, widthLossPercent };
+}
+
 export function minPiecesForBlank(blank: BlankInput, unitKg: number): number {
   const fromKg = blank.minKg > 0 && unitKg > 0 ? Math.ceil(blank.minKg / unitKg - 1e-9) : 0;
   return Math.max(fromKg, Math.max(0, Math.floor(blank.minQty)) || 0);
+}
+
+export function maxPiecesForBlank(blank: BlankInput, unitKg: number): number {
+  const fromKg = blank.minKg > 0 && unitKg > 0 ? Math.floor(blank.minKg / unitKg + 1e-9) : 0;
+  const fromQty = Math.max(0, Math.floor(blank.minQty)) || 0;
+  if (fromKg > 0 && fromQty > 0) return Math.min(fromKg, fromQty);
+  return Math.max(fromKg, fromQty);
+}
+
+export function targetPiecesForBlank(blank: BlankInput, unitKg: number, allowOvershoot: boolean): number {
+  return allowOvershoot ? minPiecesForBlank(blank, unitKg) : maxPiecesForBlank(blank, unitKg);
+}
+
+function overshootAllowed(coil: CoilInput): boolean {
+  return coil.allowOvershoot !== false;
 }
 
 export function usableWidth(coil: CoilInput): number {
@@ -156,6 +181,69 @@ function minLengthForPattern(pattern: Pattern, nMin: number[]): number {
   return hi;
 }
 
+function maxLengthForPattern(pattern: Pattern, nMax: number[]): number {
+  const n = nMax.length;
+  const rate = piecesPerMm(pattern, n);
+  let hi = 0;
+  for (let i = 0; i < n; i++) {
+    if (rate[i] <= 1e-15) continue;
+    if (nMax[i] <= 0) return 0;
+    hi = Math.max(hi, nMax[i] * (1 / rate[i]) + 10_000);
+  }
+  if (hi === 0) return 0;
+
+  let lo = 0;
+  for (let iter = 0; iter < 60; iter++) {
+    const mid = (lo + hi) / 2;
+    const pieces = piecesFromLength(pattern, mid, n);
+    const ok = pieces.every((qty, i) => rate[i] <= 1e-15 || qty <= nMax[i]);
+    if (ok) lo = mid;
+    else hi = mid;
+  }
+  return lo;
+}
+
+function capLengthsToMax(patterns: Pattern[], lengths: number[], nMax: number[]): number[] {
+  const next = [...lengths];
+  const n = nMax.length;
+
+  for (let guard = 0; guard < 80; guard++) {
+    const produced = Array.from({ length: n }, () => 0);
+    for (let j = 0; j < patterns.length; j++) {
+      if (next[j] <= LENGTH_EPS) continue;
+      piecesFromLength(patterns[j], next[j], n).forEach((qty, i) => {
+        produced[i] += qty;
+      });
+    }
+
+    let over = -1;
+    for (let i = 0; i < n; i++) {
+      if (produced[i] > nMax[i]) {
+        over = i;
+        break;
+      }
+    }
+    if (over < 0) break;
+
+    let bestJ = -1;
+    let bestRate = 0;
+    for (let j = 0; j < patterns.length; j++) {
+      if (next[j] <= LENGTH_EPS) continue;
+      const rate = piecesPerMm(patterns[j], n)[over];
+      if (rate > bestRate) {
+        bestRate = rate;
+        bestJ = j;
+      }
+    }
+    if (bestJ < 0 || bestRate <= 0) break;
+
+    const excess = produced[over] - nMax[over];
+    next[bestJ] = Math.max(0, next[bestJ] - excess / bestRate);
+  }
+
+  return next;
+}
+
 function productResults(
   blanks: BlankInput[],
   coil: CoilInput,
@@ -203,7 +291,7 @@ function planFromPrograms(
   programs: ProgramResult[],
   blanks: BlankInput[],
   coil: CoilInput,
-  nMin: number[],
+  nTarget: number[],
 ): RankedPlan | null {
   if (programs.length === 0) return null;
   fillProgramWeights(programs, blanks, coil);
@@ -214,14 +302,21 @@ function planFromPrograms(
       pieces[i] += qty;
     });
   }
-  if (nMin.some((need, i) => pieces[i] < need)) return null;
 
-  const products = productResults(blanks, coil, pieces, nMin);
+  const allow = overshootAllowed(coil);
+  if (allow && nTarget.some((need, i) => pieces[i] < need)) return null;
+  if (!allow && nTarget.some((max, i) => pieces[i] > max)) return null;
+
+  const products = productResults(blanks, coil, pieces, nTarget);
   const totalCoilLengthMm = programs.reduce((s, p) => s + p.coilLengthMm, 0);
   const coilKg = coilWeightKg(totalCoilLengthMm, coil);
   const usefulKg = products.reduce((s, p) => s + p.weightKg, 0);
-  const targetKg = blanks.reduce((s, b, i) => s + Math.max(b.minKg, nMin[i] * products[i].unitWeightKg), 0);
-  const overshootKg = Math.max(0, usefulKg - targetKg);
+  const targetKg = blanks.reduce((s, b, i) => {
+    const fromPieces = nTarget[i] * products[i].unitWeightKg;
+    return s + (b.minKg > 0 ? Math.min(b.minKg, fromPieces) || fromPieces : fromPieces);
+  }, 0);
+  const overshootKg = allow ? Math.max(0, usefulKg - targetKg) : 0;
+  const shortfallKg = allow ? 0 : Math.max(0, targetKg - usefulKg);
 
   return {
     label,
@@ -234,6 +329,7 @@ function planFromPrograms(
     products,
     setupCount: programs.length,
     overshootKg,
+    shortfallKg,
   };
 }
 
@@ -246,28 +342,31 @@ function planLabel(programs: ProgramResult[], blanks: BlankInput[]): string {
 
 function buildSequentialPlan(
   candidates: Pattern[],
-  nMin: number[],
+  nTarget: number[],
   blanks: BlankInput[],
   coil: CoilInput,
 ): RankedPlan | null {
-  const remaining = [...nMin];
+  const allow = overshootAllowed(coil);
+  const remaining = [...nTarget];
   const chosen: { pattern: Pattern; lengthMm: number }[] = [];
-  const maxPrograms = Math.max(8, nMin.filter((v) => v > 0).length * 2);
+  const maxPrograms = Math.max(8, nTarget.filter((v) => v > 0).length * 2);
 
   while (remaining.some((r) => r > 0) && chosen.length < maxPrograms) {
     let best: { pattern: Pattern; length: number; gain: number } | null = null;
 
     for (const pattern of candidates) {
-      const rate = piecesPerMm(pattern, nMin.length);
+      const rate = piecesPerMm(pattern, nTarget.length);
       if (!remaining.some((need, i) => need > 0 && rate[i] > 0)) continue;
 
-      const length = minLengthForPattern(
-        pattern,
-        remaining.map((need, i) => (rate[i] > 0 ? need : 0)),
-      );
+      const length = allow
+        ? minLengthForPattern(
+            pattern,
+            remaining.map((need, i) => (rate[i] > 0 ? need : 0)),
+          )
+        : maxLengthForPattern(pattern, remaining);
       if (!Number.isFinite(length) || length <= 0) continue;
 
-      const pieces = piecesFromLength(pattern, length, nMin.length);
+      const pieces = piecesFromLength(pattern, length, nTarget.length);
       const gain = pieces.reduce((sum, qty, i) => {
         if (remaining[i] <= 0 || qty <= 0) return sum;
         const unit = unitWeightKg(blanks[i].width, blanks[i].length, coil);
@@ -283,15 +382,15 @@ function buildSequentialPlan(
     if (!best) break;
 
     chosen.push({ pattern: best.pattern, lengthMm: best.length });
-    const produced = piecesFromLength(best.pattern, best.length, nMin.length);
+    const produced = piecesFromLength(best.pattern, best.length, nTarget.length);
     produced.forEach((qty, i) => {
       remaining[i] = Math.max(0, remaining[i] - qty);
     });
   }
 
-  if (remaining.some((r) => r > 0)) return null;
-  const programs = toPrograms(chosen, nMin.length);
-  return planFromPrograms(planLabel(programs, blanks), programs, blanks, coil, nMin);
+  if (allow && remaining.some((r) => r > 0)) return null;
+  const programs = toPrograms(chosen, nTarget.length);
+  return planFromPrograms(planLabel(programs, blanks), programs, blanks, coil, nTarget);
 }
 
 function patternLabel(pattern: Pattern, blanks: BlankInput[]): string {
@@ -390,26 +489,30 @@ function filterPatterns(patterns: Pattern[], nMin: number[], maxKeep = 36): Patt
 
 function evaluateSubset(
   subset: Pattern[],
-  nMin: number[],
+  nTarget: number[],
   blanks: BlankInput[],
   coil: CoilInput,
 ): RankedPlan | null {
+  const allow = overshootAllowed(coil);
   let bumped: number[];
   if (subset.length === 1) {
-    const lengthMm = minLengthForPattern(subset[0], nMin);
-    if (!Number.isFinite(lengthMm)) return null;
+    const lengthMm = allow
+      ? minLengthForPattern(subset[0], nTarget)
+      : maxLengthForPattern(subset[0], nTarget);
+    if (!Number.isFinite(lengthMm) || (!allow && lengthMm <= 0)) return null;
     bumped = [lengthMm];
   } else {
-    const R = subset.map((p) => piecesPerMm(p, nMin.length));
-    const continuous = minSumWithCoverage(R, nMin);
+    const R = subset.map((p) => piecesPerMm(p, nTarget.length));
+    const continuous = minSumWithCoverage(R, nTarget);
     if (!continuous) return null;
-    bumped = bumpLengthsToIntegerPieces(subset, continuous, nMin);
+    bumped = bumpLengthsToIntegerPieces(subset, continuous, nTarget);
+    if (!allow) bumped = capLengthsToMax(subset, bumped, nTarget);
   }
   const programs = toPrograms(
     subset.map((pattern, j) => ({ pattern, lengthMm: bumped[j] })),
-    nMin.length,
+    nTarget.length,
   );
-  return planFromPrograms(planLabel(programs, blanks), programs, blanks, coil, nMin);
+  return planFromPrograms(planLabel(programs, blanks), programs, blanks, coil, nTarget);
 }
 
 function rankPlans(plans: RankedPlan[]): RankedPlan[] {
@@ -427,6 +530,7 @@ function rankPlans(plans: RankedPlan[]): RankedPlan[] {
   }
 
   return [...uniq.values()].sort((a, b) => {
+    if (Math.abs(a.shortfallKg - b.shortfallKg) > 0.5) return a.shortfallKg - b.shortfallKg;
     if (Math.abs(b.yieldPercent - a.yieldPercent) > 0.05) return b.yieldPercent - a.yieldPercent;
     if (a.setupCount !== b.setupCount) return a.setupCount - b.setupCount;
     if (Math.abs(a.overshootKg - b.overshootKg) > 0.5) return a.overshootKg - b.overshootKg;
@@ -462,16 +566,17 @@ export function optimizeCutting(input: CalcInput): CalcResult | CalcError {
 
   const blanks = input.blanks.filter((b) => b.width > 0 && b.length > 0);
   const coil = input.coil;
+  const allow = overshootAllowed(coil);
   const units = blanks.map((b) => unitWeightKg(b.width, b.length, coil));
-  const nMin = blanks.map((b, i) => minPiecesForBlank(b, units[i]));
+  const nTarget = blanks.map((b, i) => targetPiecesForBlank(b, units[i], allow));
 
-  const activeIdx = nMin.map((v, i) => (v > 0 ? i : -1)).filter((i) => i >= 0);
+  const activeIdx = nTarget.map((v, i) => (v > 0 ? i : -1)).filter((i) => i >= 0);
   if (activeIdx.length === 0) {
-    return { ok: false, message: "Informe peso mínimo (kg) ou quantidade para pelo menos um blank." };
+    return { ok: false, message: "Informe peso (kg) ou quantidade para pelo menos um blank." };
   }
 
   const types = blanks.flatMap((blank, i) =>
-    nMin[i] > 0 ? stripTypesForBlank(blank, i).filter((s) => s.stripWidth <= usableWidth(coil) + 1e-9) : [],
+    nTarget[i] > 0 ? stripTypesForBlank(blank, i).filter((s) => s.stripWidth <= usableWidth(coil) + 1e-9) : [],
   );
   if (types.length === 0) {
     return { ok: false, message: "Nenhuma orientação de blank cabe na largura da bobina." };
@@ -485,39 +590,44 @@ export function optimizeCutting(input: CalcInput): CalcResult | CalcError {
     return { ok: false, message: "Não foi possível montar um plano de corte com essas medidas." };
   }
 
-  const candidates = filterPatterns(allPatterns, nMin);
+  const candidates = filterPatterns(allPatterns, nTarget);
   const plans: RankedPlan[] = [];
 
-  const activeCount = nMin.filter((v) => v > 0).length;
+  const activeCount = nTarget.filter((v) => v > 0).length;
   const maxK = Math.min(activeCount, candidates.length, 5);
   for (let k = 1; k <= maxK; k++) {
     const combos = combinations(candidates, k);
     const limit = k === 1 ? combos.length : k === 2 ? 400 : k === 3 ? 200 : 100;
     const slice = combos.slice(0, limit);
     for (const subset of slice) {
-      const plan = evaluateSubset(subset, nMin, blanks, coil);
+      const plan = evaluateSubset(subset, nTarget, blanks, coil);
       if (plan) plans.push(plan);
     }
   }
 
   const dedicated: Pattern[] = [];
   for (let i = 0; i < blanks.length; i++) {
-    if (nMin[i] <= 0) continue;
+    if (nTarget[i] <= 0) continue;
     const onlyThis = allPatterns.filter((p) => p.strips.every((s) => s.productIndex === i));
     const best = onlyThis.sort((a, b) => a.waste - b.waste)[0];
     if (best) dedicated.push(best);
   }
   if (dedicated.length >= 2) {
-    const plan = evaluateSubset(dedicated, nMin, blanks, coil);
+    const plan = evaluateSubset(dedicated, nTarget, blanks, coil);
     if (plan) plans.push(plan);
   }
 
-  const sequential = buildSequentialPlan(candidates, nMin, blanks, coil);
+  const sequential = buildSequentialPlan(candidates, nTarget, blanks, coil);
   if (sequential) plans.push(sequential);
 
   const ranked = rankPlans(plans);
   if (ranked.length === 0) {
-    return { ok: false, message: "Não foi possível atender o peso/quantidade mínimos com a largura da bobina." };
+    return {
+      ok: false,
+      message: allow
+        ? "Não foi possível atender o peso/quantidade mínimos com a largura da bobina."
+        : "Não foi possível montar um plano sem ultrapassar o peso informado.",
+    };
   }
 
   const best = ranked[0];

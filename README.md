@@ -5,7 +5,7 @@ Sistema Liganer para calcular o **melhor aproveitamento de corte de blanks em a�
 O cálculo considera:
 
 - largura e comprimento de cada blank (com giro 90° automático)
-- peso mínimo em kg (pode ultrapassar um pouco, nunca fica abaixo)
+- peso mínimo em kg (pode ultrapassar um pouco, nunca fica abaixo) — ou peso máximo, se a opção de ultrapassar estiver desligada
 - quantidade mínima em unidades
 - largura original da bobina
 - espessura (2 casas decimais), densidade fixa de 8 g/cm³, perda de faca e refile de borda

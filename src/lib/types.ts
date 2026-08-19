@@ -13,6 +13,20 @@ export type CoilInput = {
   density: number;
   kerf: number;
   edgeTrim: number;
+  allowOvershoot?: boolean;
+  line?: string;
+  /** Preço na tabela fator 100 (R$/kg) */
+  priceFactor100?: number;
+  /** Fator comercial utilizado (ex.: 170 = divide por 1,70) */
+  usedFactor?: number;
+  /** Perda adicional em mm informada manualmente */
+  lossWidthMm?: number;
+  /** Perda em % informada manualmente */
+  lossPct?: number;
+  /** Preço do serviço de corte (R$) */
+  servicePrice?: number;
+  /** Descrição do serviço de corte */
+  serviceDescription?: string;
 };
 
 export type CalcInput = {
@@ -77,6 +91,7 @@ export type RankedPlan = {
   products: ProductResult[];
   setupCount: number;
   overshootKg: number;
+  shortfallKg: number;
 };
 
 export const DEFAULT_DENSITY = 8;
