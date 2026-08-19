@@ -214,7 +214,7 @@ export default function App() {
             <span>Linha</span>
             <input
               type="text"
-              placeholder="Ex.: 430 2B"
+              placeholder="Ex.: 304 2B"
               value={coil.line ?? ""}
               onChange={(e) => updateCoil({ line: e.target.value })}
             />
@@ -319,7 +319,7 @@ export default function App() {
             <span>Preço fator 100 (R$/Kg)</span>
             <input
               inputMode="decimal"
-              placeholder="Ex.: 12,50"
+              placeholder="Ex.: 45,00"
               value={priceFactor100Text}
               onChange={(e) => {
                 const raw = e.target.value;
@@ -379,7 +379,7 @@ export default function App() {
             <span>Preço serviço (R$)</span>
             <input
               inputMode="decimal"
-              placeholder="Ex.: 800,00"
+              placeholder="Ex.: 1,24"
               value={servicepriceText}
               onChange={(e) => {
                 const raw = e.target.value;
@@ -393,7 +393,7 @@ export default function App() {
             <span>Descrição do serviço</span>
             <input
               type="text"
-              placeholder="Ex.: Corte laser + frete"
+              placeholder="Ex.: Corte (0,38) + Recorte (0,38) + PVC azul (0,48)"
               value={coil.serviceDescription ?? ""}
               onChange={(e) => updateCoil({ serviceDescription: e.target.value || undefined })}
             />
