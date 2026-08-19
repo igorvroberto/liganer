@@ -300,7 +300,7 @@ export default function App() {
         <h2>Formação de preço</h2>
         <div className="fields coil-fields">
           <label className="field">
-            <span>Preço fator 100 (R$/Kg)</span>
+            <span>Preço bobina fator 100 (R$/Kg)</span>
             <input
               inputMode="decimal"
               placeholder="Ex.: 45,00"

@@ -139,7 +139,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Peso pode ultrapassar", coil.allowOvershoot === false ? "Não" : "Sim"],
       ...((coil.priceFactor100 ?? 0) > 0
         ? [
-            ["Preço fator 100", fmtCurrency(coil.priceFactor100!, 4)],
+            ["Preço bobina fator 100", fmtCurrency(coil.priceFactor100!, 4)],
             [
               "Fator utilizado",
               coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-",
