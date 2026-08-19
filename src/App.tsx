@@ -62,7 +62,7 @@ function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult;
         ))}
         {program.pattern.waste > 0.5 && (
           <div className="pattern-seg waste" style={{ width: pct(program.pattern.waste) }}>
-            sucata {fmtInt(program.pattern.waste)}
+            sobra {fmtInt(program.pattern.waste)}
           </div>
         )}
         {edgeTrim > 0 && (

@@ -84,7 +84,7 @@ function drawStripBar(
       doc.setTextColor(70, 80, 88);
       doc.setFontSize(6.5);
       doc.setFont(fontName, "bold");
-      const wasteLabel = `sucata ${fmtInt(program.pattern.waste)}`;
+      const wasteLabel = `sobra ${fmtInt(program.pattern.waste)}`;
       const labelW = doc.getTextWidth(wasteLabel);
       if (w > labelW + 1.2) {
         doc.text(wasteLabel, cursor + w / 2, rowY + height / 2 + 1, { align: "center" });
