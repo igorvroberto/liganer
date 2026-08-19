@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtPct, fmtThickness } from "./format";
+import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness } from "./format";
 import { BLANK_COLORS, type CoilInput, type RankedPlan } from "./types";
 import { programLoss } from "./optimize";
 import { registerPdfFonts } from "./pdfFonts";
@@ -137,6 +137,41 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Perda entre tiras / faca", fmtMm(coil.kerf)],
       ["Comprimento", fmtMeters(plan.totalCoilLengthMm)],
       ["Peso pode ultrapassar", coil.allowOvershoot === false ? "Não" : "Sim"],
+      ...((coil.priceFactor100 ?? 0) > 0
+        ? [
+            ["Preço fator 100", fmtCurrency(coil.priceFactor100!, 4)],
+            [
+              "Fator utilizado",
+              coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-",
+            ],
+            [
+              "Preço fator utilizado",
+              coil.priceFactor100 != null && coil.usedFactor != null && coil.usedFactor > 0
+                ? fmtCurrency(coil.priceFactor100 / (coil.usedFactor / 100), 4)
+                : "-",
+            ],
+          ]
+        : []),
+      ...((coil.lossWidthMm ?? 0) > 0 || (coil.lossPct ?? 0) > 0
+        ? [
+            ...(coil.lossWidthMm != null && coil.lossWidthMm > 0
+              ? [["Perda adicional", fmtMm(coil.lossWidthMm)]]
+              : []),
+            ...(coil.lossPct != null && coil.lossPct > 0
+              ? [["Perda (%)", `${fmtNumber(coil.lossPct, 2)}%`]]
+              : []),
+          ]
+        : []),
+      ...((coil.servicePrice ?? 0) > 0 || coil.serviceDescription
+        ? [
+            ...(coil.serviceDescription?.trim()
+              ? [["Serviço", coil.serviceDescription.trim()]]
+              : []),
+            ...(coil.servicePrice != null && coil.servicePrice > 0
+              ? [["Preço serviço", fmtCurrency(coil.servicePrice)]]
+              : []),
+          ]
+        : []),
     ],
   });
 

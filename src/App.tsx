@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import BlankItemsTable from "./components/BlankItemsTable";
 import { resyncBlankDemand } from "./lib/blankSync";
-import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseThickness } from "./lib/format";
+import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseDecimalBr, parseThickness } from "./lib/format";
 import { optimizeCutting, programLoss } from "./lib/optimize";
 import { downloadPlanPdf } from "./lib/pdfReport";
 import {
@@ -136,9 +136,19 @@ function patternSummary(program: ProgramResult, products: RankedPlan["products"]
     .join(" + ");
 }
 
+function calcUsedFactorPrice(priceFactor100: number | undefined, usedFactor: number | undefined): number | null {
+  if (!priceFactor100 || !usedFactor || usedFactor <= 0) return null;
+  return priceFactor100 / (usedFactor / 100);
+}
+
 export default function App() {
   const [coil, setCoil] = useState<CoilInput>(EXAMPLE_COIL);
   const [thicknessText, setThicknessText] = useState(fmtThickness(EXAMPLE_COIL.thickness));
+  const [priceFactor100Text, setPriceFactor100Text] = useState("");
+  const [usedFactorText, setUsedFactorText] = useState("");
+  const [servicepriceText, setServicePriceText] = useState("");
+  const [lossWidthMmText, setLossWidthMmText] = useState("");
+  const [lossPctText, setLossPctText] = useState("");
   const [blanks, setBlanks] = useState<BlankInput[]>(EXAMPLE_BLANKS);
   const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(EXAMPLE_MODES);
   const [selectedAlt, setSelectedAlt] = useState(0);
@@ -162,6 +172,11 @@ export default function App() {
   const loadExample = () => {
     setCoil(EXAMPLE_COIL);
     setThicknessText(fmtThickness(EXAMPLE_COIL.thickness));
+    setPriceFactor100Text("");
+    setUsedFactorText("");
+    setServicePriceText("");
+    setLossWidthMmText("");
+    setLossPctText("");
     setBlanks(EXAMPLE_BLANKS);
     setDemandModes(EXAMPLE_MODES);
     setSelectedAlt(0);
@@ -297,6 +312,111 @@ export default function App() {
               ? "O kg digitado em cada item é o máximo. Se um programa produzir além disso, as demais tiras são reduzidas."
               : "O plano pode produzir um pouco acima do kg informado quando as tiras compartilham o mesmo comprimento de bobina."}
           </p>
+        </div>
+
+        <div className="coil-extra-fields">
+          <h3 className="coil-section-title">Preço do material</h3>
+          <div className="fields coil-fields">
+            <label className="field">
+              <span>Preço fator 100 (R$/kg)</span>
+              <input
+                inputMode="decimal"
+                placeholder="Ex.: 12,50"
+                value={priceFactor100Text}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setPriceFactor100Text(raw);
+                  const v = parseDecimalBr(raw);
+                  updateCoil({ priceFactor100: v ?? undefined });
+                }}
+              />
+            </label>
+            <label className="field">
+              <span>Fator utilizado</span>
+              <input
+                inputMode="decimal"
+                placeholder="Ex.: 170"
+                value={usedFactorText}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setUsedFactorText(raw);
+                  const v = parseDecimalBr(raw);
+                  updateCoil({ usedFactor: v ?? undefined });
+                }}
+              />
+            </label>
+            <label className="field span-all">
+              <span>Preço fator utilizado (R$/kg)</span>
+              <input
+                readOnly
+                tabIndex={-1}
+                className="input-readonly"
+                value={(() => {
+                  const p = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
+                  return p !== null ? fmtCurrency(p, 4) : "—";
+                })()}
+              />
+            </label>
+          </div>
+
+          <h3 className="coil-section-title">Perdas adicionais</h3>
+          <div className="fields coil-fields">
+            <label className="field">
+              <span>Perda (mm)</span>
+              <input
+                inputMode="decimal"
+                placeholder="0"
+                value={lossWidthMmText}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setLossWidthMmText(raw);
+                  const v = parseDecimalBr(raw);
+                  updateCoil({ lossWidthMm: v ?? undefined });
+                }}
+              />
+            </label>
+            <label className="field">
+              <span>Perda (%)</span>
+              <input
+                inputMode="decimal"
+                placeholder="0"
+                value={lossPctText}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setLossPctText(raw);
+                  const v = parseDecimalBr(raw);
+                  updateCoil({ lossPct: v ?? undefined });
+                }}
+              />
+            </label>
+          </div>
+
+          <h3 className="coil-section-title">Serviço</h3>
+          <div className="fields coil-fields">
+            <label className="field">
+              <span>Preço serviço (R$)</span>
+              <input
+                inputMode="decimal"
+                placeholder="Ex.: 800,00"
+                value={servicepriceText}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setServicePriceText(raw);
+                  const v = parseDecimalBr(raw);
+                  updateCoil({ servicePrice: v ?? undefined });
+                }}
+              />
+            </label>
+            <label className="field">
+              <span>Descrição do serviço</span>
+              <input
+                type="text"
+                placeholder="Ex.: Corte laser + frete"
+                value={coil.serviceDescription ?? ""}
+                onChange={(e) => updateCoil({ serviceDescription: e.target.value || undefined })}
+              />
+            </label>
+          </div>
         </div>
       </section>
 

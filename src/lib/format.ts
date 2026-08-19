@@ -43,6 +43,31 @@ export function fmtThickness(value: number): string {
   return thicknessFmt.format(value);
 }
 
+const currencyFmt = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 4,
+});
+
+const currency2Fmt = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+export function fmtCurrency(value: number, decimals: 2 | 4 = 2): string {
+  return decimals === 4 ? currencyFmt.format(value) : currency2Fmt.format(value);
+}
+
+export function parseDecimalBr(raw: string): number | null {
+  const normalized = raw.trim().replace(",", ".");
+  if (normalized === "") return null;
+  const n = Number(normalized);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
 export function parseThickness(raw: string): number | null {
   const normalized = raw.trim().replace(",", ".");
   if (normalized === "") return null;
