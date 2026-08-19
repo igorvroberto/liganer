@@ -356,16 +356,7 @@ export default function App() {
             />
           </label>
           <label className="field">
-            <span>Perda (mm)</span>
-            <input
-              readOnly
-              tabIndex={-1}
-              className="input-readonly"
-              value={plan ? fmtMm(plan.scrapKg > 0 ? plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0) : 0) : "—"}
-            />
-          </label>
-          <label className="field">
-            <span>Perda (%)</span>
+            <span>Perda total (%)</span>
             <input
               readOnly
               tabIndex={-1}
@@ -402,9 +393,9 @@ export default function App() {
         {(() => {
           const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
           const servicePrice = coil.servicePrice ?? 0;
-          const lossWasteMm = plan ? plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0) : 0;
+          const wasteMm = plan ? plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0) : 0;
           const lossPct = plan ? (100 - plan.yieldPercent) : 0;
-          const lossMultiplier = lossWasteMm < 100 ? 1 : lossWasteMm < 300 ? 0.30 : 0.20;
+          const lossMultiplier = wasteMm < 100 ? 1 : wasteMm < 300 ? 0.30 : 0.20;
           const priceWithLoss = usedPrice != null ? usedPrice + servicePrice + lossPct * lossMultiplier : null;
           const priceWithoutLoss = usedPrice != null ? usedPrice + servicePrice : null;
           return (
@@ -468,8 +459,7 @@ export default function App() {
               <p className="note">
                 Comprimento total: <strong>{fmtMeters(plan.totalCoilLengthMm)}</strong> ·{" "}
                 <strong>{plan.setupCount}</strong> programa{plan.setupCount > 1 ? "s" : ""} de corte
-                {" "}· perda <strong>{fmtMm(plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0))}</strong>
-                {" "}· <strong>{fmtPct(100 - plan.yieldPercent)}</strong>
+                {" "}· perda total <strong>{fmtPct(100 - plan.yieldPercent)}</strong>
               </p>
               <ProgramTimeline programs={plan.programs} totalLengthMm={plan.totalCoilLengthMm} />
 
