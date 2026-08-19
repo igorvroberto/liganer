@@ -293,7 +293,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
         [
           `Perda: ${fmtPct(loss.lossPercent)}`,
           `Sucata: ${fmtKg(loss.scrapKg)}`,
-          `Largura não usada: ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})`,
+          `Sobra: ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})${coil.edgeTrim > 0 ? ` · Refile: ${fmtMm(coil.edgeTrim * 2)} (2×${fmtMm(coil.edgeTrim)})` : ""}`,
         ],
       ],
     });

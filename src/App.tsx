@@ -123,8 +123,8 @@ function ProgramLossNote({ program, coil }: { program: ProgramResult; coil: Coil
       Perda: <strong>{fmtPct(loss.lossPercent)}</strong>
       <span>
         {" "}
-        · sucata {fmtKg(loss.scrapKg)} · largura não usada {fmtMm(loss.widthWasteMm)} (
-        {fmtPct(loss.widthLossPercent)})
+        · sucata {fmtKg(loss.scrapKg)} · sobra {fmtMm(loss.widthWasteMm)} ({fmtPct(loss.widthLossPercent)})
+        {coil.edgeTrim > 0 && ` · refile ${fmtMm(coil.edgeTrim * 2)} (2×${fmtMm(coil.edgeTrim)})`}
       </span>
     </p>
   );
