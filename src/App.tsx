@@ -314,6 +314,16 @@ export default function App() {
             />
           </label>
           <label className="field">
+            <span>Tipo de bobina</span>
+            <select
+              value={coil.coilType ?? "inteira"}
+              onChange={(e) => updateCoil({ coilType: e.target.value as "inteira" | "reduzida" })}
+            >
+              <option value="inteira">Inteira</option>
+              <option value="reduzida">Reduzida</option>
+            </select>
+          </label>
+          <label className="field">
             <span>Fator utilizado</span>
             <input
               inputMode="decimal"
