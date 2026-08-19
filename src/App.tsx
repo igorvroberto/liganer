@@ -350,6 +350,34 @@ export default function App() {
             />
           </label>
           <label className="field">
+            <span>Perda transversal (%)</span>
+            <input
+              readOnly
+              tabIndex={-1}
+              className="input-readonly"
+              value={plan ? (() => {
+                const weightedWaste = plan.programs.reduce((sum, p) => sum + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
+                const totalLength = plan.programs.reduce((sum, p) => sum + p.coilLengthMm, 0);
+                return fmtPct(totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0);
+              })() : "—"}
+            />
+          </label>
+          <label className="field">
+            <span>Perda longitudinal (%)</span>
+            <input
+              readOnly
+              tabIndex={-1}
+              className="input-readonly"
+              value={plan ? (() => {
+                const totalLossPct = 100 - plan.yieldPercent;
+                const weightedWaste = plan.programs.reduce((sum, p) => sum + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
+                const totalLength = plan.programs.reduce((sum, p) => sum + p.coilLengthMm, 0);
+                const transversalPct = totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
+                return fmtPct(Math.max(0, totalLossPct - transversalPct));
+              })() : "—"}
+            />
+          </label>
+          <label className="field">
             <span>Perda total (%)</span>
             <input
               readOnly

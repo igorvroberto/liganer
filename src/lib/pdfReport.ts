@@ -152,6 +152,9 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     : null;
   const servicePrice = coil.servicePrice ?? 0;
   const lossPct = 100 - plan.yieldPercent;
+  const totalLength = plan.programs.reduce((s, p) => s + p.coilLengthMm, 0);
+  const weightedWaste = plan.programs.reduce((s, p) => s + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
+  const transversalPct = totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
   const wasteMm = plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0);
   const lossMultiplier = wasteMm < 100 ? 1 : wasteMm < 300 ? 0.30 : 0.20;
   const priceWithLoss = usedFactorPrice != null ? usedFactorPrice + servicePrice + lossPct * lossMultiplier : null;
@@ -172,6 +175,8 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Tipo de bobina", coil.coilType === "reduzida" ? "Reduzida" : "Inteira"],
       ["Fator utilizado", coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-"],
       ["Preço fator utilizado", usedFactorPrice != null ? fmtCurrency(usedFactorPrice, 4) : "-"],
+      ["Perda transversal", `${fmtNumber(transversalPct, 2)}%`],
+      ["Perda longitudinal", `${fmtNumber(Math.max(0, lossPct - transversalPct), 2)}%`],
       ["Perda total", `${fmtNumber(lossPct, 2)}%`],
       ["Preço serviço", servicePrice > 0 ? fmtCurrency(servicePrice) : "-"],
       ["Descrição serviço", coil.serviceDescription?.trim() || "-"],
