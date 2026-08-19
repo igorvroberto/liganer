@@ -137,31 +137,46 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Perda entre tiras/faca", fmtMm(coil.kerf)],
       ["Comprimento", fmtMeters(plan.totalCoilLengthMm)],
       ["Peso pode ultrapassar", coil.allowOvershoot === false ? "Não" : "Sim"],
-      ...((coil.priceFactor100 ?? 0) > 0
-        ? [
-            ["Preço bobina fator 100", fmtCurrency(coil.priceFactor100!, 4)],
-            [
-              "Fator utilizado",
-              coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-",
-            ],
-            [
-              "Preço fator utilizado",
-              coil.priceFactor100 != null && coil.usedFactor != null && coil.usedFactor > 0
-                ? fmtCurrency(coil.priceFactor100 / (coil.usedFactor / 100), 4)
-                : "-",
-            ],
-          ]
-        : []),
-      ...((coil.servicePrice ?? 0) > 0 || coil.serviceDescription
-        ? [
-            ...(coil.serviceDescription?.trim()
-              ? [["Serviço", coil.serviceDescription.trim()]]
-              : []),
-            ...(coil.servicePrice != null && coil.servicePrice > 0
-              ? [["Preço serviço", fmtCurrency(coil.servicePrice)]]
-              : []),
-          ]
-        : []),
+    ],
+  });
+
+  y = lastTableY(doc) + 6;
+  doc.setFont(fontName, "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(27, 36, 44);
+  doc.text("Formação de preço", margin, y);
+  y += 2;
+
+  const usedFactorPrice = coil.priceFactor100 != null && coil.usedFactor != null && coil.usedFactor > 0
+    ? coil.priceFactor100 / (coil.usedFactor / 100)
+    : null;
+  const servicePrice = coil.servicePrice ?? 0;
+  const lossPct = 100 - plan.yieldPercent;
+  const wasteMm = plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0);
+  const lossMultiplier = wasteMm < 100 ? 1 : wasteMm < 300 ? 0.30 : 0.20;
+  const priceWithLoss = usedFactorPrice != null ? usedFactorPrice + servicePrice + lossPct * lossMultiplier : null;
+  const priceWithoutLoss = usedFactorPrice != null ? usedFactorPrice + servicePrice : null;
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    theme: "plain",
+    styles: { font: fontName, fontSize: 8.5, cellPadding: 1.2 },
+    bodyStyles: { font: fontName },
+    columnStyles: {
+      0: { fontStyle: "bold", cellWidth: 52 },
+      1: { cellWidth: contentW - 52 },
+    },
+    body: [
+      ["Preço bobina fator 100", coil.priceFactor100 != null ? fmtCurrency(coil.priceFactor100, 4) : "-"],
+      ["Tipo de bobina", coil.coilType === "reduzida" ? "Reduzida" : "Inteira"],
+      ["Fator utilizado", coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-"],
+      ["Preço fator utilizado", usedFactorPrice != null ? fmtCurrency(usedFactorPrice, 4) : "-"],
+      ["Perda total", `${fmtNumber(lossPct, 2)}%`],
+      ["Preço serviço", servicePrice > 0 ? fmtCurrency(servicePrice) : "-"],
+      ["Descrição serviço", coil.serviceDescription?.trim() || "-"],
+      ["Preço considerando perda", priceWithLoss != null ? fmtCurrency(priceWithLoss, 4) : "-"],
+      ["Preço desconsiderando perda", priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss, 4) : "-"],
     ],
   });
 
