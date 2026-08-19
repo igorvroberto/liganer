@@ -415,10 +415,8 @@ export default function App() {
         {(() => {
           const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
           const servicePrice = coil.servicePrice ?? 0;
-          const wasteMm = plan ? plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0) : 0;
           const lossPct = plan ? (100 - plan.yieldPercent) : 0;
-          const lossMultiplier = wasteMm < 100 ? 1 : wasteMm < 300 ? 0.30 : 0.20;
-          const priceWithLoss = usedPrice != null ? usedPrice + servicePrice + lossPct * lossMultiplier : null;
+          const priceWithLoss = usedPrice != null ? usedPrice * (1 + lossPct / 100) + servicePrice : null;
           const priceWithoutLoss = usedPrice != null ? usedPrice + servicePrice : null;
           return (
             <div className="pricing-results" style={{ marginTop: 16 }}>

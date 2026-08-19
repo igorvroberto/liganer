@@ -155,9 +155,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
   const totalLength = plan.programs.reduce((s, p) => s + p.coilLengthMm, 0);
   const weightedWaste = plan.programs.reduce((s, p) => s + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
   const transversalPct = totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
-  const wasteMm = plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0);
-  const lossMultiplier = wasteMm < 100 ? 1 : wasteMm < 300 ? 0.30 : 0.20;
-  const priceWithLoss = usedFactorPrice != null ? usedFactorPrice + servicePrice + lossPct * lossMultiplier : null;
+  const priceWithLoss = usedFactorPrice != null ? usedFactorPrice * (1 + lossPct / 100) + servicePrice : null;
   const priceWithoutLoss = usedFactorPrice != null ? usedFactorPrice + servicePrice : null;
 
   autoTable(doc, {
