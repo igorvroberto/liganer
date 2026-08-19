@@ -152,16 +152,6 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
             ],
           ]
         : []),
-      ...((coil.lossWidthMm ?? 0) > 0 || (coil.lossPct ?? 0) > 0
-        ? [
-            ...(coil.lossWidthMm != null && coil.lossWidthMm > 0
-              ? [["Perda adicional", fmtMm(coil.lossWidthMm)]]
-              : []),
-            ...(coil.lossPct != null && coil.lossPct > 0
-              ? [["Perda (%)", `${fmtNumber(coil.lossPct, 2)}%`]]
-              : []),
-          ]
-        : []),
       ...((coil.servicePrice ?? 0) > 0 || coil.serviceDescription
         ? [
             ...(coil.serviceDescription?.trim()

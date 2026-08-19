@@ -147,8 +147,6 @@ export default function App() {
   const [priceFactor100Text, setPriceFactor100Text] = useState("");
   const [usedFactorText, setUsedFactorText] = useState("");
   const [servicepriceText, setServicePriceText] = useState("");
-  const [lossWidthMmText, setLossWidthMmText] = useState("");
-  const [lossPctText, setLossPctText] = useState("");
   const [blanks, setBlanks] = useState<BlankInput[]>(EXAMPLE_BLANKS);
   const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(EXAMPLE_MODES);
   const [selectedAlt, setSelectedAlt] = useState(0);
@@ -175,8 +173,6 @@ export default function App() {
     setPriceFactor100Text("");
     setUsedFactorText("");
     setServicePriceText("");
-    setLossWidthMmText("");
-    setLossPctText("");
     setBlanks(EXAMPLE_BLANKS);
     setDemandModes(EXAMPLE_MODES);
     setSelectedAlt(0);
@@ -314,109 +310,94 @@ export default function App() {
           </p>
         </div>
 
-        <div className="coil-extra-fields">
-          <h3 className="coil-section-title">Preço do material</h3>
-          <div className="fields coil-fields">
-            <label className="field">
-              <span>Preço fator 100 (R$/kg)</span>
-              <input
-                inputMode="decimal"
-                placeholder="Ex.: 12,50"
-                value={priceFactor100Text}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setPriceFactor100Text(raw);
-                  const v = parseDecimalBr(raw);
-                  updateCoil({ priceFactor100: v ?? undefined });
-                }}
-              />
-            </label>
-            <label className="field">
-              <span>Fator utilizado</span>
-              <input
-                inputMode="decimal"
-                placeholder="Ex.: 170"
-                value={usedFactorText}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setUsedFactorText(raw);
-                  const v = parseDecimalBr(raw);
-                  updateCoil({ usedFactor: v ?? undefined });
-                }}
-              />
-            </label>
-            <label className="field span-all">
-              <span>Preço fator utilizado (R$/kg)</span>
-              <input
-                readOnly
-                tabIndex={-1}
-                className="input-readonly"
-                value={(() => {
-                  const p = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
-                  return p !== null ? fmtCurrency(p, 4) : "—";
-                })()}
-              />
-            </label>
-          </div>
+      </section>
 
-          <h3 className="coil-section-title">Perdas adicionais</h3>
-          <div className="fields coil-fields">
-            <label className="field">
-              <span>Perda (mm)</span>
-              <input
-                inputMode="decimal"
-                placeholder="0"
-                value={lossWidthMmText}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setLossWidthMmText(raw);
-                  const v = parseDecimalBr(raw);
-                  updateCoil({ lossWidthMm: v ?? undefined });
-                }}
-              />
-            </label>
-            <label className="field">
-              <span>Perda (%)</span>
-              <input
-                inputMode="decimal"
-                placeholder="0"
-                value={lossPctText}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setLossPctText(raw);
-                  const v = parseDecimalBr(raw);
-                  updateCoil({ lossPct: v ?? undefined });
-                }}
-              />
-            </label>
-          </div>
-
-          <h3 className="coil-section-title">Serviço</h3>
-          <div className="fields coil-fields">
-            <label className="field">
-              <span>Preço serviço (R$)</span>
-              <input
-                inputMode="decimal"
-                placeholder="Ex.: 800,00"
-                value={servicepriceText}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setServicePriceText(raw);
-                  const v = parseDecimalBr(raw);
-                  updateCoil({ servicePrice: v ?? undefined });
-                }}
-              />
-            </label>
-            <label className="field">
-              <span>Descrição do serviço</span>
-              <input
-                type="text"
-                placeholder="Ex.: Corte laser + frete"
-                value={coil.serviceDescription ?? ""}
-                onChange={(e) => updateCoil({ serviceDescription: e.target.value || undefined })}
-              />
-            </label>
-          </div>
+      <section className="card">
+        <h2>Formação de preço</h2>
+        <div className="fields coil-fields">
+          <label className="field">
+            <span>Preço fator 100 (R$/kg)</span>
+            <input
+              inputMode="decimal"
+              placeholder="Ex.: 12,50"
+              value={priceFactor100Text}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setPriceFactor100Text(raw);
+                const v = parseDecimalBr(raw);
+                updateCoil({ priceFactor100: v ?? undefined });
+              }}
+            />
+          </label>
+          <label className="field">
+            <span>Fator utilizado</span>
+            <input
+              inputMode="decimal"
+              placeholder="Ex.: 170"
+              value={usedFactorText}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setUsedFactorText(raw);
+                const v = parseDecimalBr(raw);
+                updateCoil({ usedFactor: v ?? undefined });
+              }}
+            />
+          </label>
+          <label className="field">
+            <span>Preço fator utilizado (R$/kg)</span>
+            <input
+              readOnly
+              tabIndex={-1}
+              className="input-readonly"
+              value={(() => {
+                const p = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
+                return p !== null ? fmtCurrency(p, 4) : "—";
+              })()}
+            />
+          </label>
+          <label className="field">
+            <span>Perda (mm)</span>
+            <input
+              readOnly
+              tabIndex={-1}
+              className="input-readonly"
+              value={plan ? fmtMm(plan.scrapKg > 0 ? plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0) : 0) : "—"}
+            />
+          </label>
+          <label className="field">
+            <span>Perda (%)</span>
+            <input
+              readOnly
+              tabIndex={-1}
+              className="input-readonly"
+              value={plan ? fmtPct(100 - plan.yieldPercent) : "—"}
+            />
+          </label>
+        </div>
+        <div className="fields coil-fields" style={{ marginTop: 16 }}>
+          <label className="field">
+            <span>Preço serviço (R$)</span>
+            <input
+              inputMode="decimal"
+              placeholder="Ex.: 800,00"
+              value={servicepriceText}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setServicePriceText(raw);
+                const v = parseDecimalBr(raw);
+                updateCoil({ servicePrice: v ?? undefined });
+              }}
+            />
+          </label>
+          <label className="field">
+            <span>Descrição do serviço</span>
+            <input
+              type="text"
+              placeholder="Ex.: Corte laser + frete"
+              value={coil.serviceDescription ?? ""}
+              onChange={(e) => updateCoil({ serviceDescription: e.target.value || undefined })}
+            />
+          </label>
         </div>
       </section>
 
@@ -466,6 +447,8 @@ export default function App() {
               <p className="note">
                 Comprimento total: <strong>{fmtMeters(plan.totalCoilLengthMm)}</strong> ·{" "}
                 <strong>{plan.setupCount}</strong> programa{plan.setupCount > 1 ? "s" : ""} de corte
+                {" "}· perda <strong>{fmtMm(plan.programs.reduce((max, p) => Math.max(max, p.pattern.waste), 0))}</strong>
+                {" "}· <strong>{fmtPct(100 - plan.yieldPercent)}</strong>
               </p>
               <ProgramTimeline programs={plan.programs} totalLengthMm={plan.totalCoilLengthMm} />
 
