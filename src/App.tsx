@@ -420,14 +420,24 @@ export default function App() {
         {(() => {
           const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
           const servicePrice = coil.servicePrice ?? 0;
-          const lossPct = plan ? (100 - plan.yieldPercent) : 0;
-          const priceWithLoss = usedPrice != null ? usedPrice * (1 + lossPct / 100) + servicePrice : null;
+          const totalLossPct = plan ? (100 - plan.yieldPercent) : 0;
+          const longitudinalPct = plan ? (() => {
+            const totalLength = plan.programs.reduce((s, p) => s + p.coilLengthMm, 0);
+            const weightedWaste = plan.programs.reduce((s, p) => s + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
+            return totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
+          })() : 0;
+          const priceWithTotalLoss = usedPrice != null ? usedPrice * (1 + totalLossPct / 100) + servicePrice : null;
+          const priceWithLongLoss = usedPrice != null ? usedPrice * (1 + longitudinalPct / 100) + servicePrice : null;
           const priceWithoutLoss = usedPrice != null ? usedPrice + servicePrice : null;
           return (
             <div className="pricing-results" style={{ marginTop: 16 }}>
               <div className="pricing-result highlight">
-                <span>Preço considerando perda (R$/Kg)</span>
-                <b>{priceWithLoss != null && plan ? fmtCurrency(priceWithLoss) : "—"}</b>
+                <span>Preço considerando perda total (R$/Kg)</span>
+                <b>{priceWithTotalLoss != null && plan ? fmtCurrency(priceWithTotalLoss) : "—"}</b>
+              </div>
+              <div className="pricing-result highlight">
+                <span>Preço considerando perda longitudinal (R$/Kg)</span>
+                <b>{priceWithLongLoss != null && plan ? fmtCurrency(priceWithLongLoss) : "—"}</b>
               </div>
               <div className="pricing-result">
                 <span>Preço desconsiderando perda (R$/Kg)</span>

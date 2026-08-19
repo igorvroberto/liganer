@@ -203,7 +203,8 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
   const totalLength = plan.programs.reduce((s, p) => s + p.coilLengthMm, 0);
   const weightedWaste = plan.programs.reduce((s, p) => s + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
   const transversalPct = totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
-  const priceWithLoss = usedFactorPrice != null ? usedFactorPrice * (1 + lossPct / 100) + servicePrice : null;
+  const priceWithTotalLoss = usedFactorPrice != null ? usedFactorPrice * (1 + lossPct / 100) + servicePrice : null;
+  const priceWithLongLoss = usedFactorPrice != null ? usedFactorPrice * (1 + transversalPct / 100) + servicePrice : null;
   const priceWithoutLoss = usedFactorPrice != null ? usedFactorPrice + servicePrice : null;
 
   autoTable(doc, {
@@ -226,7 +227,8 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Perda total", `${fmtNumber(lossPct, 2)}%`],
       ["Preço serviço", servicePrice > 0 ? fmtCurrency(servicePrice) : "-"],
       ["Descrição serviço", coil.serviceDescription?.trim() || "-"],
-      ["Preço considerando perda", priceWithLoss != null ? fmtCurrency(priceWithLoss) : "-"],
+      ["Preço considerando perda total", priceWithTotalLoss != null ? fmtCurrency(priceWithTotalLoss) : "-"],
+      ["Preço considerando perda longitudinal", priceWithLongLoss != null ? fmtCurrency(priceWithLongLoss) : "-"],
       ["Preço desconsiderando perda", priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss) : "-"],
     ],
   });
