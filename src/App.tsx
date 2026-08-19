@@ -422,11 +422,11 @@ export default function App() {
             <div className="pricing-results" style={{ marginTop: 16 }}>
               <div className="pricing-result highlight">
                 <span>Preço considerando perda (R$/Kg)</span>
-                <b>{priceWithLoss != null && plan ? fmtCurrency(priceWithLoss, 4) : "—"}</b>
+                <b>{priceWithLoss != null && plan ? fmtCurrency(priceWithLoss) : "—"}</b>
               </div>
               <div className="pricing-result">
                 <span>Preço desconsiderando perda (R$/Kg)</span>
-                <b>{priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss, 4) : "—"}</b>
+                <b>{priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss) : "—"}</b>
               </div>
             </div>
           );

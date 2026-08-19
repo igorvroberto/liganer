@@ -178,8 +178,8 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Perda total", `${fmtNumber(lossPct, 2)}%`],
       ["Preço serviço", servicePrice > 0 ? fmtCurrency(servicePrice) : "-"],
       ["Descrição serviço", coil.serviceDescription?.trim() || "-"],
-      ["Preço considerando perda", priceWithLoss != null ? fmtCurrency(priceWithLoss, 4) : "-"],
-      ["Preço desconsiderando perda", priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss, 4) : "-"],
+      ["Preço considerando perda", priceWithLoss != null ? fmtCurrency(priceWithLoss) : "-"],
+      ["Preço desconsiderando perda", priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss) : "-"],
     ],
   });
 
