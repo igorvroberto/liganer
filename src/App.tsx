@@ -350,24 +350,6 @@ export default function App() {
               value={plan ? fmtPct(lossBreakdown(plan.programs, plan.usefulWeightKg, coil).longitudinalPct) : "—"}
             />
           </label>
-          <label className="field">
-            <span>Perda transversal (%)</span>
-            <input
-              readOnly
-              tabIndex={-1}
-              className="input-readonly"
-              value={plan ? fmtPct(lossBreakdown(plan.programs, plan.usefulWeightKg, coil).transversalPct) : "—"}
-            />
-          </label>
-          <label className="field">
-            <span>Perda total (%)</span>
-            <input
-              readOnly
-              tabIndex={-1}
-              className="input-readonly"
-              value={plan ? fmtPct(100 - plan.yieldPercent) : "—"}
-            />
-          </label>
         </div>
         <div className="fields coil-fields" style={{ marginTop: 16 }}>
           <label className="field">
@@ -454,7 +436,8 @@ export default function App() {
                     {" "}· {fmtKg(breakdown.refileKg)} ({fmtPct(breakdown.refilePct)})
                     {" "}· Perda transversal: <strong>{fmtPct(breakdown.transversalPct)}</strong>
                     {" "}({fmtKg(breakdown.transversalKg)})
-                    {" "}— informativos; não entram no aproveitamento. O refile reduz a largura útil dos planos.
+                    {" "}· Perda total: <strong>{fmtPct(100 - plan.yieldPercent)}</strong>
+                    {" "}— refile e transversal não entram no aproveitamento; o refile reduz a largura útil dos planos.
                   </p>
                 );
               })()}
@@ -480,7 +463,6 @@ export default function App() {
               <p className="note">
                 Comprimento total: <strong>{fmtMeters(plan.totalCoilLengthMm)}</strong> ·{" "}
                 <strong>{plan.setupCount}</strong> programa{plan.setupCount > 1 ? "s" : ""} de corte
-                {" "}· perda total <strong>{fmtPct(100 - plan.yieldPercent)}</strong>
               </p>
               <ProgramTimeline programs={plan.programs} totalLengthMm={plan.totalCoilLengthMm} />
 
