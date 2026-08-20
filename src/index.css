@@ -692,6 +692,11 @@ th {
   border-left: 3px solid #1f6f8b;
 }
 
+.loss-info-note strong:first-child {
+  display: inline;
+  color: #16384a;
+}
+
 .empty {
   color: var(--muted);
 }

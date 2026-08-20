@@ -51,8 +51,8 @@ export type LossBreakdown = {
 };
 
 /**
- * Aproveitamento/perda usam só a sobra de largura (longitudinal).
- * Refile e perda transversal (resto de comprimento) são informativos e não entram no %.
+ * Aproveitamento usa a largura total da bobina como base e desconsidera o refile
+ * (e a perda transversal): só a sobra de largura entra na perda.
  * O refile continua reduzindo a largura útil nos planos de corte via usableWidth().
  */
 export function lossBreakdown(
@@ -65,9 +65,9 @@ export function lossBreakdown(
   const scrapKg = longitudinalWasteKg(programs, coil);
   const refileKg = refileWeightKg(totalLengthMm, coil);
   const transversalKg = Math.max(0, physicalCoilKg - usefulKg - scrapKg - refileKg);
-  const yieldBasisKg = usefulKg + scrapKg;
-  const yieldPercent = yieldBasisKg > 0 ? (usefulKg / yieldBasisKg) * 100 : 0;
-  const longitudinalPct = yieldBasisKg > 0 ? (scrapKg / yieldBasisKg) * 100 : 0;
+  // Base = peso da bobina na largura total; refile não entra na perda do %.
+  const yieldPercent = physicalCoilKg > 0 ? ((physicalCoilKg - scrapKg) / physicalCoilKg) * 100 : 0;
+  const longitudinalPct = physicalCoilKg > 0 ? (scrapKg / physicalCoilKg) * 100 : 0;
   const transversalPct = physicalCoilKg > 0 ? (transversalKg / physicalCoilKg) * 100 : 0;
   const refilePct = physicalCoilKg > 0 ? (refileKg / physicalCoilKg) * 100 : 0;
   const widthWasteMm =
@@ -93,13 +93,12 @@ export function programLoss(program: ProgramResult, coil: CoilInput) {
   const usefulKg = program.weightPerProductKg.reduce((sum, kg) => sum + kg, 0);
   const breakdown = lossBreakdown([program], usefulKg, coil);
   const widthWasteMm = program.pattern.waste;
-  const usable = usableWidth(coil);
-  const widthLossPercent = usable > 0 ? (widthWasteMm / usable) * 100 : 0;
+  const widthLossPercent = coil.width > 0 ? (widthWasteMm / coil.width) * 100 : 0;
   return {
     coilKg: breakdown.physicalCoilKg,
     usefulKg,
     scrapKg: breakdown.scrapKg,
-    lossPercent: 100 - breakdown.yieldPercent,
+    lossPercent: breakdown.longitudinalPct,
     widthWasteMm,
     widthLossPercent,
     refileKg: breakdown.refileKg,

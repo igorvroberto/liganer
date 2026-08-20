@@ -250,16 +250,6 @@ export default function App() {
               onChange={(e) => updateCoil({ edgeTrim: Number(e.target.value) })}
             />
           </label>
-          <label className="field">
-            <span>Perda entre tiras/faca (mm)</span>
-            <input
-              type="number"
-              min={0}
-              step={0.5}
-              value={coil.kerf}
-              onChange={(e) => updateCoil({ kerf: Number(e.target.value) })}
-            />
-          </label>
         </div>
         <div className="field span-all">
           <span>O peso informado pode ser ultrapassado?</span>
@@ -380,17 +370,11 @@ export default function App() {
           const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
           const servicePrice = coil.servicePrice ?? 0;
           const breakdown = plan ? lossBreakdown(plan.programs, plan.usefulWeightKg, coil) : null;
-          const totalLossPct = breakdown ? breakdown.longitudinalPct : 0;
           const longitudinalPct = breakdown ? breakdown.longitudinalPct : 0;
-          const priceWithTotalLoss = usedPrice != null ? usedPrice * (1 + totalLossPct / 100) + servicePrice : null;
           const priceWithLongLoss = usedPrice != null ? usedPrice * (1 + longitudinalPct / 100) + servicePrice : null;
           const priceWithoutLoss = usedPrice != null ? usedPrice + servicePrice : null;
           return (
             <div className="pricing-results" style={{ marginTop: 16 }}>
-              <div className="pricing-result highlight">
-                <span>Preço considerando perda total (R$/Kg)</span>
-                <b>{priceWithTotalLoss != null && plan ? fmtCurrency(priceWithTotalLoss) : "—"}</b>
-              </div>
               <div className="pricing-result highlight">
                 <span>Preço considerando perda longitudinal (R$/Kg)</span>
                 <b>{priceWithLongLoss != null && plan ? fmtCurrency(priceWithLongLoss) : "—"}</b>
@@ -432,12 +416,13 @@ export default function App() {
                 const breakdown = lossBreakdown(plan.programs, plan.usefulWeightKg, coil);
                 return (
                   <p className="note loss-info-note">
-                    Refile: <strong>{fmtMm(coil.edgeTrim * 2)}</strong> (2×{fmtMm(coil.edgeTrim)})
+                    <strong>Aproveitamento na largura total da bobina, desconsiderando o refile.</strong>
+                    {" "}Refile: <strong>{fmtMm(coil.edgeTrim * 2)}</strong> (2×{fmtMm(coil.edgeTrim)})
                     {" "}· {fmtKg(breakdown.refileKg)} ({fmtPct(breakdown.refilePct)})
                     {" "}· Perda transversal: <strong>{fmtPct(breakdown.transversalPct)}</strong>
                     {" "}({fmtKg(breakdown.transversalKg)})
                     {" "}· Perda total: <strong>{fmtPct(100 - plan.yieldPercent)}</strong>
-                    {" "}— refile e transversal não entram no aproveitamento; o refile reduz a largura útil dos planos.
+                    {" "}— refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.
                   </p>
                 );
               })()}

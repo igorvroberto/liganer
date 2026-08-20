@@ -101,7 +101,7 @@ export default function BlankItemsTable({
       <div className="items-panel-head">
         <div>
           <h2>Itens do pedido</h2>
-          <p className="note">Informe largura, comprimento, quantidade e peso. Ao editar quantidade ou peso, o outro campo é recalculado.</p>
+          <p className="note">Informe largura, comprimento, peso e quantidade. Ao editar peso ou quantidade, o outro campo é recalculado.</p>
         </div>
         <button className="btn btn-primary" type="button" onClick={addItem}>
           + Adicionar item
@@ -115,8 +115,8 @@ export default function BlankItemsTable({
               <th />
               <th>Largura (mm)</th>
               <th>Comprimento (mm)</th>
-              <th>Quantidade (un)</th>
               <th>Peso (Kg)</th>
+              <th>Quantidade (un)</th>
               <th>Peso un.</th>
               <th />
             </tr>
@@ -155,20 +155,20 @@ export default function BlankItemsTable({
                     <input
                       type="number"
                       min={0}
-                      step={1}
-                      className={mode === "qty" ? "linked-active" : "linked"}
-                      value={blank.minQty || ""}
-                      onChange={(e) => updateQty(blank.id, e.target.value)}
+                      step={0.1}
+                      className={mode === "weight" ? "linked-active" : "linked"}
+                      value={blank.minKg || ""}
+                      onChange={(e) => updateWeight(blank.id, e.target.value)}
                     />
                   </td>
                   <td>
                     <input
                       type="number"
                       min={0}
-                      step={0.1}
-                      className={mode === "weight" ? "linked-active" : "linked"}
-                      value={blank.minKg || ""}
-                      onChange={(e) => updateWeight(blank.id, e.target.value)}
+                      step={1}
+                      className={mode === "qty" ? "linked-active" : "linked"}
+                      value={blank.minQty || ""}
+                      onChange={(e) => updateQty(blank.id, e.target.value)}
                     />
                   </td>
                   <td className="unit-cell">
