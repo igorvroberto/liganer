@@ -200,10 +200,8 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     : null;
   const servicePrice = coil.servicePrice ?? 0;
   const breakdown = lossBreakdown(plan.programs, plan.usefulWeightKg, coil);
-  const lossPct = breakdown.longitudinalPct;
   const longitudinalPct = breakdown.longitudinalPct;
-  const transversalPct = breakdown.transversalPct;
-  const priceWithTotalLoss = usedFactorPrice != null ? usedFactorPrice * (1 + lossPct / 100) + servicePrice : null;
+  const priceWithTotalLoss = usedFactorPrice != null ? usedFactorPrice * (1 + longitudinalPct / 100) + servicePrice : null;
   const priceWithLongLoss = usedFactorPrice != null ? usedFactorPrice * (1 + longitudinalPct / 100) + servicePrice : null;
   const priceWithoutLoss = usedFactorPrice != null ? usedFactorPrice + servicePrice : null;
 
@@ -223,8 +221,6 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Fator utilizado", coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-"],
       ["Preço fator utilizado", usedFactorPrice != null ? fmtCurrency(usedFactorPrice) : "-"],
       ["Perda longitudinal", `${fmtNumber(longitudinalPct, 2)}%`],
-      ["Perda transversal", `${fmtNumber(transversalPct, 2)}%`],
-      ["Perda total", `${fmtNumber(lossPct, 2)}%`],
       ["Preço serviço", servicePrice > 0 ? fmtCurrency(servicePrice) : "-"],
       ["Descrição serviço", coil.serviceDescription?.trim() || "-"],
       ["Preço considerando perda total", priceWithTotalLoss != null ? fmtCurrency(priceWithTotalLoss) : "-"],
@@ -237,7 +233,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
   doc.setFont(fontName, "bold");
   doc.setFontSize(10);
   doc.setTextColor(27, 36, 44);
-  doc.text("Refile e perda transversal", margin, y);
+  doc.text("Informações de perda", margin, y);
   y += 2;
 
   autoTable(doc, {
@@ -254,9 +250,10 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Refile (total / cada lado)", `${fmtMm(coil.edgeTrim * 2)} (2×${fmtMm(coil.edgeTrim)})`],
       ["Peso do refile", `${fmtKg(breakdown.refileKg)} (${fmtPct(breakdown.refilePct)})`],
       ["Perda transversal", `${fmtPct(breakdown.transversalPct)} (${fmtKg(breakdown.transversalKg)})`],
+      ["Perda total", `${fmtPct(100 - plan.yieldPercent)}`],
       [
         "Observação",
-        "Não entram no aproveitamento/perda total. O refile reduz a largura útil dos planos de corte.",
+        "Refile e perda transversal não entram no aproveitamento. O refile reduz a largura útil dos planos de corte.",
       ],
     ],
   });
