@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import BlankItemsTable from "./components/BlankItemsTable";
 import { resyncBlankDemand } from "./lib/blankSync";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseDecimalBr, parseThickness } from "./lib/format";
-import { optimizeCutting, programLoss } from "./lib/optimize";
+import { lossBreakdown, optimizeCutting, programLoss } from "./lib/optimize";
 import { downloadPlanPdf } from "./lib/pdfReport";
 import {
   BLANK_COLORS,
@@ -124,11 +124,10 @@ function ProgramLossNote({ program, coil }: { program: ProgramResult; coil: Coil
   const loss = programLoss(program, coil);
   return (
     <p className="program-loss">
-      Perda: <strong>{fmtPct(loss.lossPercent)}</strong>
+      Perda (longitudinal): <strong>{fmtPct(loss.lossPercent)}</strong>
       <span>
         {" "}
         · sucata {fmtKg(loss.scrapKg)} · sobra {fmtMm(loss.widthWasteMm)} ({fmtPct(loss.widthLossPercent)})
-        {coil.edgeTrim > 0 && ` · refile ${fmtMm(coil.edgeTrim * 2)} (2×${fmtMm(coil.edgeTrim)})`}
       </span>
     </p>
   );
@@ -348,11 +347,7 @@ export default function App() {
               readOnly
               tabIndex={-1}
               className="input-readonly"
-              value={plan ? (() => {
-                const weightedWaste = plan.programs.reduce((sum, p) => sum + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
-                const totalLength = plan.programs.reduce((sum, p) => sum + p.coilLengthMm, 0);
-                return fmtPct(totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0);
-              })() : "—"}
+              value={plan ? fmtPct(lossBreakdown(plan.programs, plan.usefulWeightKg, coil).longitudinalPct) : "—"}
             />
           </label>
           <label className="field">
@@ -361,13 +356,7 @@ export default function App() {
               readOnly
               tabIndex={-1}
               className="input-readonly"
-              value={plan ? (() => {
-                const totalLossPct = 100 - plan.yieldPercent;
-                const weightedWaste = plan.programs.reduce((sum, p) => sum + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
-                const totalLength = plan.programs.reduce((sum, p) => sum + p.coilLengthMm, 0);
-                const longitudinalPct = totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
-                return fmtPct(Math.max(0, totalLossPct - longitudinalPct));
-              })() : "—"}
+              value={plan ? fmtPct(lossBreakdown(plan.programs, plan.usefulWeightKg, coil).transversalPct) : "—"}
             />
           </label>
           <label className="field">
@@ -408,12 +397,9 @@ export default function App() {
         {(() => {
           const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
           const servicePrice = coil.servicePrice ?? 0;
-          const totalLossPct = plan ? (100 - plan.yieldPercent) : 0;
-          const longitudinalPct = plan ? (() => {
-            const totalLength = plan.programs.reduce((s, p) => s + p.coilLengthMm, 0);
-            const weightedWaste = plan.programs.reduce((s, p) => s + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
-            return totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
-          })() : 0;
+          const breakdown = plan ? lossBreakdown(plan.programs, plan.usefulWeightKg, coil) : null;
+          const totalLossPct = breakdown ? breakdown.longitudinalPct : 0;
+          const longitudinalPct = breakdown ? breakdown.longitudinalPct : 0;
           const priceWithTotalLoss = usedPrice != null ? usedPrice * (1 + totalLossPct / 100) + servicePrice : null;
           const priceWithLongLoss = usedPrice != null ? usedPrice * (1 + longitudinalPct / 100) + servicePrice : null;
           const priceWithoutLoss = usedPrice != null ? usedPrice + servicePrice : null;
@@ -460,6 +446,18 @@ export default function App() {
           {!result.ok && <div className="error">{result.message}</div>}
           {result.ok && plan && (
             <>
+              {(() => {
+                const breakdown = lossBreakdown(plan.programs, plan.usefulWeightKg, coil);
+                return (
+                  <p className="note loss-info-note">
+                    Refile: <strong>{fmtMm(coil.edgeTrim * 2)}</strong> (2×{fmtMm(coil.edgeTrim)})
+                    {" "}· {fmtKg(breakdown.refileKg)} ({fmtPct(breakdown.refilePct)})
+                    {" "}· Perda transversal: <strong>{fmtPct(breakdown.transversalPct)}</strong>
+                    {" "}({fmtKg(breakdown.transversalKg)})
+                    {" "}— informativos; não entram no aproveitamento. O refile reduz a largura útil dos planos.
+                  </p>
+                );
+              })()}
               <div className="kpis">
                 <div className="kpi good">
                   <span>Aproveitamento</span>
@@ -474,7 +472,7 @@ export default function App() {
                   <b>{fmtKg(plan.usefulWeightKg)}</b>
                 </div>
                 <div className="kpi">
-                  <span>Sucata</span>
+                  <span>Sucata (longitudinal)</span>
                   <b>{fmtKg(plan.scrapKg)}</b>
                 </div>
               </div>

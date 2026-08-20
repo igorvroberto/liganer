@@ -684,6 +684,14 @@ th {
   margin-top: 12px;
 }
 
+.loss-info-note {
+  margin-top: 0;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--surface, #fff) 88%, #1f6f8b 12%);
+  border-left: 3px solid #1f6f8b;
+}
+
 .empty {
   color: var(--muted);
 }

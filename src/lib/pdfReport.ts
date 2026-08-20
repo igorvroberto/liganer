@@ -2,7 +2,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness } from "./format";
 import { BLANK_COLORS, type CoilInput, type RankedPlan } from "./types";
-import { programLoss } from "./optimize";
+import { lossBreakdown, programLoss } from "./optimize";
 import { registerPdfFonts } from "./pdfFonts";
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -199,12 +199,12 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     ? coil.priceFactor100 / (coil.usedFactor / 100)
     : null;
   const servicePrice = coil.servicePrice ?? 0;
-  const lossPct = 100 - plan.yieldPercent;
-  const totalLength = plan.programs.reduce((s, p) => s + p.coilLengthMm, 0);
-  const weightedWaste = plan.programs.reduce((s, p) => s + (p.pattern.waste / coil.width) * p.coilLengthMm, 0);
-  const transversalPct = totalLength > 0 ? (weightedWaste / totalLength) * 100 : 0;
+  const breakdown = lossBreakdown(plan.programs, plan.usefulWeightKg, coil);
+  const lossPct = breakdown.longitudinalPct;
+  const longitudinalPct = breakdown.longitudinalPct;
+  const transversalPct = breakdown.transversalPct;
   const priceWithTotalLoss = usedFactorPrice != null ? usedFactorPrice * (1 + lossPct / 100) + servicePrice : null;
-  const priceWithLongLoss = usedFactorPrice != null ? usedFactorPrice * (1 + transversalPct / 100) + servicePrice : null;
+  const priceWithLongLoss = usedFactorPrice != null ? usedFactorPrice * (1 + longitudinalPct / 100) + servicePrice : null;
   const priceWithoutLoss = usedFactorPrice != null ? usedFactorPrice + servicePrice : null;
 
   autoTable(doc, {
@@ -222,8 +222,8 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       ["Tipo de bobina", coil.coilType === "reduzida" ? "Reduzida" : "Inteira"],
       ["Fator utilizado", coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-"],
       ["Preço fator utilizado", usedFactorPrice != null ? fmtCurrency(usedFactorPrice) : "-"],
-      ["Perda longitudinal", `${fmtNumber(transversalPct, 2)}%`],
-      ["Perda transversal", `${fmtNumber(Math.max(0, lossPct - transversalPct), 2)}%`],
+      ["Perda longitudinal", `${fmtNumber(longitudinalPct, 2)}%`],
+      ["Perda transversal", `${fmtNumber(transversalPct, 2)}%`],
       ["Perda total", `${fmtNumber(lossPct, 2)}%`],
       ["Preço serviço", servicePrice > 0 ? fmtCurrency(servicePrice) : "-"],
       ["Descrição serviço", coil.serviceDescription?.trim() || "-"],
@@ -237,13 +237,41 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
   doc.setFont(fontName, "bold");
   doc.setFontSize(10);
   doc.setTextColor(27, 36, 44);
+  doc.text("Refile e perda transversal", margin, y);
+  y += 2;
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    theme: "plain",
+    styles: { font: fontName, fontSize: 8.5, cellPadding: 1.2 },
+    bodyStyles: { font: fontName },
+    columnStyles: {
+      0: { fontStyle: "bold", cellWidth: 52 },
+      1: { cellWidth: contentW - 52 },
+    },
+    body: [
+      ["Refile (total / cada lado)", `${fmtMm(coil.edgeTrim * 2)} (2×${fmtMm(coil.edgeTrim)})`],
+      ["Peso do refile", `${fmtKg(breakdown.refileKg)} (${fmtPct(breakdown.refilePct)})`],
+      ["Perda transversal", `${fmtPct(breakdown.transversalPct)} (${fmtKg(breakdown.transversalKg)})`],
+      [
+        "Observação",
+        "Não entram no aproveitamento/perda total. O refile reduz a largura útil dos planos de corte.",
+      ],
+    ],
+  });
+
+  y = lastTableY(doc) + 6;
+  doc.setFont(fontName, "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(27, 36, 44);
   doc.text("Resumo do plano", margin, y);
   y += 2;
 
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
-    head: [["Aproveitamento", "Peso da bobina", "Peso útil", "Sucata"]],
+    head: [["Aproveitamento", "Peso da bobina", "Peso útil", "Sucata (longitudinal)"]],
     body: [[fmtPct(plan.yieldPercent), fmtKg(plan.coilWeightKg), fmtKg(plan.usefulWeightKg), fmtKg(plan.scrapKg)]],
     headStyles: { font: fontName, fontStyle: "bold", fillColor: [22, 56, 74], textColor: 255, fontSize: 7.5, halign: "center" },
     bodyStyles: { font: fontName, fontStyle: "bold", fontSize: 9, halign: "center" },
@@ -293,9 +321,9 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       bodyStyles: { font: fontName },
       body: [
         [
-          `Perda: ${fmtPct(loss.lossPercent)}`,
+          `Perda (longitudinal): ${fmtPct(loss.lossPercent)}`,
           `Sucata: ${fmtKg(loss.scrapKg)}`,
-          `Sobra: ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})${coil.edgeTrim > 0 ? ` · Refile: ${fmtMm(coil.edgeTrim * 2)} (2×${fmtMm(coil.edgeTrim)})` : ""}`,
+          `Sobra: ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})`,
         ],
       ],
     });
