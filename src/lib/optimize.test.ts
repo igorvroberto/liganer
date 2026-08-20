@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { combinations, minSumWithCoverage, solveLinearSystem } from "./math";
 import {
   generatePatterns,
+  lossBreakdown,
   minPiecesForBlank,
   optimizeCutting,
   programLoss,
@@ -126,6 +127,32 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
 
   it("respeita a largura útil com refile", () => {
     expect(usableWidth({ width: 1250, thickness: 1, density: 7.93, kerf: 0, edgeTrim: 10 })).toBe(1230);
+  });
+
+  it("exclui refile e perda transversal do aproveitamento", () => {
+    const result = optimizeCutting({
+      coil: { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 10 },
+      blanks: [{ id: "a", name: "600×470", width: 600, length: 470, minKg: 1000, minQty: 0 }],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const plan = result.alternatives[0];
+    const breakdown = lossBreakdown(plan.programs, plan.usefulWeightKg, {
+      width: 1250,
+      thickness: 0.4,
+      density: 8,
+      kerf: 0,
+      edgeTrim: 10,
+    });
+
+    expect(breakdown.refileKg).toBeGreaterThan(0);
+    expect(plan.yieldPercent).toBeCloseTo(breakdown.yieldPercent, 5);
+    expect(plan.scrapKg).toBeCloseTo(breakdown.scrapKg, 5);
+    // Aproveitamento só com sobra longitudinal: refile/transversal não puxam o % para baixo.
+    expect(plan.yieldPercent).toBeCloseTo(100 - breakdown.longitudinalPct, 5);
+    expect(plan.coilWeightKg).toBeCloseTo(breakdown.physicalCoilKg, 5);
+    expect(plan.coilWeightKg).toBeGreaterThan(plan.usefulWeightKg + plan.scrapKg);
   });
 
   it("atende quantidade mínima em unidades", () => {

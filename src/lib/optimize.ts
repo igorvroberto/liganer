@@ -23,14 +23,91 @@ export function coilWeightKg(coilLengthMm: number, coil: CoilInput): number {
   return (coil.width * coilLengthMm * coil.thickness * coil.density) / MM_TO_KG;
 }
 
+/** Peso da sobra de largura (perda longitudinal). Refile e resto de comprimento ficam de fora. */
+export function longitudinalWasteKg(programs: ProgramResult[], coil: CoilInput): number {
+  return programs.reduce(
+    (sum, program) =>
+      sum + (program.pattern.waste * program.coilLengthMm * coil.thickness * coil.density) / MM_TO_KG,
+    0,
+  );
+}
+
+export function refileWeightKg(coilLengthMm: number, coil: CoilInput): number {
+  return (2 * coil.edgeTrim * coilLengthMm * coil.thickness * coil.density) / MM_TO_KG;
+}
+
+export type LossBreakdown = {
+  physicalCoilKg: number;
+  usefulKg: number;
+  /** Sucata considerada no aproveitamento (somente sobra de largura). */
+  scrapKg: number;
+  refileKg: number;
+  transversalKg: number;
+  yieldPercent: number;
+  longitudinalPct: number;
+  transversalPct: number;
+  refilePct: number;
+  widthWasteMm: number;
+};
+
+/**
+ * Aproveitamento/perda usam só a sobra de largura (longitudinal).
+ * Refile e perda transversal (resto de comprimento) são informativos e não entram no %.
+ * O refile continua reduzindo a largura útil nos planos de corte via usableWidth().
+ */
+export function lossBreakdown(
+  programs: ProgramResult[],
+  usefulKg: number,
+  coil: CoilInput,
+): LossBreakdown {
+  const totalLengthMm = programs.reduce((s, p) => s + p.coilLengthMm, 0);
+  const physicalCoilKg = coilWeightKg(totalLengthMm, coil);
+  const scrapKg = longitudinalWasteKg(programs, coil);
+  const refileKg = refileWeightKg(totalLengthMm, coil);
+  const transversalKg = Math.max(0, physicalCoilKg - usefulKg - scrapKg - refileKg);
+  const yieldBasisKg = usefulKg + scrapKg;
+  const yieldPercent = yieldBasisKg > 0 ? (usefulKg / yieldBasisKg) * 100 : 0;
+  const longitudinalPct = yieldBasisKg > 0 ? (scrapKg / yieldBasisKg) * 100 : 0;
+  const transversalPct = physicalCoilKg > 0 ? (transversalKg / physicalCoilKg) * 100 : 0;
+  const refilePct = physicalCoilKg > 0 ? (refileKg / physicalCoilKg) * 100 : 0;
+  const widthWasteMm =
+    totalLengthMm > 0
+      ? programs.reduce((s, p) => s + p.pattern.waste * p.coilLengthMm, 0) / totalLengthMm
+      : 0;
+
+  return {
+    physicalCoilKg,
+    usefulKg,
+    scrapKg,
+    refileKg,
+    transversalKg,
+    yieldPercent,
+    longitudinalPct,
+    transversalPct,
+    refilePct,
+    widthWasteMm,
+  };
+}
+
 export function programLoss(program: ProgramResult, coil: CoilInput) {
-  const coilKg = coilWeightKg(program.coilLengthMm, coil);
   const usefulKg = program.weightPerProductKg.reduce((sum, kg) => sum + kg, 0);
-  const scrapKg = Math.max(0, coilKg - usefulKg);
-  const lossPercent = coilKg > 0 ? (scrapKg / coilKg) * 100 : 0;
+  const breakdown = lossBreakdown([program], usefulKg, coil);
   const widthWasteMm = program.pattern.waste;
-  const widthLossPercent = coil.width > 0 ? (widthWasteMm / coil.width) * 100 : 0;
-  return { coilKg, usefulKg, scrapKg, lossPercent, widthWasteMm, widthLossPercent };
+  const usable = usableWidth(coil);
+  const widthLossPercent = usable > 0 ? (widthWasteMm / usable) * 100 : 0;
+  return {
+    coilKg: breakdown.physicalCoilKg,
+    usefulKg,
+    scrapKg: breakdown.scrapKg,
+    lossPercent: 100 - breakdown.yieldPercent,
+    widthWasteMm,
+    widthLossPercent,
+    refileKg: breakdown.refileKg,
+    transversalKg: breakdown.transversalKg,
+    longitudinalPct: breakdown.longitudinalPct,
+    transversalPct: breakdown.transversalPct,
+    refilePct: breakdown.refilePct,
+  };
 }
 
 export function minPiecesForBlank(blank: BlankInput, unitKg: number): number {
@@ -309,8 +386,8 @@ function planFromPrograms(
 
   const products = productResults(blanks, coil, pieces, nTarget);
   const totalCoilLengthMm = programs.reduce((s, p) => s + p.coilLengthMm, 0);
-  const coilKg = coilWeightKg(totalCoilLengthMm, coil);
   const usefulKg = products.reduce((s, p) => s + p.weightKg, 0);
+  const breakdown = lossBreakdown(programs, usefulKg, coil);
   const targetKg = blanks.reduce((s, b, i) => {
     const fromPieces = nTarget[i] * products[i].unitWeightKg;
     return s + (b.minKg > 0 ? Math.min(b.minKg, fromPieces) || fromPieces : fromPieces);
@@ -320,10 +397,10 @@ function planFromPrograms(
 
   return {
     label,
-    yieldPercent: coilKg > 0 ? (usefulKg / coilKg) * 100 : 0,
-    coilWeightKg: coilKg,
+    yieldPercent: breakdown.yieldPercent,
+    coilWeightKg: breakdown.physicalCoilKg,
     usefulWeightKg: usefulKg,
-    scrapKg: Math.max(0, coilKg - usefulKg),
+    scrapKg: breakdown.scrapKg,
     totalCoilLengthMm,
     programs,
     products,
