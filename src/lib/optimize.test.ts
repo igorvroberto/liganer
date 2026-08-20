@@ -149,10 +149,13 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     expect(breakdown.refileKg).toBeGreaterThan(0);
     expect(plan.yieldPercent).toBeCloseTo(breakdown.yieldPercent, 5);
     expect(plan.scrapKg).toBeCloseTo(breakdown.scrapKg, 5);
-    // Aproveitamento só com sobra longitudinal: refile/transversal não puxam o % para baixo.
+    // Base = largura total; só a sobra longitudinal reduz o %.
     expect(plan.yieldPercent).toBeCloseTo(100 - breakdown.longitudinalPct, 5);
     expect(plan.coilWeightKg).toBeCloseTo(breakdown.physicalCoilKg, 5);
-    expect(plan.coilWeightKg).toBeGreaterThan(plan.usefulWeightKg + plan.scrapKg);
+    expect(breakdown.longitudinalPct).toBeCloseTo(
+      (breakdown.scrapKg / breakdown.physicalCoilKg) * 100,
+      5,
+    );
   });
 
   it("atende quantidade mínima em unidades", () => {
