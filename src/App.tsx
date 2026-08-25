@@ -7,6 +7,7 @@ import { downloadPlanPdf } from "./lib/pdfReport";
 import {
   BLANK_COLORS,
   DEFAULT_DENSITY,
+  FIXED_EDGE_TRIM_MM,
   PVC_OPTIONS,
   type BlankInput,
   type CoilInput,
@@ -20,7 +21,7 @@ const EMPTY_COIL: CoilInput = {
   thickness: 0,
   density: DEFAULT_DENSITY,
   kerf: 0,
-  edgeTrim: 0,
+  edgeTrim: FIXED_EDGE_TRIM_MM,
   allowOvershoot: true,
   line: "",
 };
@@ -173,7 +174,7 @@ export default function App() {
 
   const updateCoil = (patch: Partial<CoilInput>) => {
     setSelectedAlt(0);
-    setCoil((prev) => ({ ...prev, ...patch, density: DEFAULT_DENSITY }));
+    setCoil((prev) => ({ ...prev, ...patch, density: DEFAULT_DENSITY, edgeTrim: FIXED_EDGE_TRIM_MM }));
   };
 
   const setThickness = (value: number) => {
@@ -240,16 +241,6 @@ export default function App() {
               min={1}
               value={coil.width || ""}
               onChange={(e) => updateCoil({ width: Number(e.target.value) })}
-            />
-          </label>
-          <label className="field">
-            <span>Refile de borda (mm cada lado)</span>
-            <input
-              type="number"
-              min={0}
-              step={0.5}
-              value={coil.edgeTrim}
-              onChange={(e) => updateCoil({ edgeTrim: Number(e.target.value) })}
             />
           </label>
         </div>
