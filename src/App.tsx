@@ -8,9 +8,11 @@ import {
   BLANK_COLORS,
   DEFAULT_DENSITY,
   FIXED_EDGE_TRIM_MM,
+  PVC_OPTIONS,
   type BlankInput,
   type CoilInput,
   type ProgramResult,
+  type PvcOption,
   type RankedPlan,
 } from "./lib/types";
 
@@ -273,7 +275,7 @@ export default function App() {
         <h2>Formação de preço</h2>
         <div className="fields coil-fields">
           <label className="field">
-            <span>Preço bobina fator 100 (R$/Kg)</span>
+            <span>Preço bobina reduzida fator 100 (R$/Kg)</span>
             <input
               inputMode="decimal"
               placeholder="Ex.: 45,00"
@@ -287,13 +289,16 @@ export default function App() {
             />
           </label>
           <label className="field">
-            <span>Tipo de bobina</span>
+            <span>PVC</span>
             <select
-              value={coil.coilType ?? "inteira"}
-              onChange={(e) => updateCoil({ coilType: e.target.value as "inteira" | "reduzida" })}
+              value={coil.pvc ?? "sem"}
+              onChange={(e) => updateCoil({ pvc: e.target.value as PvcOption })}
             >
-              <option value="inteira">Inteira</option>
-              <option value="reduzida">Reduzida</option>
+              {PVC_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </label>
           <label className="field">

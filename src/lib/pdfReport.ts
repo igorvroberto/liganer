@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness } from "./format";
-import { BLANK_COLORS, type CoilInput, type RankedPlan } from "./types";
+import { BLANK_COLORS, pvcLabel, type CoilInput, type RankedPlan } from "./types";
 import { lossBreakdown, programLoss } from "./optimize";
 import { registerPdfFonts } from "./pdfFonts";
 
@@ -214,8 +214,8 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       1: { cellWidth: contentW - 52 },
     },
     body: [
-      ["Preço bobina fator 100", coil.priceFactor100 != null ? fmtCurrency(coil.priceFactor100, 4) : "-"],
-      ["Tipo de bobina", coil.coilType === "reduzida" ? "Reduzida" : "Inteira"],
+      ["Preço bobina reduzida fator 100", coil.priceFactor100 != null ? fmtCurrency(coil.priceFactor100, 4) : "-"],
+      ["PVC", pvcLabel(coil.pvc)],
       ["Fator utilizado", coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-"],
       ["Preço fator utilizado", usedFactorPrice != null ? fmtCurrency(usedFactorPrice) : "-"],
       ["Perda longitudinal", `${fmtNumber(longitudinalPct, 2)}%`],
