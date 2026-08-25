@@ -7,13 +7,14 @@ export type BlankInput = {
   minQty: number;
 };
 
-export type PvcOption = "sem" | "azul" | "preto-branco" | "preto-laser";
+export type PvcOption = "sem" | "azul" | "preto-branco" | "preto" | "laser";
 
 export const PVC_OPTIONS: { value: PvcOption; label: string }[] = [
   { value: "sem", label: "Sem PVC" },
   { value: "azul", label: "Azul" },
   { value: "preto-branco", label: "Preto e branco" },
-  { value: "preto-laser", label: "Preto e Laser" },
+  { value: "preto", label: "Preto" },
+  { value: "laser", label: "Laser" },
 ];
 
 export function pvcLabel(pvc: PvcOption | undefined): string {
