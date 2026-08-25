@@ -94,6 +94,9 @@ export type RankedPlan = {
 
 export const DEFAULT_DENSITY = 8;
 
+/** Refile fixo (mm em cada lado). Não é editável na UI. */
+export const FIXED_EDGE_TRIM_MM = 5;
+
 export const COMMON_THICKNESSES = [0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5, 2.0, 2.5, 3.0];
 
 export const BLANK_COLORS = [
