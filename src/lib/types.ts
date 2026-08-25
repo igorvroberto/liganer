@@ -7,6 +7,19 @@ export type BlankInput = {
   minQty: number;
 };
 
+export type PvcOption = "sem" | "azul" | "preto-branco" | "preto-laser";
+
+export const PVC_OPTIONS: { value: PvcOption; label: string }[] = [
+  { value: "sem", label: "Sem PVC" },
+  { value: "azul", label: "Azul" },
+  { value: "preto-branco", label: "Preto e branco" },
+  { value: "preto-laser", label: "Preto e Laser" },
+];
+
+export function pvcLabel(pvc: PvcOption | undefined): string {
+  return PVC_OPTIONS.find((o) => o.value === pvc)?.label ?? "Sem PVC";
+}
+
 export type CoilInput = {
   width: number;
   thickness: number;
@@ -15,9 +28,9 @@ export type CoilInput = {
   edgeTrim: number;
   allowOvershoot?: boolean;
   line?: string;
-  /** Tipo de bobina: inteira ou reduzida */
-  coilType?: "inteira" | "reduzida";
-  /** Preço na tabela fator 100 (R$/Kg) */
+  /** Opção de PVC aplicada à bobina */
+  pvc?: PvcOption;
+  /** Preço bobina reduzida na tabela fator 100 (R$/Kg) */
   priceFactor100?: number;
   /** Fator comercial utilizado (ex.: 170 = divide por 1,70) */
   usedFactor?: number;
