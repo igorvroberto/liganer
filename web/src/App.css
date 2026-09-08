@@ -240,6 +240,23 @@ select {
   max-width: 8.5rem;
 }
 
+.table-edit-situacao {
+  min-width: 8.5rem;
+  max-width: none;
+  width: auto;
+}
+
+.table-edit-status,
+.col-status .table-edit {
+  min-width: 11.5rem;
+  max-width: none;
+  width: 100%;
+}
+
+.col-status {
+  min-width: 11.5rem;
+}
+
 .table-edit-text {
   min-width: 10rem;
 }
