@@ -29,7 +29,7 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
           <span>Busca</span>
           <input
             type="search"
-            placeholder="Empresa, produto, telefone, motivo…"
+            placeholder="Empresa, CNPJ, produto, telefone, motivo…"
             value={filters.q}
             onChange={(e) => set('q', e.target.value)}
           />

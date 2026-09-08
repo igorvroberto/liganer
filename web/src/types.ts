@@ -91,6 +91,7 @@ export const EDITABLE_FIELDS: {
   options?: readonly string[]
 }[] = [
   { key: 'empresa', label: 'Empresa', kind: 'text' },
+  { key: 'cnpj', label: 'CNPJ', kind: 'text' },
   { key: 'cidade', label: 'Cidade', kind: 'text' },
   { key: 'estado', label: 'Estado', kind: 'text' },
   { key: 'categoria', label: 'Categoria', kind: 'select', options: ['C', 'CD', 'M', 'I', 'R'] },

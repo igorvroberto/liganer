@@ -14,6 +14,7 @@ type Props = {
 const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'potencial', label: 'Potencial' },
   { key: 'empresa', label: 'Empresa' },
+  { key: 'cnpj', label: 'CNPJ' },
   { key: 'cidade', label: 'Cidade' },
   { key: 'categoria', label: 'Cat.' },
   { key: 'produto_provavel', label: 'Produto' },
@@ -106,6 +107,15 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Pr
               <td>
                 <strong>{l.empresa}</strong>
                 <div className="muted tiny">{l.id}</div>
+              </td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <input
+                  className="table-edit-text"
+                  value={l.cnpj ?? ''}
+                  onChange={(e) => onPatch(l.id, { cnpj: e.target.value })}
+                  aria-label={`CNPJ de ${l.empresa}`}
+                  placeholder="00.000.000/0000-00"
+                />
               </td>
               <td>
                 {l.cidade}

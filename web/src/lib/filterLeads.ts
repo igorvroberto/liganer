@@ -11,6 +11,7 @@ const SIT_ORDER = Object.fromEntries(SITUACAO_OPTIONS.map((s, i) => [s, i])) as 
 export type SortKey =
   | 'potencial'
   | 'empresa'
+  | 'cnpj'
   | 'cidade'
   | 'categoria'
   | 'produto_provavel'
@@ -32,6 +33,7 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
     if (!q) return true
     const hay = [
       l.empresa,
+      l.cnpj,
       l.cidade,
       l.categoria,
       l.subcategoria,
@@ -79,6 +81,8 @@ function cmp(a: Lead, b: Lead, key: SortKey): number {
       return (a.proxima_acao ?? '').localeCompare(b.proxima_acao ?? '', 'pt-BR')
     case 'cidade':
       return (a.cidade ?? '').localeCompare(b.cidade ?? '', 'pt-BR')
+    case 'cnpj':
+      return (a.cnpj ?? '').localeCompare(b.cnpj ?? '', 'pt-BR')
     case 'empresa':
     default:
       return (a.empresa ?? '').localeCompare(b.empresa ?? '', 'pt-BR')
