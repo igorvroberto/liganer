@@ -340,6 +340,31 @@ select {
   z-index: 1;
 }
 
+.th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.th-sort:hover,
+.th-sort.active {
+  color: var(--ink);
+}
+
+.th-sort-ind {
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+
 .leads-table tbody tr {
   cursor: pointer;
 }

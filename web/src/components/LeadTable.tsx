@@ -1,6 +1,7 @@
+import { useMemo, useState } from 'react'
 import type { Lead } from '../types'
 import { CATEGORIA_LABEL, POTENCIAL_OPTIONS, SITUACAO_OPTIONS } from '../types'
-import { potClass } from '../lib/filterLeads'
+import { potClass, sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
 
 type Props = {
   leads: Lead[]
@@ -10,7 +11,42 @@ type Props = {
   onDelete: (id: string) => void
 }
 
+const COLUMNS: { key: SortKey; label: string }[] = [
+  { key: 'potencial', label: 'Potencial' },
+  { key: 'empresa', label: 'Empresa' },
+  { key: 'cidade', label: 'Cidade' },
+  { key: 'categoria', label: 'Cat.' },
+  { key: 'produto_provavel', label: 'Produto' },
+  { key: 'situacao', label: 'Situação' },
+  { key: 'ultima_compra', label: 'Última compra' },
+  { key: 'proxima_acao', label: 'Próxima ação' },
+]
+
+/** Converte dd/mm/yyyy → yyyy-mm-dd para input type=date */
+function toDateInputValue(raw: string): string {
+  const s = (raw ?? '').trim()
+  if (!s) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (br) return `${br[3]}-${br[2]}-${br[1]}`
+  return ''
+}
+
 export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Props) {
+  const [sortKey, setSortKey] = useState<SortKey>('potencial')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  const sorted = useMemo(() => sortLeads(leads, sortKey, sortDir), [leads, sortKey, sortDir])
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir(key === 'ultima_compra' ? 'desc' : 'asc')
+    }
+  }
+
   if (!leads.length) {
     return <p className="empty">Nenhum lead com esses filtros.</p>
   }
@@ -20,18 +56,29 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Pr
       <table className="leads-table">
         <thead>
           <tr>
-            <th>Potencial</th>
-            <th>Empresa</th>
-            <th>Cidade</th>
-            <th>Cat.</th>
-            <th>Produto</th>
-            <th>Situação</th>
-            <th>Próxima ação</th>
+            {COLUMNS.map((col) => {
+              const active = sortKey === col.key
+              return (
+                <th key={col.key}>
+                  <button
+                    type="button"
+                    className={`th-sort${active ? ' active' : ''}`}
+                    onClick={() => toggleSort(col.key)}
+                    aria-label={`Ordenar por ${col.label}`}
+                  >
+                    {col.label}
+                    <span className="th-sort-ind" aria-hidden>
+                      {active ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </span>
+                  </button>
+                </th>
+              )
+            })}
             <th></th>
           </tr>
         </thead>
         <tbody>
-          {leads.map((l) => (
+          {sorted.map((l) => (
             <tr
               key={l.id}
               className={selectedId === l.id ? 'selected' : undefined}
@@ -93,6 +140,15 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Pr
                       </option>
                     ))}
                 </select>
+              </td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="date"
+                  className="table-edit-text"
+                  value={toDateInputValue(l.ultima_compra ?? '')}
+                  onChange={(e) => onPatch(l.id, { ultima_compra: e.target.value })}
+                  aria-label={`Última compra de ${l.empresa}`}
+                />
               </td>
               <td
                 className="clamp editable-cell"

@@ -1,5 +1,5 @@
 import type { Filters, Lead } from '../types'
-import { CATEGORIA_LABEL, POTENCIAL_OPTIONS } from '../types'
+import { CATEGORIA_LABEL, POTENCIAL_OPTIONS, SITUACAO_OPTIONS } from '../types'
 import { uniqueSorted } from '../lib/filterLeads'
 
 type Props = {
@@ -11,8 +11,13 @@ type Props = {
 
 export function FilterBar({ leads, filters, onChange, onClear }: Props) {
   const cidades = uniqueSorted(leads.map((l) => l.cidade))
-  const situacoes = uniqueSorted(leads.map((l) => l.situacao))
   const categorias = uniqueSorted(leads.map((l) => l.categoria))
+  const situacoes = [
+    ...SITUACAO_OPTIONS,
+    ...uniqueSorted(leads.map((l) => l.situacao)).filter(
+      (s) => !(SITUACAO_OPTIONS as readonly string[]).includes(s),
+    ),
+  ]
 
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) =>
     onChange({ ...filters, [key]: value })

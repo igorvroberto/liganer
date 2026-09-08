@@ -29,6 +29,7 @@ export type Lead = {
   fonte: string
   data_pesquisa: string
   ultimo_contato: string
+  ultima_compra: string
   situacao: string
   proxima_acao: string
   necessidade_identificada: string
@@ -96,6 +97,7 @@ export const EDITABLE_FIELDS: {
   { key: 'subcategoria', label: 'Subcategoria', kind: 'text' },
   { key: 'potencial', label: 'Potencial', kind: 'select', options: POTENCIAL_OPTIONS },
   { key: 'situacao', label: 'Situação', kind: 'select', options: SITUACAO_OPTIONS },
+  { key: 'ultima_compra', label: 'Última compra', kind: 'text' },
   { key: 'multiproduto', label: 'Multiproduto', kind: 'select', options: ['Sim', 'Não'] },
   { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },
   { key: 'produto_secundario', label: 'Produto secundário', kind: 'textarea' },

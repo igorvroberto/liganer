@@ -55,5 +55,5 @@ export function normalizeLead(
     visita_presencial?: string
     classificacao_comercial?: string
   }
-  return rest as Lead
+  return { ...rest, ultima_compra: rest.ultima_compra ?? '' } as Lead
 }
