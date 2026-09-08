@@ -1,43 +1,28 @@
-# Radar Comercial B2B — Aço & Metalurgia (Liganer Prospecção)
+# Liganer Prospecção
 
-Ferramenta de **prospecção comercial qualificada** para representante do setor siderúrgico/metalúrgico.
+Radar comercial B2B (aço/metalurgia) + sistema web em **`vendas.liganer.com.br/prospeccao`**.
 
-## Começar por aqui
+## Abrir a base (planilha)
 
-1. Abrir [`radar-comercial/RADAR-ARACATUBA.md`](./radar-comercial/RADAR-ARACATUBA.md) — painel + TOP 20 + rotas  
-2. Abrir [`radar-comercial/LEADS.csv`](./radar-comercial/LEADS.csv) no Excel/Sheets — CRM completo  
+- [`radar-comercial/LEADS.csv`](./radar-comercial/LEADS.csv) — **fonte da verdade (GitHub)**
+- Painel texto: [`radar-comercial/RADAR-ARACATUBA.md`](./radar-comercial/RADAR-ARACATUBA.md)
 
-## Escopo v1
-
-- **Cidade-base:** Araçatuba/SP  
-- **Raio inicial:** Birigui, Penápolis, Andradina (+ inteligência de obras)  
-- **5 funis:** Construção (C) · Corte e Dobra (CD) · Metalúrgica (M) · Indústria/Inox (I) · Distribuição (R)  
-
-## O que esta base NÃO é
-
-Lista genérica de empresas. Cada lead precisa responder: por que é prospect, qual produto do catálogo, por que compra.
-
-## Atualizar a base
-
-Editar leads em `radar-comercial/gerar_base.py` e regenerar:
+## Sistema web
 
 ```bash
-cd radar-comercial && python3 gerar_base.py
+bash scripts/sync-leads.sh
+cd web && npm install && npm run dev
+# http://localhost:5173/prospeccao/
 ```
 
-## Legenda rápida
+## Publicar (FTP)
 
-| Potencial | Significado |
-| --------- | ----------- |
-| A | Alta prioridade |
-| B | Média |
-| C | Baixa |
-| X | Concorrente |
-| P | Parceiro (quando aplicável) |
+1. `cd web && npm run build`
+2. Enviar `web/dist/` via FileZilla para `/prospeccao/`
+3. Configurar secrets `FTP_*` para o Action espelhar o CSV automaticamente
 
-| Classificação comercial | Significado |
-| ----------------------- | ----------- |
-| PROSPECT | Atacar |
-| CONCORRENTE | Fora da rota normal |
-| PARCEIRO | Indicações |
-| INDEFINIDO | Qualificar antes |
+Detalhes: [`deploy/README.md`](./deploy/README.md)
+
+## Atualizar leads
+
+Edite no GitHub → merge `main` → Action FTP atualiza `data/leads.csv` → no site clique **Atualizar**.

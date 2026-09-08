@@ -1,0 +1,5 @@
+{
+  "_comment": "Opcional. Se leadsUrl estiver vazio/ausente, o app usa /prospeccao/data/leads.csv (espelho via FTP a partir do GitHub).",
+  "leadsUrl": "",
+  "leadsLabel": "GitHub"
+}
