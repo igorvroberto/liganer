@@ -9,13 +9,7 @@ type Props = {
 }
 
 export function LeadDetail({ lead, onClose, onPatch, onDelete }: Props) {
-  if (!lead) {
-    return (
-      <aside className="detail empty-detail">
-        <p>Selecione um lead na tabela para editar o dossiê comercial.</p>
-      </aside>
-    )
-  }
+  if (!lead) return null
 
   const wa = lead.whatsapp?.replace(/\D/g, '')
 

@@ -1,5 +1,5 @@
 import type { Filters, Lead } from '../types'
-import { CATEGORIA_LABEL, POTENCIAL_OPTIONS } from '../types'
+import { CATEGORIA_LABEL, POTENCIAL_OPTIONS, SITUACAO_OPTIONS } from '../types'
 import { uniqueSorted } from '../lib/filterLeads'
 
 type Props = {
@@ -11,9 +11,13 @@ type Props = {
 
 export function FilterBar({ leads, filters, onChange, onClear }: Props) {
   const cidades = uniqueSorted(leads.map((l) => l.cidade))
-  const situacoes = uniqueSorted(leads.map((l) => l.situacao))
-  const classifs = uniqueSorted(leads.map((l) => l.classificacao_comercial))
   const categorias = uniqueSorted(leads.map((l) => l.categoria))
+  const situacoes = [
+    ...SITUACAO_OPTIONS,
+    ...uniqueSorted(leads.map((l) => l.situacao)).filter(
+      (s) => !(SITUACAO_OPTIONS as readonly string[]).includes(s),
+    ),
+  ]
 
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) =>
     onChange({ ...filters, [key]: value })
@@ -25,7 +29,7 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
           <span>Busca</span>
           <input
             type="search"
-            placeholder="Empresa, produto, telefone, motivo…"
+            placeholder="Empresa, CNPJ, produto, telefone, motivo…"
             value={filters.q}
             onChange={(e) => set('q', e.target.value)}
           />
@@ -60,21 +64,6 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
           <select value={filters.cidade} onChange={(e) => set('cidade', e.target.value)}>
             <option value="">Todas</option>
             {cidades.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="field">
-          <span>Classificação</span>
-          <select
-            value={filters.classificacao}
-            onChange={(e) => set('classificacao', e.target.value)}
-          >
-            <option value="">Todas</option>
-            {classifs.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>

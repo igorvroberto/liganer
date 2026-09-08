@@ -1,6 +1,25 @@
 import type { Filters, Lead } from '../types'
+import { SITUACAO_OPTIONS } from '../types'
 
 const POT_ORDER: Record<string, number> = { Alto: 0, Médio: 1, Baixo: 2 }
+
+const SIT_ORDER = Object.fromEntries(SITUACAO_OPTIONS.map((s, i) => [s, i])) as Record<
+  string,
+  number
+>
+
+export type SortKey =
+  | 'potencial'
+  | 'empresa'
+  | 'cnpj'
+  | 'cidade'
+  | 'categoria'
+  | 'produto_provavel'
+  | 'situacao'
+  | 'ultima_compra'
+  | 'proxima_acao'
+
+export type SortDir = 'asc' | 'desc'
 
 export function filterLeads(leads: Lead[], f: Filters): Lead[] {
   const q = f.q.trim().toLowerCase()
@@ -8,13 +27,13 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
     if (f.categoria && l.categoria !== f.categoria) return false
     if (f.potencial && l.potencial !== f.potencial) return false
     if (f.cidade && l.cidade !== f.cidade) return false
-    if (f.classificacao && l.classificacao_comercial !== f.classificacao) return false
     if (f.situacao && l.situacao !== f.situacao) return false
     if (f.multiproduto === 'Sim' && !/^sim/i.test(l.multiproduto)) return false
     if (f.multiproduto === 'Não' && /^sim/i.test(l.multiproduto)) return false
     if (!q) return true
     const hay = [
       l.empresa,
+      l.cnpj,
       l.cidade,
       l.categoria,
       l.subcategoria,
@@ -24,7 +43,7 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
       l.proxima_acao,
       l.telefone,
       l.whatsapp,
-      l.classificacao_comercial,
+      l.ultima_compra,
       l.observacoes_comerciais,
     ]
       .join(' ')
@@ -33,14 +52,52 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
   })
 }
 
-export function sortLeads(leads: Lead[]): Lead[] {
+function dateSortValue(raw: string): number {
+  const s = (raw ?? '').trim()
+  if (!s) return 0
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return Date.parse(s)
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (br) return Date.parse(`${br[3]}-${br[2]}-${br[1]}`)
+  const t = Date.parse(s)
+  return Number.isNaN(t) ? 0 : t
+}
+
+function cmp(a: Lead, b: Lead, key: SortKey): number {
+  switch (key) {
+    case 'potencial':
+      return (POT_ORDER[a.potencial] ?? 9) - (POT_ORDER[b.potencial] ?? 9)
+    case 'situacao':
+      return (SIT_ORDER[a.situacao] ?? 99) - (SIT_ORDER[b.situacao] ?? 99)
+    case 'ultima_compra':
+      return dateSortValue(a.ultima_compra ?? '') - dateSortValue(b.ultima_compra ?? '')
+    case 'categoria':
+      return `${a.categoria}/${a.subcategoria}`.localeCompare(
+        `${b.categoria}/${b.subcategoria}`,
+        'pt-BR',
+      )
+    case 'produto_provavel':
+      return (a.produto_provavel ?? '').localeCompare(b.produto_provavel ?? '', 'pt-BR')
+    case 'proxima_acao':
+      return (a.proxima_acao ?? '').localeCompare(b.proxima_acao ?? '', 'pt-BR')
+    case 'cidade':
+      return (a.cidade ?? '').localeCompare(b.cidade ?? '', 'pt-BR')
+    case 'cnpj':
+      return (a.cnpj ?? '').localeCompare(b.cnpj ?? '', 'pt-BR')
+    case 'empresa':
+    default:
+      return (a.empresa ?? '').localeCompare(b.empresa ?? '', 'pt-BR')
+  }
+}
+
+export function sortLeads(
+  leads: Lead[],
+  key: SortKey = 'potencial',
+  dir: SortDir = 'asc',
+): Lead[] {
+  const factor = dir === 'asc' ? 1 : -1
   return [...leads].sort((a, b) => {
-    const pa = POT_ORDER[a.potencial] ?? 9
-    const pb = POT_ORDER[b.potencial] ?? 9
-    if (pa !== pb) return pa - pb
-    const ma = /^sim/i.test(a.multiproduto) ? 0 : 1
-    const mb = /^sim/i.test(b.multiproduto) ? 0 : 1
-    if (ma !== mb) return ma - mb
+    const primary = cmp(a, b, key) * factor
+    if (primary !== 0) return primary
     return a.empresa.localeCompare(b.empresa, 'pt-BR')
   })
 }

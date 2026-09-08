@@ -3,7 +3,7 @@ import { FilterBar } from './components/FilterBar'
 import { LeadDetail } from './components/LeadDetail'
 import { LeadTable } from './components/LeadTable'
 import { StatsBar } from './components/StatsBar'
-import { filterLeads, sortLeads, topAttackList } from './lib/filterLeads'
+import { filterLeads, topAttackList } from './lib/filterLeads'
 import { loadLeads, type LeadsSource } from './lib/loadLeads'
 import {
   clearLocalLeads,
@@ -163,7 +163,7 @@ export default function App() {
     refresh(false)
   }
 
-  const filtered = useMemo(() => sortLeads(filterLeads(leads, filters)), [leads, filters])
+  const filtered = useMemo(() => filterLeads(leads, filters), [leads, filters])
   const top20 = useMemo(() => topAttackList(leads, 20), [leads])
   const view = tab === 'top20' ? top20 : filtered
   const selected = leads.find((l) => l.id === selectedId) ?? null

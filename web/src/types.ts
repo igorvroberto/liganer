@@ -29,10 +29,10 @@ export type Lead = {
   fonte: string
   data_pesquisa: string
   ultimo_contato: string
+  ultima_compra: string
   situacao: string
   proxima_acao: string
   necessidade_identificada: string
-  classificacao_comercial: string
   motivo_prospect: string
   abordagem: string
   observacoes_comerciais: string
@@ -43,7 +43,6 @@ export type Filters = {
   categoria: string
   potencial: string
   cidade: string
-  classificacao: string
   situacao: string
   multiproduto: string
 }
@@ -57,13 +56,6 @@ export const CATEGORIA_LABEL: Record<string, string> = {
 }
 
 export const POTENCIAL_OPTIONS = ['Alto', 'Médio', 'Baixo'] as const
-
-export const CLASSIFICACAO_OPTIONS = [
-  'PROSPECT',
-  'INDEFINIDO',
-  'CLIENTE',
-  'PARCEIRO',
-] as const
 
 export const SITUACAO_OPTIONS = [
   'Não pesquisado',
@@ -87,21 +79,26 @@ export const EMPTY_FILTERS: Filters = {
   categoria: '',
   potencial: '',
   cidade: '',
-  classificacao: '',
   situacao: '',
   multiproduto: '',
 }
 
 /** Campos editáveis alinhados aos filtros + operação comercial */
-export const EDITABLE_FIELDS: { key: keyof Lead; label: string; kind: 'text' | 'textarea' | 'select'; options?: readonly string[] }[] = [
+export const EDITABLE_FIELDS: {
+  key: keyof Lead
+  label: string
+  kind: 'text' | 'textarea' | 'select'
+  options?: readonly string[]
+}[] = [
   { key: 'empresa', label: 'Empresa', kind: 'text' },
+  { key: 'cnpj', label: 'CNPJ', kind: 'text' },
   { key: 'cidade', label: 'Cidade', kind: 'text' },
   { key: 'estado', label: 'Estado', kind: 'text' },
   { key: 'categoria', label: 'Categoria', kind: 'select', options: ['C', 'CD', 'M', 'I', 'R'] },
   { key: 'subcategoria', label: 'Subcategoria', kind: 'text' },
   { key: 'potencial', label: 'Potencial', kind: 'select', options: POTENCIAL_OPTIONS },
-  { key: 'classificacao_comercial', label: 'Classificação', kind: 'select', options: CLASSIFICACAO_OPTIONS },
   { key: 'situacao', label: 'Situação', kind: 'select', options: SITUACAO_OPTIONS },
+  { key: 'ultima_compra', label: 'Última compra', kind: 'text' },
   { key: 'multiproduto', label: 'Multiproduto', kind: 'select', options: ['Sim', 'Não'] },
   { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },
   { key: 'produto_secundario', label: 'Produto secundário', kind: 'textarea' },

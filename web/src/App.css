@@ -301,9 +301,13 @@ select {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.9rem;
   align-items: start;
+}
+
+.workspace:has(.detail) {
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
 }
 
 .table-wrap {
@@ -334,6 +338,31 @@ select {
   letter-spacing: 0.04em;
   color: var(--muted);
   z-index: 1;
+}
+
+.th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.th-sort:hover,
+.th-sort.active {
+  color: var(--ink);
+}
+
+.th-sort-ind {
+  font-size: 0.85em;
+  opacity: 0.85;
 }
 
 .leads-table tbody tr {
