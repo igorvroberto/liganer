@@ -73,9 +73,9 @@
 | Alcoazul / Figueira | Araçatuba | I | I12 | Validar operação | Médio | Não | Usina em lista pública | — | — | Confirmar se ativa | INDEFINIDO |
 | Better Beef | Araçatuba | I | I2 | Inox se planta ativa | Médio | Não | Frigorífico | — | — | Confirmar operação | PROSPECT |
 | APC do Brasil | Araçatuba | I | I15 | Não presumir inox | Baixo | Não | Sem justificativa clara ainda | — | — | Só com evidência | INDEFINIDO |
-| André Ferro e Aço | Araçatuba | R | R5 | Chapas/tubos/perfis (sobreposição) | Alto | Sim | Centro de serviço + distribuição | — | (18) 3623-1770 | Fora da rota (ou atacado) | CONCORRENTE |
-| Lobisfer | Araçatuba | R | R1 | Aço construção | Alto | Não | Revenda | — | (18) 2102-5600 | Fora da rota | CONCORRENTE |
-| Rodriaco | Araçatuba | R | R1 | Ferro e aço | Alto | Não | Distribuição | — | Não id. | Fora da rota | CONCORRENTE |
+| André Ferro e Aço | Araçatuba | R | R5 | Chapas/tubos/perfis (sobreposição) | Alto | Sim | Centro de serviço + distribuição | — | (18) 3623-1770 | Abordar atacado | PROSPECT |
+| Lobisfer | Araçatuba | R | R1 | Aço construção | Alto | Não | Revenda | — | (18) 2102-5600 | Abordar / qualificar | PROSPECT |
+| Rodriaco | Araçatuba | R | R1 | Ferro e aço | Alto | Não | Distribuição | — | Não id. | Abordar / qualificar | PROSPECT |
 
 ---
 
@@ -125,7 +125,7 @@ ZBN, Megatec, 5 Estrelas, Fenasi, Estruturas Metálicas Araçatuba, Noroagro, IM
 Ata Inox, Plasminox, Inox e Cia, Brazzatti, AISI, Nestlé, Raízen Destivale, Better Beef (validar), Aquinox (qualificar).
 
 ### Funil 5 — Distribuição (R)
-André Ferro e Aço, Lobisfer, Rodriaco → **em geral CONCORRENTES**; só abordar se estratégia for atacado.
+André Ferro e Aço, Lobisfer, Rodriaco → prioridade **Alto** (ex-distribuição); abordar como prospect de atacado/share.
 
 ### ⭐ Multoportunidade
 Medida Exata, ZBN, TARRAF/Pacaembu (obra+CD), Passador, Raízen/Nestlé/JBS (indústria+caldeiraria).
@@ -171,7 +171,7 @@ Medida Exata, ZBN, TARRAF/Pacaembu (obra+CD), Passador, Raízen/Nestlé/JBS (ind
 2. Separar **FATO** de **Provável — validar**.  
 3. **CD ≠ corte de chapa** (chapa = M/R).  
 4. Construtora ≠ comprador automático — mapear CD/empreiteiro.  
-5. Distribuidor com mesmo portfólio = **CONCORRENTE**, não lead de rota.  
+5. Distribuidor com mesmo portfólio = prospect de **Alto** potencial (atacado/parceria).  
 6. Usinas/frigoríficos/Nestlé = muitas vezes compra **via caldeiraria**.
 
 ---

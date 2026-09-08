@@ -337,10 +337,6 @@ select {
   background: #dcfce7;
   color: var(--ok);
 }
-.class-CONCORRENTE {
-  background: #ffe4e6;
-  color: var(--danger);
-}
 .class-INDEFINIDO {
   background: #fef3c7;
   color: var(--warn);

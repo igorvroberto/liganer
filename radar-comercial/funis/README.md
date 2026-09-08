@@ -15,4 +15,4 @@ Mapear: matéria-prima → processo → produto final.
 Só com justificativa clara de inox (liga, processo, sanitário).
 
 ## R — Distribuição
-Separar PROSPECT (atacado) de CONCORRENTE (mesmo canal).
+Classificação comercial: PROSPECT / PARCEIRO / INDEFINIDO / CLIENTE.
