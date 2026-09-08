@@ -1,5 +1,5 @@
 {
-  "_comment": "Opcional. Se leadsUrl estiver vazio/ausente, o app usa /prospeccao/data/leads.csv (espelho via FTP a partir do GitHub).",
+  "_comment": "Opcional. syncSecret é injetado no deploy quando LEADS_SYNC_SECRET existe. Sem ele, edições ficam só no navegador.",
   "leadsUrl": "",
   "leadsLabel": "GitHub"
 }

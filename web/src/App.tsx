@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FilterBar } from './components/FilterBar'
 import { LeadDetail } from './components/LeadDetail'
 import { LeadTable } from './components/LeadTable'
@@ -12,10 +12,12 @@ import {
   normalizeLead,
   saveLocalLeads,
 } from './lib/persist'
+import { createSyncQueue, loadSyncConfig, type SyncConfig } from './lib/syncApi'
 import { EMPTY_FILTERS, type Filters, type Lead } from './types'
 import './App.css'
 
 type Tab = 'todos' | 'top20'
+type SyncUi = { state: 'idle' | 'saving' | 'saved' | 'error' | 'local-only'; detail?: string }
 
 export default function App() {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -27,6 +29,35 @@ export default function App() {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('todos')
+  const [syncCfg, setSyncCfg] = useState<SyncConfig>({})
+  const [syncUi, setSyncUi] = useState<SyncUi>({ state: 'idle' })
+  const syncQueue = useRef(createSyncQueue(1200))
+
+  const autoSync = Boolean(syncCfg.syncSecret)
+
+  const onSyncStatus = useCallback((s: 'saving' | 'saved' | 'error', detail?: string) => {
+    setSyncUi({ state: s, detail })
+    if (s === 'saved') {
+      clearLocalLeads()
+      setDirty(false)
+    }
+  }, [])
+
+  const queueSync = useCallback(
+    (next: Lead[], opts?: { immediate?: boolean; message?: string }) => {
+      saveLocalLeads(next)
+      setDirty(true)
+      if (!syncCfg.syncSecret) {
+        setSyncUi({
+          state: 'local-only',
+          detail: 'Alteração só neste navegador — configure o sync (deploy/README.md)',
+        })
+        return
+      }
+      syncQueue.current.schedule(next, syncCfg, onSyncStatus, opts)
+    },
+    [syncCfg, onSyncStatus],
+  )
 
   const applyLeads = useCallback((next: Lead[], markDirty: boolean) => {
     const normalized = next.map((l) => normalizeLead(l as Lead & { visita_presencial?: string }))
@@ -41,22 +72,40 @@ export default function App() {
     (preferLocal = true) => {
       setLoading(true)
       setError(null)
-      loadLeads()
-        .then(({ leads: data, source: src }) => {
+      Promise.all([loadLeads(), loadSyncConfig()])
+        .then(([{ leads: data, source: src }, cfg]) => {
+          setSyncCfg(cfg)
           const remote = data.map((l) =>
             normalizeLead(l as Lead & { visita_presencial?: string }),
           )
           const local = preferLocal ? loadLocalLeads() : null
           if (local?.leads?.length) {
             applyLeads(local.leads, true)
-            setSource({ ...src, label: `${src.label} + edições locais` })
+            setSource({ ...src, label: `${src.label} + pendências locais` })
             setFetchedAt(new Date(local.updatedAt).toLocaleString('pt-BR'))
             setDirty(true)
+            if (cfg.syncSecret) {
+              syncQueue.current.schedule(local.leads, cfg, onSyncStatus, {
+                immediate: true,
+                message: 'Reenvia edições locais pendentes',
+              })
+            } else {
+              setSyncUi({
+                state: 'local-only',
+                detail: 'Há edições locais — sync automático ainda não configurado',
+              })
+            }
           } else {
             setLeads(remote)
             setSource(src)
             setFetchedAt(new Date().toLocaleString('pt-BR'))
             setDirty(false)
+            setSyncUi({
+              state: cfg.syncSecret ? 'idle' : 'local-only',
+              detail: cfg.syncSecret
+                ? undefined
+                : 'Sync automático off — edições ficam só neste navegador até configurar',
+            })
           }
           setLoading(false)
         })
@@ -73,7 +122,7 @@ export default function App() {
           setLoading(false)
         })
     },
-    [applyLeads],
+    [applyLeads, onSyncStatus],
   )
 
   useEffect(() => {
@@ -84,31 +133,33 @@ export default function App() {
     (id: string, patch: Partial<Lead>) => {
       setLeads((prev) => {
         const next = prev.map((l) => (l.id === id ? { ...l, ...patch } : l))
-        saveLocalLeads(next)
+        queueSync(next)
         return next
       })
-      setDirty(true)
     },
-    [],
+    [queueSync],
   )
 
   const onDelete = useCallback(
     (id: string) => {
       setLeads((prev) => {
         const next = prev.filter((l) => l.id !== id)
-        saveLocalLeads(next)
+        queueSync(next, {
+          immediate: true,
+          message: `Remove lead ${id} via prospecção`,
+        })
         return next
       })
       setSelectedId((cur) => (cur === id ? null : cur))
-      setDirty(true)
     },
-    [],
+    [queueSync],
   )
 
   const discardLocal = () => {
-    if (!confirm('Descartar todas as edições locais e recarregar do GitHub/FTP?')) return
+    if (!confirm('Descartar edições locais não sincronizadas e recarregar do servidor?')) return
     clearLocalLeads()
     setDirty(false)
+    setSyncUi({ state: 'idle' })
     refresh(false)
   }
 
@@ -116,6 +167,19 @@ export default function App() {
   const top20 = useMemo(() => topAttackList(leads, 20), [leads])
   const view = tab === 'top20' ? top20 : filtered
   const selected = leads.find((l) => l.id === selectedId) ?? null
+
+  const syncLabel =
+    syncUi.state === 'saving'
+      ? 'Salvando…'
+      : syncUi.state === 'saved'
+        ? syncUi.detail ?? 'Salvo'
+        : syncUi.state === 'error'
+          ? `Erro ao salvar: ${syncUi.detail ?? ''}`
+          : syncUi.state === 'local-only'
+            ? syncUi.detail ?? 'Só neste navegador'
+            : autoSync
+              ? 'Sync automático ativo'
+              : null
 
   return (
     <div className="app">
@@ -148,8 +212,23 @@ export default function App() {
             <span>
               Fonte: {source?.label ?? '…'}
               {fetchedAt ? ` · ${fetchedAt}` : ''}
-              {dirty ? ' · alterações locais' : ''}
+              {dirty ? ' · pendente' : ''}
             </span>
+            {syncLabel ? (
+              <span
+                className={
+                  syncUi.state === 'error'
+                    ? 'sync-pill sync-error'
+                    : syncUi.state === 'saved'
+                      ? 'sync-pill sync-ok'
+                      : syncUi.state === 'saving'
+                        ? 'sync-pill sync-saving'
+                        : 'sync-pill'
+                }
+              >
+                {syncLabel}
+              </span>
+            ) : null}
             <button type="button" className="btn ghost btn-sm" onClick={() => refresh(true)} disabled={loading}>
               Atualizar
             </button>
@@ -185,7 +264,7 @@ export default function App() {
           ) : (
             <p className="banner">
               TOP 20 ordenado por potencial, recorrência, multiproduto, CD e proximidade. Edite
-              direto na tabela ou no painel.
+              direto na tabela ou no painel — salvamento automático no servidor.
             </p>
           )}
 

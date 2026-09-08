@@ -28,7 +28,7 @@ export function LeadDetail({ lead, onClose, onPatch, onDelete }: Props) {
             {CATEGORIA_LABEL[lead.categoria] ?? lead.categoria}
           </p>
           <h2>{lead.empresa}</h2>
-          <p className="muted">Edite os campos abaixo — alterações ficam salvas neste navegador.</p>
+          <p className="muted">Edite os campos abaixo — salvamento automático no servidor/GitHub.</p>
         </div>
         <button type="button" className="btn ghost" onClick={onClose} aria-label="Fechar">
           Fechar
