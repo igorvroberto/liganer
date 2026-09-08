@@ -114,7 +114,8 @@ function leads_to_csv(array $leads): string
         'consumo_estimado', 'compra_recorrente', 'tipo_operacao', 'o_que_fabrica_constroi',
         'obras_atuais', 'fornecedor_atual', 'comprador', 'cargo_comprador',
         'telefone', 'whatsapp', 'email', 'site', 'endereco', 'fonte',
-        'data_pesquisa', 'ultimo_contato', 'ultima_compra', 'situacao', 'proxima_acao',
+        'data_pesquisa', 'ultimo_contato', 'status', 'proximo_contato', 'ultima_compra',
+        'situacao', 'proxima_acao',
         'necessidade_identificada', 'motivo_prospect',
         'abordagem', 'observacoes_comerciais',
     ];

@@ -1,8 +1,8 @@
 import Papa from 'papaparse'
 import type { Lead } from '../types'
-import { SITUACAO_OPTIONS } from '../types'
+import { SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
 
-const STORAGE_KEY = 'liganer-prospeccao-leads-v3'
+const STORAGE_KEY = 'liganer-prospeccao-leads-v4'
 
 export type LocalStore = {
   leads: Lead[]
@@ -49,11 +49,16 @@ function mapSituacao(value: string | undefined): string {
   if ((SITUACAO_OPTIONS as readonly string[]).includes(s)) return s
   if (s === 'Sem interesse' || s === 'Sem contato') return 'Desqualificado'
   if (!s) return 'Qualificado'
-  // valores antigos do funil (Lead qualificado, Pesquisado, Cliente, etc.)
   return 'Qualificado'
 }
 
-/** Remove campos legados e normaliza situação */
+function mapStatus(value: string | undefined): string {
+  const s = (value ?? '').trim()
+  if ((STATUS_OPTIONS as readonly string[]).includes(s)) return s
+  return 'Sem retorno'
+}
+
+/** Remove campos legados e normaliza situação/status */
 export function normalizeLead(
   row: Lead & { visita_presencial?: string; classificacao_comercial?: string },
 ): Lead {
@@ -67,7 +72,10 @@ export function normalizeLead(
   }
   return {
     ...rest,
+    ultimo_contato: rest.ultimo_contato ?? '',
+    proximo_contato: rest.proximo_contato ?? '',
     ultima_compra: rest.ultima_compra ?? '',
+    status: mapStatus(rest.status),
     situacao: mapSituacao(rest.situacao),
   } as Lead
 }

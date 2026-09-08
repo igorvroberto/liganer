@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import type { Lead } from '../types'
-import { CATEGORIA_LABEL } from '../types'
+import { CATEGORIA_LABEL, STATUS_OPTIONS } from '../types'
 import { potClass, sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
 
 type Props = {
   leads: Lead[]
   selectedId: string | null
   onSelect: (id: string) => void
+  onPatch: (id: string, patch: Partial<Lead>) => void
 }
 
 const COLUMNS: { key: SortKey; label: string }[] = [
@@ -17,21 +18,23 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'categoria', label: 'Cat.' },
   { key: 'produto_provavel', label: 'Produto' },
   { key: 'situacao', label: 'Situação' },
+  { key: 'ultimo_contato', label: 'Último contato' },
+  { key: 'status', label: 'Status' },
+  { key: 'proximo_contato', label: 'Próximo contato' },
   { key: 'ultima_compra', label: 'Última compra' },
   { key: 'proxima_acao', label: 'Próxima ação' },
 ]
 
-function formatDateBr(raw: string): string {
+function toDateInputValue(raw: string): string {
   const s = (raw ?? '').trim()
-  if (!s) return '—'
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-    const [y, m, d] = s.split('-')
-    return `${d}/${m}/${y}`
-  }
-  return s
+  if (!s) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (br) return `${br[3]}-${br[2]}-${br[1]}`
+  return ''
 }
 
-export function LeadTable({ leads, selectedId, onSelect }: Props) {
+export function LeadTable({ leads, selectedId, onSelect, onPatch }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('potencial')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -42,7 +45,11 @@ export function LeadTable({ leads, selectedId, onSelect }: Props) {
       setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortKey(key)
-      setSortDir(key === 'ultima_compra' ? 'desc' : 'asc')
+      setSortDir(
+        key === 'ultima_compra' || key === 'proximo_contato' || key === 'ultimo_contato'
+          ? 'desc'
+          : 'asc',
+      )
     }
   }
 
@@ -109,7 +116,52 @@ export function LeadTable({ leads, selectedId, onSelect }: Props) {
               </td>
               <td className="clamp">{l.produto_provavel}</td>
               <td>{l.situacao}</td>
-              <td>{formatDateBr(l.ultima_compra ?? '')}</td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="date"
+                  className="table-edit-text"
+                  value={toDateInputValue(l.ultimo_contato ?? '')}
+                  onChange={(e) => onPatch(l.id, { ultimo_contato: e.target.value })}
+                  aria-label={`Último contato de ${l.empresa}`}
+                />
+              </td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <select
+                  className="table-edit"
+                  value={l.status || 'Sem retorno'}
+                  onChange={(e) => onPatch(l.id, { status: e.target.value })}
+                  aria-label={`Status de ${l.empresa}`}
+                >
+                  {[
+                    ...STATUS_OPTIONS,
+                    ...(STATUS_OPTIONS as readonly string[]).includes(l.status) || !l.status
+                      ? []
+                      : [l.status],
+                  ].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="date"
+                  className="table-edit-text"
+                  value={toDateInputValue(l.proximo_contato ?? '')}
+                  onChange={(e) => onPatch(l.id, { proximo_contato: e.target.value })}
+                  aria-label={`Próximo contato de ${l.empresa}`}
+                />
+              </td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="date"
+                  className="table-edit-text"
+                  value={toDateInputValue(l.ultima_compra ?? '')}
+                  onChange={(e) => onPatch(l.id, { ultima_compra: e.target.value })}
+                  aria-label={`Última compra de ${l.empresa}`}
+                />
+              </td>
               <td className="clamp">{l.proxima_acao}</td>
             </tr>
           ))}
