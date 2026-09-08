@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FilterBar } from './components/FilterBar'
 import { LeadDetail } from './components/LeadDetail'
 import { LeadTable } from './components/LeadTable'
 import { StatsBar } from './components/StatsBar'
 import { filterLeads, sortLeads, topAttackList } from './lib/filterLeads'
-import { loadLeads } from './lib/loadLeads'
+import { loadLeads, type LeadsSource } from './lib/loadLeads'
 import { EMPTY_FILTERS, type Filters, type Lead } from './types'
 import './App.css'
 
@@ -12,16 +12,22 @@ type Tab = 'todos' | 'top20'
 
 export default function App() {
   const [leads, setLeads] = useState<Lead[]>([])
+  const [source, setSource] = useState<LeadsSource | null>(null)
+  const [fetchedAt, setFetchedAt] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('todos')
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
+    setLoading(true)
+    setError(null)
     loadLeads()
-      .then((data) => {
+      .then(({ leads: data, source: src }) => {
         setLeads(data)
+        setSource(src)
+        setFetchedAt(new Date().toLocaleString('pt-BR'))
         setLoading(false)
       })
       .catch((err: Error) => {
@@ -29,6 +35,10 @@ export default function App() {
         setLoading(false)
       })
   }, [])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
 
   const filtered = useMemo(() => sortLeads(filterLeads(leads, filters)), [leads, filters])
   const top20 = useMemo(() => topAttackList(leads, 20), [leads])
@@ -62,7 +72,15 @@ export default function App() {
               TOP 20 ataque
             </button>
           </nav>
-          <p className="sync-note">Dados: GitHub → build → /prospeccao</p>
+          <div className="sync-note">
+            <span>
+              Fonte: {source?.label ?? '…'}
+              {fetchedAt ? ` · ${fetchedAt}` : ''}
+            </span>
+            <button type="button" className="btn ghost btn-sm" onClick={refresh} disabled={loading}>
+              Atualizar
+            </button>
+          </div>
         </div>
       </header>
 

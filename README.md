@@ -4,29 +4,25 @@ Radar comercial B2B (aço/metalurgia) + sistema web em **`vendas.liganer.com.br/
 
 ## Abrir a base (planilha)
 
-- [`radar-comercial/LEADS.csv`](./radar-comercial/LEADS.csv)
+- [`radar-comercial/LEADS.csv`](./radar-comercial/LEADS.csv) — **fonte da verdade (GitHub)**
 - Painel texto: [`radar-comercial/RADAR-ARACATUBA.md`](./radar-comercial/RADAR-ARACATUBA.md)
 
-## Sistema web (filtros + dossiê)
+## Sistema web
 
 ```bash
 bash scripts/sync-leads.sh
-cd web
-npm install
-npm run dev
+cd web && npm install && npm run dev
 # http://localhost:5173/prospeccao/
 ```
 
-### Publicação
+## Publicar (FTP)
 
-Push em `main` → GitHub Actions gera o site estático e (se secrets VPS_* estiverem configurados) faz deploy em `/prospeccao`.
+1. `cd web && npm run build`
+2. Enviar `web/dist/` via FileZilla para `/prospeccao/`
+3. Configurar secrets `FTP_*` para o Action espelhar o CSV automaticamente
 
 Detalhes: [`deploy/README.md`](./deploy/README.md)
 
 ## Atualizar leads
 
-1. Editar `radar-comercial/gerar_base.py` ou `LEADS.csv`
-2. `python3 radar-comercial/gerar_base.py` (se usou o gerador)
-3. Commit → merge `main` → site atualiza
-
-A UI **não grava** alterações; a fonte da verdade é o GitHub.
+Edite no GitHub → merge `main` → Action FTP atualiza `data/leads.csv` → no site clique **Atualizar**.

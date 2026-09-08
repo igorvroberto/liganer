@@ -1,55 +1,71 @@
-# Deploy — vendas.liganer.com.br/prospeccao
+# Deploy FTP — vendas.liganer.com.br/prospeccao
 
-O app em `web/` é um SPA estático. A fonte dos leads é `radar-comercial/LEADS.csv` no GitHub.
+## Ideia
 
-## Fluxo
+- **Fonte da verdade:** `radar-comercial/LEADS.csv` no GitHub (repo privado).
+- **Hospedagem FTP:** só recebe o site estático + um **espelho** do CSV.
+- O navegador **não** lê o GitHub privado (não daria sem expor token, e o CSV tem telefone/e-mail).
 
 ```
-editar LEADS.csv (ou gerar_base.py) → push main → GitHub Actions build → rsync VPS → /prospeccao
+editar LEADS.csv no GitHub
+        ↓
+   Actions (sync-leads-ftp)
+        ↓
+   FTP → /prospeccao/data/leads.csv
+        ↓
+   app clica "Atualizar" / recarrega a página
 ```
 
-## 1. Build local
+## 1) Subir o app uma vez (FileZilla)
 
 ```bash
 bash scripts/sync-leads.sh
 cd web && npm ci && npm run build
-# saída em web/dist — base path /prospeccao/
 ```
 
-Preview local com o prefixo correto:
+Envie o **conteúdo** de `web/dist/` para:
 
-```bash
-cd web && npm run preview -- --host
-# abrir http://localhost:4173/prospeccao/
+```text
+/public_html/prospeccao/   (ajuste ao caminho da sua hospedagem)
 ```
 
-## 2. Nginx na VPS
+Inclui: `index.html`, `assets/`, `data/leads.csv`, `config.json`, `.htaccess`.
 
-1. Criar pasta: `/var/www/vendas.liganer.com.br/prospeccao`
-2. Usar o exemplo `nginx-vendas.liganer.com.br.conf`
-3. DNS `vendas.liganer.com.br` → IP da VPS
-4. Certbot SSL
-5. (Recomendado) `auth_basic` no `/prospeccao/`
+URL: `https://vendas.liganer.com.br/prospeccao/`
 
-## 3. Secrets do GitHub (deploy automático)
+## 2) Secrets GitHub (atualizar leads sem reenviar o site)
 
-No repositório → Settings → Secrets and variables → Actions:
+Settings → Secrets → Actions:
 
 | Secret | Exemplo |
 | ------ | ------- |
-| `VPS_HOST` | IP ou hostname |
-| `VPS_USER` | `deploy` |
-| `VPS_SSH_KEY` | chave privada SSH |
-| `VPS_PATH` | `/var/www/vendas.liganer.com.br/prospeccao` (opcional) |
-| `VPS_PORT` | `22` (opcional) |
+| `FTP_HOST` | `ftp.seudominio.com.br` |
+| `FTP_USER` | usuário FTP |
+| `FTP_PASSWORD` | senha FTP |
+| `FTP_SERVER_DIR` | `/public_html/prospeccao/data/` |
+| `FTP_PROTOCOL` | `ftp` ou `ftps` (opcional) |
 
-Sem esses secrets, o workflow **só gera o artifact** `prospeccao-dist` (download manual).
+Workflow: `.github/workflows/sync-leads-ftp.yml`  
+Dispara em todo push de `radar-comercial/LEADS.csv` em `main`.
 
-## 4. Atualizar leads
+## 3) Dia a dia
 
-1. Editar `radar-comercial/gerar_base.py` ou `LEADS.csv`
-2. `python3 radar-comercial/gerar_base.py` (se usou o script)
-3. Commit + merge em `main`
-4. O Actions sincroniza o CSV para o build e publica
+1. Edite leads no GitHub (`LEADS.csv` ou `gerar_base.py` → gerar CSV).
+2. Merge em `main`.
+3. O Action envia só `leads.csv` via FTP.
+4. No sistema, clique **Atualizar** (ou F5).
 
-Edições feitas só na UI do navegador **não** persistem — a verdade é o GitHub.
+## 4) Puxar direto do GitHub raw? (não recomendado aqui)
+
+Só faria sentido se o CSV fosse **público**. Este repo é **privado** e contém contatos comerciais.
+
+Se no futuro houver uma URL pública segura, coloque em `config.json` na hospedagem:
+
+```json
+{
+  "leadsUrl": "https://exemplo.com/leads.csv",
+  "leadsLabel": "GitHub mirror"
+}
+```
+
+Sem rebuild. Hoje o padrão seguro é: **GitHub privado → FTP espelho → app**.

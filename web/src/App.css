@@ -86,12 +86,26 @@ select {
 }
 
 .brand p,
-.sync-note,
 .muted,
 .banner,
 .status {
   color: var(--muted);
   margin: 0.15rem 0 0;
+}
+
+.sync-note {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  color: var(--muted);
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
 }
 
 .tabs {
