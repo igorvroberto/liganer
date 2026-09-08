@@ -1,5 +1,5 @@
 import type { Filters, Lead } from '../types'
-import { CATEGORIA_LABEL, POTENCIAL_OPTIONS, SITUACAO_OPTIONS } from '../types'
+import { CATEGORIA_LABEL, POTENCIAL_OPTIONS, SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
 import { uniqueSorted } from '../lib/filterLeads'
 
 type Props = {
@@ -16,6 +16,12 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
     ...SITUACAO_OPTIONS,
     ...uniqueSorted(leads.map((l) => l.situacao)).filter(
       (s) => !(SITUACAO_OPTIONS as readonly string[]).includes(s),
+    ),
+  ]
+  const statuses = [
+    ...STATUS_OPTIONS,
+    ...uniqueSorted(leads.map((l) => l.status)).filter(
+      (s) => !(STATUS_OPTIONS as readonly string[]).includes(s),
     ),
   ]
 
@@ -76,6 +82,18 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
           <select value={filters.situacao} onChange={(e) => set('situacao', e.target.value)}>
             <option value="">Todas</option>
             {situacoes.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="field">
+          <span>Status</span>
+          <select value={filters.status} onChange={(e) => set('status', e.target.value)}>
+            <option value="">Todos</option>
+            {statuses.map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>

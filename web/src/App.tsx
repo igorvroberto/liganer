@@ -263,8 +263,8 @@ export default function App() {
             />
           ) : (
             <p className="banner">
-              TOP 20 ordenado por potencial, recorrência, multiproduto, CD e proximidade. Clique
-              em um lead para editar no painel — salvamento automático no servidor.
+              TOP 20 ordenado por potencial, recorrência, multiproduto, CD e proximidade. Datas e
+              status editam na tabela; demais campos no painel.
             </p>
           )}
 
@@ -275,6 +275,7 @@ export default function App() {
               leads={view}
               selectedId={selectedId}
               onSelect={(id) => setSelectedId(id)}
+              onPatch={onPatch}
             />
             <LeadDetail
               lead={selected}

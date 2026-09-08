@@ -29,6 +29,8 @@ export type Lead = {
   fonte: string
   data_pesquisa: string
   ultimo_contato: string
+  status: string
+  proximo_contato: string
   ultima_compra: string
   situacao: string
   proxima_acao: string
@@ -44,6 +46,7 @@ export type Filters = {
   potencial: string
   cidade: string
   situacao: string
+  status: string
   multiproduto: string
 }
 
@@ -59,16 +62,24 @@ export const POTENCIAL_OPTIONS = ['Alto', 'Médio', 'Baixo'] as const
 
 export const SITUACAO_OPTIONS = ['Qualificado', 'Desqualificado'] as const
 
+export const STATUS_OPTIONS = [
+  'Sem retorno',
+  'Em contato',
+  'Orçamento enviado',
+  'Cliente',
+] as const
+
 export const EMPTY_FILTERS: Filters = {
   q: '',
   categoria: '',
   potencial: '',
   cidade: '',
   situacao: '',
+  status: '',
   multiproduto: '',
 }
 
-/** Campos editáveis alinhados aos filtros + operação comercial */
+/** Campos editáveis no painel (follow-up também na tabela) */
 export const EDITABLE_FIELDS: {
   key: keyof Lead
   label: string
@@ -83,6 +94,9 @@ export const EDITABLE_FIELDS: {
   { key: 'subcategoria', label: 'Subcategoria', kind: 'text' },
   { key: 'potencial', label: 'Potencial', kind: 'select', options: POTENCIAL_OPTIONS },
   { key: 'situacao', label: 'Situação', kind: 'select', options: SITUACAO_OPTIONS },
+  { key: 'ultimo_contato', label: 'Último contato', kind: 'date' },
+  { key: 'status', label: 'Status', kind: 'select', options: STATUS_OPTIONS },
+  { key: 'proximo_contato', label: 'Próximo contato', kind: 'date' },
   { key: 'ultima_compra', label: 'Última compra', kind: 'date' },
   { key: 'multiproduto', label: 'Multiproduto', kind: 'select', options: ['Sim', 'Não'] },
   { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },

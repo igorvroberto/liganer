@@ -1,9 +1,14 @@
 import type { Filters, Lead } from '../types'
-import { SITUACAO_OPTIONS } from '../types'
+import { SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
 
 const POT_ORDER: Record<string, number> = { Alto: 0, Médio: 1, Baixo: 2 }
 
 const SIT_ORDER = Object.fromEntries(SITUACAO_OPTIONS.map((s, i) => [s, i])) as Record<
+  string,
+  number
+>
+
+const STATUS_ORDER = Object.fromEntries(STATUS_OPTIONS.map((s, i) => [s, i])) as Record<
   string,
   number
 >
@@ -16,6 +21,9 @@ export type SortKey =
   | 'categoria'
   | 'produto_provavel'
   | 'situacao'
+  | 'ultimo_contato'
+  | 'status'
+  | 'proximo_contato'
   | 'ultima_compra'
   | 'proxima_acao'
 
@@ -28,6 +36,7 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
     if (f.potencial && l.potencial !== f.potencial) return false
     if (f.cidade && l.cidade !== f.cidade) return false
     if (f.situacao && l.situacao !== f.situacao) return false
+    if (f.status && l.status !== f.status) return false
     if (f.multiproduto === 'Sim' && !/^sim/i.test(l.multiproduto)) return false
     if (f.multiproduto === 'Não' && /^sim/i.test(l.multiproduto)) return false
     if (!q) return true
@@ -43,6 +52,7 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
       l.proxima_acao,
       l.telefone,
       l.whatsapp,
+      l.status,
       l.ultima_compra,
       l.observacoes_comerciais,
     ]
@@ -68,6 +78,12 @@ function cmp(a: Lead, b: Lead, key: SortKey): number {
       return (POT_ORDER[a.potencial] ?? 9) - (POT_ORDER[b.potencial] ?? 9)
     case 'situacao':
       return (SIT_ORDER[a.situacao] ?? 99) - (SIT_ORDER[b.situacao] ?? 99)
+    case 'status':
+      return (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99)
+    case 'ultimo_contato':
+      return dateSortValue(a.ultimo_contato ?? '') - dateSortValue(b.ultimo_contato ?? '')
+    case 'proximo_contato':
+      return dateSortValue(a.proximo_contato ?? '') - dateSortValue(b.proximo_contato ?? '')
     case 'ultima_compra':
       return dateSortValue(a.ultima_compra ?? '') - dateSortValue(b.ultima_compra ?? '')
     case 'categoria':
