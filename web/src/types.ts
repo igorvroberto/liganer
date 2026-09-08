@@ -35,7 +35,6 @@ export type Lead = {
   classificacao_comercial: string
   motivo_prospect: string
   abordagem: string
-  visita_presencial: string
   observacoes_comerciais: string
 }
 
@@ -47,7 +46,6 @@ export type Filters = {
   classificacao: string
   situacao: string
   multiproduto: string
-  visita: string
 }
 
 export const CATEGORIA_LABEL: Record<string, string> = {
@@ -58,6 +56,32 @@ export const CATEGORIA_LABEL: Record<string, string> = {
   R: 'Distribuição',
 }
 
+export const POTENCIAL_OPTIONS = ['Alto', 'Médio', 'Baixo'] as const
+
+export const CLASSIFICACAO_OPTIONS = [
+  'PROSPECT',
+  'INDEFINIDO',
+  'CLIENTE',
+  'PARCEIRO',
+] as const
+
+export const SITUACAO_OPTIONS = [
+  'Não pesquisado',
+  'Pesquisado',
+  'Lead qualificado',
+  'Primeiro contato',
+  'Contato realizado',
+  'Conversando',
+  'Cotação solicitada',
+  'Cotação enviada',
+  'Negociação',
+  'Cliente',
+  'Sem interesse',
+  'Sem contato',
+  'Parceiro',
+  'Follow-up',
+] as const
+
 export const EMPTY_FILTERS: Filters = {
   q: '',
   categoria: '',
@@ -66,5 +90,27 @@ export const EMPTY_FILTERS: Filters = {
   classificacao: '',
   situacao: '',
   multiproduto: '',
-  visita: '',
 }
+
+/** Campos editáveis alinhados aos filtros + operação comercial */
+export const EDITABLE_FIELDS: { key: keyof Lead; label: string; kind: 'text' | 'textarea' | 'select'; options?: readonly string[] }[] = [
+  { key: 'empresa', label: 'Empresa', kind: 'text' },
+  { key: 'cidade', label: 'Cidade', kind: 'text' },
+  { key: 'estado', label: 'Estado', kind: 'text' },
+  { key: 'categoria', label: 'Categoria', kind: 'select', options: ['C', 'CD', 'M', 'I', 'R'] },
+  { key: 'subcategoria', label: 'Subcategoria', kind: 'text' },
+  { key: 'potencial', label: 'Potencial', kind: 'select', options: POTENCIAL_OPTIONS },
+  { key: 'classificacao_comercial', label: 'Classificação', kind: 'select', options: CLASSIFICACAO_OPTIONS },
+  { key: 'situacao', label: 'Situação', kind: 'select', options: SITUACAO_OPTIONS },
+  { key: 'multiproduto', label: 'Multiproduto', kind: 'select', options: ['Sim', 'Não'] },
+  { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },
+  { key: 'produto_secundario', label: 'Produto secundário', kind: 'textarea' },
+  { key: 'proxima_acao', label: 'Próxima ação', kind: 'textarea' },
+  { key: 'motivo_prospect', label: 'Motivo', kind: 'textarea' },
+  { key: 'abordagem', label: 'Abordagem', kind: 'textarea' },
+  { key: 'telefone', label: 'Telefone', kind: 'text' },
+  { key: 'whatsapp', label: 'WhatsApp', kind: 'text' },
+  { key: 'email', label: 'E-mail', kind: 'text' },
+  { key: 'comprador', label: 'Comprador', kind: 'text' },
+  { key: 'observacoes_comerciais', label: 'Observações', kind: 'textarea' },
+]
