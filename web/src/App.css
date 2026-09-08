@@ -301,23 +301,19 @@ select {
   font-size: 0.8rem;
 }
 
-.pot-A {
+.pot-alto {
   background: #dcfce7;
   color: var(--ok);
 }
-.pot-B {
+.pot-medio {
   background: #ffedd5;
   color: var(--warn);
 }
-.pot-C {
+.pot-baixo {
   background: #e5e7eb;
   color: #374151;
 }
-.pot-X {
-  background: #ffe4e6;
-  color: var(--danger);
-}
-.pot-P {
+.pot-outro {
   background: #e0f2fe;
   color: #075985;
 }

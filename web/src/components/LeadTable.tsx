@@ -1,5 +1,6 @@
 import type { Lead } from '../types'
 import { CATEGORIA_LABEL } from '../types'
+import { potClass } from '../lib/filterLeads'
 
 type Props = {
   leads: Lead[]
@@ -8,7 +9,7 @@ type Props = {
 }
 
 function PotBadge({ value }: { value: string }) {
-  return <span className={`badge pot-${value}`}>{value || '—'}</span>
+  return <span className={`badge ${potClass(value)}`}>{value || '—'}</span>
 }
 
 export function LeadTable({ leads, selectedId, onSelect }: Props) {

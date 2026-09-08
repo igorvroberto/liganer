@@ -20,8 +20,8 @@ export function StatsBar({ all, filtered }: Props) {
         <span>visíveis / {all.length}</span>
       </div>
       <div className="stat">
-        <strong>{count((l) => l.potencial === 'A')}</strong>
-        <span>potencial A</span>
+        <strong>{count((l) => l.potencial === 'Alto')}</strong>
+        <span>potencial Alto</span>
       </div>
       <div className="stat">
         <strong>{count((l) => /^sim/i.test(l.multiproduto))}</strong>

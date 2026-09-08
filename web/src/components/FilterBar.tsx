@@ -47,7 +47,7 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
           <span>Potencial</span>
           <select value={filters.potencial} onChange={(e) => set('potencial', e.target.value)}>
             <option value="">Todos</option>
-            {['A', 'B', 'C', 'X', 'P'].map((p) => (
+            {['Alto', 'Médio', 'Baixo'].map((p) => (
               <option key={p} value={p}>
                 {p}
               </option>
