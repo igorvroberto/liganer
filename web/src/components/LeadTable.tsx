@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Lead } from '../types'
-import { CATEGORIA_LABEL, STATUS_OPTIONS } from '../types'
+import { CATEGORIA_LABEL, SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
 import { potClass, sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
 
 type Props = {
@@ -115,7 +115,25 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch }: Props) {
                 </div>
               </td>
               <td className="clamp">{l.produto_provavel}</td>
-              <td>{l.situacao}</td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <select
+                  className="table-edit table-edit-situacao"
+                  value={l.situacao || 'Qualificado'}
+                  onChange={(e) => onPatch(l.id, { situacao: e.target.value })}
+                  aria-label={`Situação de ${l.empresa}`}
+                >
+                  {[
+                    ...SITUACAO_OPTIONS,
+                    ...(SITUACAO_OPTIONS as readonly string[]).includes(l.situacao) || !l.situacao
+                      ? []
+                      : [l.situacao],
+                  ].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </td>
               <td onClick={(e) => e.stopPropagation()}>
                 <input
                   type="date"
@@ -125,9 +143,9 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch }: Props) {
                   aria-label={`Último contato de ${l.empresa}`}
                 />
               </td>
-              <td onClick={(e) => e.stopPropagation()}>
+              <td className="col-status" onClick={(e) => e.stopPropagation()}>
                 <select
-                  className="table-edit"
+                  className="table-edit table-edit-status"
                   value={l.status || 'Sem retorno'}
                   onChange={(e) => onPatch(l.id, { status: e.target.value })}
                   aria-label={`Status de ${l.empresa}`}
