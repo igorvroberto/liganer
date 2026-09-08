@@ -1,0 +1,70 @@
+name: Deploy prospecção → FTP
+
+# Tudo automático:
+# - mudou web/ ou LEADS.csv → build → FTP do site inteiro (/prospeccao)
+# Fonte dos leads: radar-comercial/LEADS.csv (GitHub) → entra no dist/data/leads.csv
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'radar-comercial/**'
+      - 'web/**'
+      - 'scripts/**'
+      - '.github/workflows/deploy-ftp.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_HOST: ${{ secrets.FTP_HOST }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Sync leads + build
+        run: |
+          bash scripts/sync-leads.sh
+          cd web
+          npm ci
+          npm run build
+
+      - name: Upload artifact (sempre)
+        uses: actions/upload-artifact@v4
+        with:
+          name: prospeccao-dist
+          path: web/dist
+          retention-days: 14
+
+      - name: Check FTP secrets
+        id: ftp
+        run: |
+          if [ -n "$FTP_HOST" ] && [ -n "$FTP_USER" ] && [ -n "$FTP_PASSWORD" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Secrets FTP_HOST / FTP_USER / FTP_PASSWORD ausentes — só gerou artifact."
+          fi
+
+      - name: Deploy via FTP
+        if: steps.ftp.outputs.ready == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ secrets.FTP_PROTOCOL || 'ftp' }}
+          local-dir: ./web/dist/
+          server-dir: ${{ secrets.FTP_SERVER_DIR || '/public_html/prospeccao/' }}
+          dangerous-clean-slate: false

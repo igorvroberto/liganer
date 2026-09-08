@@ -1,28 +1,21 @@
 # Liganer Prospecção
 
-Radar comercial B2B (aço/metalurgia) + sistema web em **`vendas.liganer.com.br/prospeccao`**.
+Radar comercial B2B + sistema em **`vendas.liganer.com.br/prospeccao`**.
 
-## Abrir a base (planilha)
+## Fonte dos leads
 
-- [`radar-comercial/LEADS.csv`](./radar-comercial/LEADS.csv) — **fonte da verdade (GitHub)**
-- Painel texto: [`radar-comercial/RADAR-ARACATUBA.md`](./radar-comercial/RADAR-ARACATUBA.md)
+[`radar-comercial/LEADS.csv`](./radar-comercial/LEADS.csv) no GitHub.
 
-## Sistema web
+## Deploy automático (FTP)
+
+Configure os secrets `FTP_*` neste repo (veja [`deploy/README.md`](./deploy/README.md)).
+
+Qualquer merge na `main` que altere leads ou o app → **Actions publica tudo via FTP**.
+
+## Dev local
 
 ```bash
 bash scripts/sync-leads.sh
 cd web && npm install && npm run dev
 # http://localhost:5173/prospeccao/
 ```
-
-## Publicar (FTP)
-
-1. `cd web && npm run build`
-2. Enviar `web/dist/` via FileZilla para `/prospeccao/`
-3. Configurar secrets `FTP_*` para o Action espelhar o CSV automaticamente
-
-Detalhes: [`deploy/README.md`](./deploy/README.md)
-
-## Atualizar leads
-
-Edite no GitHub → merge `main` → Action FTP atualiza `data/leads.csv` → no site clique **Atualizar**.
