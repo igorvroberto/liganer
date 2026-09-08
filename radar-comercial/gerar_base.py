@@ -42,7 +42,6 @@ HEADERS = [
     "classificacao_comercial",
     "motivo_prospect",
     "abordagem",
-    "visita_presencial",
     "observacoes_comerciais",
 ]
 
@@ -85,7 +84,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Única CD local com linha completa publicada; volume recorrente; porta de entrada para várias obras da cidade",
         "abordagem": "Posicionar como fornecedor de matéria-prima (não competir no varejo da obra). Abrir com CA-50 bobina/reto + arame. Perguntar bitolas e volume mensal.",
-        "visita_presencial": "Sim — prioridade 1",
         "observacoes_comerciais": "⭐ MULTIPRODUTO + MULTIOPORTUNIDADE. Também revende aço construção (concorrência parcial no varejo). Foco: ser o fornecedor da CD. Contato Facebook: +55 18 3608-8900 / 98184-0127.",
     },
     {
@@ -124,7 +122,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "CD ativa a 20 km; compra recorrente; atende construtoras de Birigui",
         "abordagem": "Mesma lógica Medida Exata: matéria-prima + prazo. Comparar frete Araçatuba vs fornecedor atual.",
-        "visita_presencial": "Sim — prioridade 1",
         "observacoes_comerciais": "Agrupar rota Araçatuba–Birigui.",
     },
     {
@@ -163,7 +160,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "CD/revenda local com telefone público e serviço de corte e dobra",
         "abordagem": "Descobrir se compra direto de usina; oferecer CA-50 + treliças com frete local.",
-        "visita_presencial": "Sim — prioridade 2",
         "observacoes_comerciais": "Pode ser concorrente no varejo — classificar após 1º contato.",
     },
     {
@@ -202,7 +198,6 @@ LEADS = [
         "classificacao_comercial": "INDEFINIDO",
         "motivo_prospect": "Empresa de corte e dobra em Birigui com capital social R$ 400 mil — potencial se for armadura",
         "abordagem": "Pergunta aberta: 'vocês trabalham com vergalhão CA-50 ou com chapa?' Antes de ofertar.",
-        "visita_presencial": "Sim — após validação telefônica",
         "observacoes_comerciais": "Não classificar definitivamente como CD até validar. Datas de fundação em bases cadastrais inconsistentes — validar situação cadastral.",
     },
     {
@@ -241,7 +236,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Revenda local do mesmo segmento — priorizar abordagem de atacado",
         "abordagem": "Abordar como prospect de atacado para revenda.",
-        "visita_presencial": "Não",
         "observacoes_comerciais": "Potencial Alto (ex-concorrente de canal). Validar abordagem atacado/parceria.",
     },
     # ========== C — CONSTRUÇÃO ==========
@@ -281,7 +275,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Maior pipeline imobiliário ativo em Araçatuba; volume de aço significativo nas obras",
         "abordagem": "NÃO ofertar direto sem mapear comprador. Abordagem: engenharia da obra → 'quem está fornecendo o aço?' → atacar CD/empreiteiro.",
-        "visita_presencial": "Sim — prioridade 1 (canteiro)",
         "observacoes_comerciais": "⭐ MULTIOPORTUNIDADE (obra + CD oculta). Sede compras pode ser SJRP (~140 km).",
     },
     {
@@ -320,7 +313,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Maior volume habitacional ativo na cidade; consumo recorrente por fase",
         "abordagem": "Mapear comprador real (central vs obra). Oferecer kit obra: CA-50 + treliças + telas com logística de canteiro.",
-        "visita_presencial": "Sim — prioridade 1",
         "observacoes_comerciais": "⭐ MULTIOPORTUNIDADE. Compras podem ser centralizadas fora de Araçatuba.",
     },
     {
@@ -359,7 +351,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Construtora regional com obras ativas em Araçatuba e sede a 50 km",
         "abordagem": "Agendar com engenharia de obras; perguntar política de compra de aço (CD vs direto).",
-        "visita_presencial": "Sim — prioridade 2",
         "observacoes_comerciais": "Sede Penápolis — combinar rota com outras visitas.",
     },
     {
@@ -398,7 +389,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Incorporadora local acessível; potencial médio se houver obra ativa",
         "abordagem": "Contato direto WhatsApp; qualificar obra e estágio estrutural.",
-        "visita_presencial": "Sim — se houver obra ativa",
         "observacoes_comerciais": "DDD 14 no telefone — confirmar se comercial atende Araçatuba.",
     },
     {
@@ -437,7 +427,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Obras residenciais alto padrão consomem aço; pode ser porta de indicação",
         "abordagem": "Qualificar se compra ou indica. Volume unitário menor que Pacaembu/TARRAF.",
-        "visita_presencial": "Não prioritário",
         "observacoes_comerciais": "Pode ser tratado como parceiro/indicação se não comprar direto.",
     },
     {
@@ -476,7 +465,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Obra de alto volume — cliente oculto (CD) pode ser mais valioso que a construtora",
         "abordagem": "Investigação de canteiro, não pitch de catálogo.",
-        "visita_presencial": "Sim — prioridade 1",
         "observacoes_comerciais": "Registro de obra para inteligência comercial; vincular a Pacaembu + CD descoberta.",
     },
     {
@@ -515,7 +503,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Maior lançamento TARRAF na cidade; timing de compra de aço a acompanhar",
         "abordagem": "Acompanhar estágio; atacar na fase de fundação/estrutura.",
-        "visita_presencial": "Sim — conforme cronograma",
         "observacoes_comerciais": "Pode ainda estar em fase pré-obra; validar status real no local.",
     },
     {
@@ -554,7 +541,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Obra já em execução = consumo atual, não futuro",
         "abordagem": "Canteiro primeiro; depois CD/suprimentos.",
-        "visita_presencial": "Sim — prioridade 1",
         "observacoes_comerciais": "Melhor timing entre as obras Pacaembu (já em obras).",
     },
     # ========== M — METALÚRGICA / TRANSFORMAÇÃO ==========
@@ -594,7 +580,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Maior transformador metal-mecânico local identificado; multiproduto; consumo recorrente",
         "abordagem": "Abrir com chapa quente/oxicorte (necessidade óbvia). Segundo passo: inox 304. Levar tabela de espessuras.",
-        "visita_presencial": "Sim — prioridade 1",
         "observacoes_comerciais": "⭐ MULTIPRODUTO + MULTIOPORTUNIDADE (M + I). Capital social ~R$ 6,7 mi nas bases. Alvo âncora do funil M.",
     },
     {
@@ -633,7 +618,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Grande transformador com multiproduto e vínculo com sucroalcooleiro",
         "abordagem": "Foco chapa quente espessas + inox. Mencionar capacidade de fornecimento para projetos de usina.",
-        "visita_presencial": "Sim — prioridade 1 (rota Andradina)",
         "observacoes_comerciais": "⭐ MULTIPRODUTO. Distância ~100 km — justificar com volume.",
     },
     {
@@ -672,7 +656,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Transformador verticalizado; vários grupos do catálogo; recorrência industrial",
         "abordagem": "Abrir com chapa + metalon/tubo (kit implemento). Oferecer programação de fornecimento.",
-        "visita_presencial": "Sim — prioridade 1",
         "observacoes_comerciais": "⭐ MULTIPRODUTO. Vizinha da Nestlé na Rondon — rota industrial.",
     },
     {
@@ -711,7 +694,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Fabricante de estruturas com 45+ anos; consumo de múltiplas linhas",
         "abordagem": "Kit galpão: perfis U + metalon + telha trapezoidal/cumeeiras.",
-        "visita_presencial": "Sim — prioridade 1",
         "observacoes_comerciais": "⭐ MULTIPRODUTO. Excelente aderência a coberturas do catálogo.",
     },
     {
@@ -750,7 +732,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Portfólio sobreposto (chapas, tubos, perfis, barras) + serviço de corte",
         "abordagem": "Abordar com foco em venda atacado para centro de serviço.",
-        "visita_presencial": "Não (salvo decisão comercial de atacado)",
         "observacoes_comerciais": "Pode gerar indicação de clientes finais. Não confundir corte de chapa com CD de vergalhão.",
     },
     {
@@ -789,7 +770,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Aderência direta à linha Portas de Enrolar do catálogo",
         "abordagem": "Abrir com kit porta de enrolar. Segundo produto: metalon para portões.",
-        "visita_presencial": "Sim — prioridade 2",
         "observacoes_comerciais": "⭐ MULTIPRODUTO na linha de portas/portões. Vizinha da Estruturas Metálicas Araçatuba.",
     },
     {
@@ -828,7 +808,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Transformador estabelecido há décadas; consumo de perfis/tubos",
         "abordagem": "Oferta metalon + perfis U + chapa.",
-        "visita_presencial": "Sim — prioridade 2",
         "observacoes_comerciais": "E-mail parece antigo — preferir telefone.",
     },
     {
@@ -867,7 +846,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Fabricante local de estruturas; endereço no polo Umuarama",
         "abordagem": "Visita a frio no cluster Umuarama (Odorindo Perenha).",
-        "visita_presencial": "Sim — cluster Umuarama",
         "observacoes_comerciais": "Porte pequeno/EPP — potencial Médio.",
     },
     {
@@ -906,7 +884,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Serralheria local — volume provavelmente baixo",
         "abordagem": "Qualificar volume antes de visitar.",
-        "visita_presencial": "Não prioritário",
         "observacoes_comerciais": "Prioridade C.",
     },
     {
@@ -945,7 +922,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Consumo recorrente em reformas; rede regional",
         "abordagem": "Oferta chapa + tubo com entrega rápida (urgencia de oficina).",
-        "visita_presencial": "Sim — prioridade 3",
         "observacoes_comerciais": "Volume tende a ser menor que Megatec (OEM).",
     },
     # ========== I — INDÚSTRIA / INOX ==========
@@ -985,7 +961,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Comprador direto de inox com transformação; aderência total ao catálogo inox",
         "abordagem": "Abrir com 304 2B + filme. Segundo: 430 e N4 escovado. Levar amostras de acabamento se possível.",
-        "visita_presencial": "Sim — prioridade 1",
         "observacoes_comerciais": "⭐ MULTIPRODUTO (linhas inox). Alvo âncora do funil I.",
     },
     {
@@ -1024,7 +999,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Fabricante local de equipamentos inox",
         "abordagem": "Qualificar ligas e consumo mensal.",
-        "visita_presencial": "Sim — cluster Vila Industrial",
         "observacoes_comerciais": "Fundada 2019 — porte a validar.",
     },
     {
@@ -1063,7 +1037,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Consumidor local de inox com contato WhatsApp",
         "abordagem": "Amostra/preço 304; perguntar espessuras mais usadas.",
-        "visita_presencial": "Sim — prioridade 2",
         "observacoes_comerciais": "Volume provavelmente menor que Ata Inox.",
     },
     {
@@ -1102,7 +1075,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Fabricante local de peças inox",
         "abordagem": "Qualificar consumo antes de visita.",
-        "visita_presencial": "Opcional",
         "observacoes_comerciais": "Lead B/C conforme volume.",
     },
     {
@@ -1141,7 +1113,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Metalúrgica especializada em inox",
         "abordagem": "Mapear ligas e formatos.",
-        "visita_presencial": "Sim — prioridade 2",
         "observacoes_comerciais": "",
     },
     {
@@ -1180,7 +1151,6 @@ LEADS = [
         "classificacao_comercial": "INDEFINIDO",
         "motivo_prospect": "Nome/listagem inox no parque industrial — precisa qualificação",
         "abordagem": "Descobrir se é fabricante (I) ou revenda (R2/concorrente).",
-        "visita_presencial": "Após qualificação",
         "observacoes_comerciais": "Se for só revenda de inox, qualificar como prospect de canal/atacado.",
     },
     {
@@ -1219,7 +1189,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Grande indústria alimentícia local com justificativa clara de inox",
         "abordagem": "Difícil acesso direto. Estratégia: (1) fornecedor de caldeiraria que atende a planta; (2) cadastro de fornecedores MRO.",
-        "visita_presencial": "Não a frio — via indicação/cadastro",
         "observacoes_comerciais": "⭐ MULTIOPORTUNIDADE (I + caldeirarias). Não presumir compra direta de bobina.",
     },
     {
@@ -1258,7 +1227,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Grande consumidor potencial de inox sanitário na região",
         "abordagem": "Indireta via Passador/Ata Inox que atendem frigoríficos; ou portal de fornecedores JBS.",
-        "visita_presencial": "Planejar com rota Andradina",
         "observacoes_comerciais": "Acesso difícil; alto potencial se entrar na cadeia de manutenção.",
     },
     {
@@ -1297,7 +1265,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Âncora sucroalcooleira regional; puxa demanda de caldeirarias",
         "abordagem": "Estratégia indireta: virar fornecedor das caldeirarias que atendem a usina.",
-        "visita_presencial": "Indireta via Passador",
         "observacoes_comerciais": "⭐ MULTIOPORTUNIDADE. Cliente oculto = caldeiraria.",
     },
     {
@@ -1336,7 +1303,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Usina local — demanda puxada por caldeirarias",
         "abordagem": "Indireta via ZBN/Megatec/Passador.",
-        "visita_presencial": "Após confirmar unidade ativa",
         "observacoes_comerciais": "Validar se unidade segue ativa sob mesmo nome.",
     },
     {
@@ -1375,7 +1341,6 @@ LEADS = [
         "classificacao_comercial": "INDEFINIDO",
         "motivo_prospect": "Usina histórica na lista pública — confirmar operação",
         "abordagem": "Só após confirmar atividade.",
-        "visita_presencial": "Não",
         "observacoes_comerciais": "Lead não plenamente qualificado até validar operação.",
     },
     {
@@ -1414,7 +1379,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Frigorífico local — justificativa de inox se ativo",
         "abordagem": "Validar operação antes de ofertar.",
-        "visita_presencial": "Após confirmação",
         "observacoes_comerciais": "Histórico regional de frigoríficos com aberturas/fechamentos — validar.",
     },
     # ========== R — DISTRIBUIÇÃO (classificação cuidadosa) ==========
@@ -1454,7 +1418,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Distribuidor local — conflito de canal",
         "abordagem": "Abordar como prospect (atacado/share of wallet).",
-        "visita_presencial": "Não",
         "observacoes_comerciais": "Mesmo eixo da Aquinox na Faria Lima.",
     },
     # ========== Complemento M / C / CD ==========
@@ -1494,7 +1457,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Metalúrgica de porte relevante na cidade",
         "abordagem": "Primeiro entender o que fabricam; depois ofertar linha aderente.",
-        "visita_presencial": "Sim — após localizar",
         "observacoes_comerciais": "Prioridade alta se confirmar transformação de bobina/chapa.",
     },
     {
@@ -1533,7 +1495,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Fabricante de estruturas — compra aço para transformar",
         "abordagem": "Kit estrutura: metalon + perfil U + telha.",
-        "visita_presencial": "Após localizar",
         "observacoes_comerciais": "Lead B até confirmar porte.",
     },
     {
@@ -1572,7 +1533,6 @@ LEADS = [
         "classificacao_comercial": "INDEFINIDO",
         "motivo_prospect": "Nome sugere transformação de ferro/aço",
         "abordagem": "Qualificar antes de ofertar.",
-        "visita_presencial": "Não",
         "observacoes_comerciais": "Lead não qualificado até responder perguntas 1–3.",
     },
     {
@@ -1611,7 +1571,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Transformador de aço em estruturas",
         "abordagem": "Oferta perfis + metalon.",
-        "visita_presencial": "Após contato",
         "observacoes_comerciais": "",
     },
     {
@@ -1650,7 +1609,6 @@ LEADS = [
         "classificacao_comercial": "INDEFINIDO",
         "motivo_prospect": "Nome no segmento de estruturas",
         "abordagem": "Qualificar porte.",
-        "visita_presencial": "Não",
         "observacoes_comerciais": "Lead não qualificado plenamente.",
     },
     {
@@ -1689,7 +1647,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Fabricante de estruturas",
         "abordagem": "Qualificar e ofertar perfis.",
-        "visita_presencial": "Após contato",
         "observacoes_comerciais": "",
     },
     {
@@ -1728,7 +1685,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Aderência direta à linha Portas de Enrolar",
         "abordagem": "Mesma da 5 Estrelas: kit porta de enrolar.",
-        "visita_presencial": "Após localizar",
         "observacoes_comerciais": "Comparar volume com Serralheria 5 Estrelas.",
     },
     {
@@ -1767,7 +1723,6 @@ LEADS = [
         "classificacao_comercial": "PROSPECT",
         "motivo_prospect": "Obra vertical ativa/recente da maior incorporadora na cidade",
         "abordagem": "Investigação de canteiro → CD oculta.",
-        "visita_presencial": "Sim — prioridade 1",
         "observacoes_comerciais": "Validar se estrutura já foi concluída antes de priorizar.",
     },
     {
@@ -1806,7 +1761,6 @@ LEADS = [
         "classificacao_comercial": "INDEFINIDO",
         "motivo_prospect": "Cliente oculto de maior valor potencial no funil construção",
         "abordagem": "Inteligência de campo, não cold call genérico.",
-        "visita_presencial": "Sim — via obras",
         "observacoes_comerciais": "Registro metodológico. Substituir por empresa real assim que identificada.",
     },
     {
@@ -1845,7 +1799,6 @@ LEADS = [
         "classificacao_comercial": "INDEFINIDO",
         "motivo_prospect": "Indústria agro — possível mas não comprovado consumo de inox",
         "abordagem": "Não ofertar inox sem validação. Lead não qualificado para I até haver justificativa.",
-        "visita_presencial": "Não",
         "observacoes_comerciais": "Incluído para não ignorar; classificação cautelosa conforme regras.",
     },
 ]

@@ -1,5 +1,5 @@
 import type { Filters, Lead } from '../types'
-import { CATEGORIA_LABEL } from '../types'
+import { CATEGORIA_LABEL, POTENCIAL_OPTIONS } from '../types'
 import { uniqueSorted } from '../lib/filterLeads'
 
 type Props = {
@@ -47,7 +47,7 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
           <span>Potencial</span>
           <select value={filters.potencial} onChange={(e) => set('potencial', e.target.value)}>
             <option value="">Todos</option>
-            {['Alto', 'Médio', 'Baixo'].map((p) => (
+            {POTENCIAL_OPTIONS.map((p) => (
               <option key={p} value={p}>
                 {p}
               </option>
@@ -103,15 +103,6 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
             <option value="">Todos</option>
             <option value="Sim">Sim</option>
             <option value="Não">Não</option>
-          </select>
-        </label>
-
-        <label className="field">
-          <span>Visita presencial</span>
-          <select value={filters.visita} onChange={(e) => set('visita', e.target.value)}>
-            <option value="">Todas</option>
-            <option value="Sim">Priorizar visita</option>
-            <option value="Não">Sem visita agora</option>
           </select>
         </label>
       </div>

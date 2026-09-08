@@ -12,8 +12,6 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
     if (f.situacao && l.situacao !== f.situacao) return false
     if (f.multiproduto === 'Sim' && !/^sim/i.test(l.multiproduto)) return false
     if (f.multiproduto === 'Não' && /^sim/i.test(l.multiproduto)) return false
-    if (f.visita === 'Sim' && !/^sim/i.test(l.visita_presencial)) return false
-    if (f.visita === 'Não' && /^sim/i.test(l.visita_presencial)) return false
     if (!q) return true
     const hay = [
       l.empresa,
@@ -72,7 +70,6 @@ export function topAttackList(leads: Lead[], limit = 20): Lead[] {
     if (l.categoria === 'CD') score += 20
     if (l.consumo_estimado === 'Alto') score += 15
     if (l.compra_recorrente === 'Sim') score += 15
-    if (/^sim/i.test(l.visita_presencial)) score += 10
     const dist = Number(l.distancia_km_aracatuba)
     if (!Number.isNaN(dist)) score += Math.max(0, 20 - dist / 10)
     return { l, score }

@@ -1,18 +1,21 @@
 import type { Lead } from '../types'
-import { CATEGORIA_LABEL } from '../types'
+import {
+  CATEGORIA_LABEL,
+  CLASSIFICACAO_OPTIONS,
+  POTENCIAL_OPTIONS,
+  SITUACAO_OPTIONS,
+} from '../types'
 import { potClass } from '../lib/filterLeads'
 
 type Props = {
   leads: Lead[]
   selectedId: string | null
   onSelect: (id: string) => void
+  onPatch: (id: string, patch: Partial<Lead>) => void
+  onDelete: (id: string) => void
 }
 
-function PotBadge({ value }: { value: string }) {
-  return <span className={`badge ${potClass(value)}`}>{value || '—'}</span>
-}
-
-export function LeadTable({ leads, selectedId, onSelect }: Props) {
+export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Props) {
   if (!leads.length) {
     return <p className="empty">Nenhum lead com esses filtros.</p>
   }
@@ -22,7 +25,7 @@ export function LeadTable({ leads, selectedId, onSelect }: Props) {
       <table className="leads-table">
         <thead>
           <tr>
-            <th>Pot.</th>
+            <th>Potencial</th>
             <th>Empresa</th>
             <th>Cidade</th>
             <th>Cat.</th>
@@ -30,6 +33,7 @@ export function LeadTable({ leads, selectedId, onSelect }: Props) {
             <th>Classificação</th>
             <th>Situação</th>
             <th>Próxima ação</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -39,9 +43,24 @@ export function LeadTable({ leads, selectedId, onSelect }: Props) {
               className={selectedId === l.id ? 'selected' : undefined}
               onClick={() => onSelect(l.id)}
             >
-              <td>
-                <PotBadge value={l.potencial} />
-                {/^sim/i.test(l.multiproduto) ? <span className="star" title="Multiproduto">★</span> : null}
+              <td onClick={(e) => e.stopPropagation()}>
+                <select
+                  className={`table-edit ${potClass(l.potencial)}`}
+                  value={l.potencial}
+                  onChange={(e) => onPatch(l.id, { potencial: e.target.value })}
+                  aria-label={`Potencial de ${l.empresa}`}
+                >
+                  {POTENCIAL_OPTIONS.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+                {/^sim/i.test(l.multiproduto) ? (
+                  <span className="star" title="Multiproduto">
+                    ★
+                  </span>
+                ) : null}
               </td>
               <td>
                 <strong>{l.empresa}</strong>
@@ -60,11 +79,71 @@ export function LeadTable({ leads, selectedId, onSelect }: Props) {
                 </div>
               </td>
               <td className="clamp">{l.produto_provavel}</td>
-              <td>
-                <span className={`chip class-${l.classificacao_comercial}`}>{l.classificacao_comercial}</span>
+              <td onClick={(e) => e.stopPropagation()}>
+                <select
+                  className="table-edit"
+                  value={l.classificacao_comercial}
+                  onChange={(e) => onPatch(l.id, { classificacao_comercial: e.target.value })}
+                  aria-label={`Classificação de ${l.empresa}`}
+                >
+                  {[
+                    ...CLASSIFICACAO_OPTIONS,
+                    ...(CLASSIFICACAO_OPTIONS as readonly string[]).includes(l.classificacao_comercial)
+                      ? []
+                      : [l.classificacao_comercial],
+                  ]
+                    .filter(Boolean)
+                    .map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                </select>
               </td>
-              <td>{l.situacao}</td>
-              <td className="clamp">{l.proxima_acao}</td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <select
+                  className="table-edit"
+                  value={l.situacao}
+                  onChange={(e) => onPatch(l.id, { situacao: e.target.value })}
+                  aria-label={`Situação de ${l.empresa}`}
+                >
+                  {[
+                    ...SITUACAO_OPTIONS,
+                    ...(SITUACAO_OPTIONS as readonly string[]).includes(l.situacao)
+                      ? []
+                      : [l.situacao],
+                  ]
+                    .filter(Boolean)
+                    .map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                </select>
+              </td>
+              <td
+                className="clamp editable-cell"
+                onClick={(e) => e.stopPropagation()}
+                title="Clique para editar"
+              >
+                <input
+                  className="table-edit-text"
+                  value={l.proxima_acao}
+                  onChange={(e) => onPatch(l.id, { proxima_acao: e.target.value })}
+                  aria-label={`Próxima ação de ${l.empresa}`}
+                />
+              </td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  className="btn ghost btn-sm danger"
+                  onClick={() => {
+                    if (confirm(`Remover ${l.empresa}?`)) onDelete(l.id)
+                  }}
+                >
+                  Remover
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

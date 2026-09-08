@@ -149,7 +149,7 @@ select {
 
 .filters-grid {
   display: grid;
-  grid-template-columns: 1.5fr repeat(4, 1fr);
+  grid-template-columns: 1.6fr repeat(3, 1fr);
   gap: 0.75rem;
 }
 
@@ -192,9 +192,52 @@ select {
   cursor: pointer;
 }
 
-.btn.ghost {
-  background: transparent;
+.btn.danger,
+.btn.ghost.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.table-edit,
+.table-edit-text,
+.edit-row input,
+.edit-row select,
+.edit-row textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  padding: 0.35rem 0.45rem;
+  background: #fff;
   color: var(--ink);
+  font: inherit;
+}
+
+.table-edit {
+  max-width: 8.5rem;
+}
+
+.table-edit-text {
+  min-width: 10rem;
+}
+
+.edit-grid {
+  gap: 0.85rem;
+}
+
+.edit-row {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.edit-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.edit-row textarea {
+  resize: vertical;
 }
 
 .stats {
