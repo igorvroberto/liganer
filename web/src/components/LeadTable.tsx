@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react'
 import type { Lead } from '../types'
-import { CATEGORIA_LABEL, POTENCIAL_OPTIONS, SITUACAO_OPTIONS } from '../types'
+import { CATEGORIA_LABEL } from '../types'
 import { potClass, sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
 
 type Props = {
   leads: Lead[]
   selectedId: string | null
   onSelect: (id: string) => void
-  onPatch: (id: string, patch: Partial<Lead>) => void
-  onDelete: (id: string) => void
 }
 
 const COLUMNS: { key: SortKey; label: string }[] = [
@@ -23,17 +21,17 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'proxima_acao', label: 'Próxima ação' },
 ]
 
-/** Converte dd/mm/yyyy → yyyy-mm-dd para input type=date */
-function toDateInputValue(raw: string): string {
+function formatDateBr(raw: string): string {
   const s = (raw ?? '').trim()
-  if (!s) return ''
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
-  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
-  if (br) return `${br[3]}-${br[2]}-${br[1]}`
-  return ''
+  if (!s) return '—'
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, m, d] = s.split('-')
+    return `${d}/${m}/${y}`
+  }
+  return s
 }
 
-export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Props) {
+export function LeadTable({ leads, selectedId, onSelect }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('potencial')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -75,7 +73,6 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Pr
                 </th>
               )
             })}
-            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -85,19 +82,8 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Pr
               className={selectedId === l.id ? 'selected' : undefined}
               onClick={() => onSelect(l.id)}
             >
-              <td onClick={(e) => e.stopPropagation()}>
-                <select
-                  className={`table-edit ${potClass(l.potencial)}`}
-                  value={l.potencial}
-                  onChange={(e) => onPatch(l.id, { potencial: e.target.value })}
-                  aria-label={`Potencial de ${l.empresa}`}
-                >
-                  {POTENCIAL_OPTIONS.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
+              <td>
+                <span className={`pot-pill ${potClass(l.potencial)}`}>{l.potencial}</span>
                 {/^sim/i.test(l.multiproduto) ? (
                   <span className="star" title="Multiproduto">
                     ★
@@ -108,15 +94,7 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Pr
                 <strong>{l.empresa}</strong>
                 <div className="muted tiny">{l.id}</div>
               </td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <input
-                  className="table-edit-text"
-                  value={l.cnpj ?? ''}
-                  onChange={(e) => onPatch(l.id, { cnpj: e.target.value })}
-                  aria-label={`CNPJ de ${l.empresa}`}
-                  placeholder="00.000.000/0000-00"
-                />
-              </td>
+              <td className="mono-cell">{l.cnpj || '—'}</td>
               <td>
                 {l.cidade}
                 {l.distancia_km_aracatuba ? (
@@ -130,59 +108,9 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Pr
                 </div>
               </td>
               <td className="clamp">{l.produto_provavel}</td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <select
-                  className="table-edit"
-                  value={l.situacao}
-                  onChange={(e) => onPatch(l.id, { situacao: e.target.value })}
-                  aria-label={`Situação de ${l.empresa}`}
-                >
-                  {[
-                    ...SITUACAO_OPTIONS,
-                    ...(SITUACAO_OPTIONS as readonly string[]).includes(l.situacao)
-                      ? []
-                      : [l.situacao],
-                  ]
-                    .filter(Boolean)
-                    .map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                </select>
-              </td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="date"
-                  className="table-edit-text"
-                  value={toDateInputValue(l.ultima_compra ?? '')}
-                  onChange={(e) => onPatch(l.id, { ultima_compra: e.target.value })}
-                  aria-label={`Última compra de ${l.empresa}`}
-                />
-              </td>
-              <td
-                className="clamp editable-cell"
-                onClick={(e) => e.stopPropagation()}
-                title="Clique para editar"
-              >
-                <input
-                  className="table-edit-text"
-                  value={l.proxima_acao}
-                  onChange={(e) => onPatch(l.id, { proxima_acao: e.target.value })}
-                  aria-label={`Próxima ação de ${l.empresa}`}
-                />
-              </td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  className="btn ghost btn-sm danger"
-                  onClick={() => {
-                    if (confirm(`Remover ${l.empresa}?`)) onDelete(l.id)
-                  }}
-                >
-                  Remover
-                </button>
-              </td>
+              <td>{l.situacao}</td>
+              <td>{formatDateBr(l.ultima_compra ?? '')}</td>
+              <td className="clamp">{l.proxima_acao}</td>
             </tr>
           ))}
         </tbody>

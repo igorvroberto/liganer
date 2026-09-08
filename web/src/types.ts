@@ -87,7 +87,7 @@ export const EMPTY_FILTERS: Filters = {
 export const EDITABLE_FIELDS: {
   key: keyof Lead
   label: string
-  kind: 'text' | 'textarea' | 'select'
+  kind: 'text' | 'textarea' | 'select' | 'date'
   options?: readonly string[]
 }[] = [
   { key: 'empresa', label: 'Empresa', kind: 'text' },
@@ -98,7 +98,7 @@ export const EDITABLE_FIELDS: {
   { key: 'subcategoria', label: 'Subcategoria', kind: 'text' },
   { key: 'potencial', label: 'Potencial', kind: 'select', options: POTENCIAL_OPTIONS },
   { key: 'situacao', label: 'Situação', kind: 'select', options: SITUACAO_OPTIONS },
-  { key: 'ultima_compra', label: 'Última compra', kind: 'text' },
+  { key: 'ultima_compra', label: 'Última compra', kind: 'date' },
   { key: 'multiproduto', label: 'Multiproduto', kind: 'select', options: ['Sim', 'Não'] },
   { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },
   { key: 'produto_secundario', label: 'Produto secundário', kind: 'textarea' },

@@ -8,6 +8,15 @@ type Props = {
   onDelete: (id: string) => void
 }
 
+function toDateInputValue(raw: string): string {
+  const s = (raw ?? '').trim()
+  if (!s) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (br) return `${br[3]}-${br[2]}-${br[1]}`
+  return ''
+}
+
 export function LeadDetail({ lead, onClose, onPatch, onDelete }: Props) {
   if (!lead) return null
 
@@ -22,7 +31,7 @@ export function LeadDetail({ lead, onClose, onPatch, onDelete }: Props) {
             {CATEGORIA_LABEL[lead.categoria] ?? lead.categoria}
           </p>
           <h2>{lead.empresa}</h2>
-          <p className="muted">Edite os campos abaixo — salvamento automático no servidor/GitHub.</p>
+          <p className="muted">Edite aqui — salvamento automático no servidor/GitHub.</p>
         </div>
         <button type="button" className="btn ghost" onClick={onClose} aria-label="Fechar">
           Fechar
@@ -58,7 +67,8 @@ export function LeadDetail({ lead, onClose, onPatch, onDelete }: Props) {
 
       <div className="detail-grid edit-grid">
         {EDITABLE_FIELDS.map((field) => {
-          const value = String(lead[field.key] ?? '')
+          const raw = String(lead[field.key] ?? '')
+          const value = field.kind === 'date' ? toDateInputValue(raw) : raw
           return (
             <label key={field.key} className="detail-row edit-row">
               <span className="edit-label">{field.label}</span>
@@ -72,13 +82,21 @@ export function LeadDetail({ lead, onClose, onPatch, onDelete }: Props) {
                       {opt}
                     </option>
                   ))}
-                  {field.options && !(field.options as readonly string[]).includes(value) && value ? (
+                  {field.options &&
+                  !(field.options as readonly string[]).includes(value) &&
+                  value ? (
                     <option value={value}>{value}</option>
                   ) : null}
                 </select>
               ) : field.kind === 'textarea' ? (
                 <textarea
                   rows={3}
+                  value={value}
+                  onChange={(e) => onPatch(lead.id, { [field.key]: e.target.value })}
+                />
+              ) : field.kind === 'date' ? (
+                <input
+                  type="date"
                   value={value}
                   onChange={(e) => onPatch(lead.id, { [field.key]: e.target.value })}
                 />
