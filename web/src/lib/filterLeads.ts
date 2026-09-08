@@ -131,9 +131,11 @@ export function potClass(value: string): string {
   return 'pot-outro'
 }
 
-/** Heurística do TOP 20 alinhada ao radar */
+/** Heurística do TOP 20 alinhada ao radar (ignora Desqualificado) */
 export function topAttackList(leads: Lead[], limit = 20): Lead[] {
-  const scored = leads.map((l) => {
+  const scored = leads
+    .filter((l) => l.situacao !== 'Desqualificado')
+    .map((l) => {
     let score = 0
     if (l.potencial === 'Alto') score += 100
     else if (l.potencial === 'Médio') score += 50
