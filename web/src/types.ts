@@ -57,22 +57,7 @@ export const CATEGORIA_LABEL: Record<string, string> = {
 
 export const POTENCIAL_OPTIONS = ['Alto', 'Médio', 'Baixo'] as const
 
-export const SITUACAO_OPTIONS = [
-  'Não pesquisado',
-  'Pesquisado',
-  'Lead qualificado',
-  'Primeiro contato',
-  'Contato realizado',
-  'Conversando',
-  'Cotação solicitada',
-  'Cotação enviada',
-  'Negociação',
-  'Cliente',
-  'Sem interesse',
-  'Sem contato',
-  'Parceiro',
-  'Follow-up',
-] as const
+export const SITUACAO_OPTIONS = ['Qualificado', 'Desqualificado'] as const
 
 export const EMPTY_FILTERS: Filters = {
   q: '',

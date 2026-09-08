@@ -1,7 +1,8 @@
 import Papa from 'papaparse'
 import type { Lead } from '../types'
+import { SITUACAO_OPTIONS } from '../types'
 
-const STORAGE_KEY = 'liganer-prospeccao-leads-v2'
+const STORAGE_KEY = 'liganer-prospeccao-leads-v3'
 
 export type LocalStore = {
   leads: Lead[]
@@ -43,7 +44,16 @@ export function downloadLeadsCsv(leads: Lead[], filename = 'LEADS.csv'): void {
   URL.revokeObjectURL(url)
 }
 
-/** Remove campos legados se vierem de CSV/localStorage antigo */
+function mapSituacao(value: string | undefined): string {
+  const s = (value ?? '').trim()
+  if ((SITUACAO_OPTIONS as readonly string[]).includes(s)) return s
+  if (s === 'Sem interesse' || s === 'Sem contato') return 'Desqualificado'
+  if (!s) return 'Qualificado'
+  // valores antigos do funil (Lead qualificado, Pesquisado, Cliente, etc.)
+  return 'Qualificado'
+}
+
+/** Remove campos legados e normaliza situação */
 export function normalizeLead(
   row: Lead & { visita_presencial?: string; classificacao_comercial?: string },
 ): Lead {
@@ -55,5 +65,9 @@ export function normalizeLead(
     visita_presencial?: string
     classificacao_comercial?: string
   }
-  return { ...rest, ultima_compra: rest.ultima_compra ?? '' } as Lead
+  return {
+    ...rest,
+    ultima_compra: rest.ultima_compra ?? '',
+    situacao: mapSituacao(rest.situacao),
+  } as Lead
 }
