@@ -140,21 +140,6 @@ export default function App() {
     [queueSync],
   )
 
-  const onDelete = useCallback(
-    (id: string) => {
-      setLeads((prev) => {
-        const next = prev.filter((l) => l.id !== id)
-        queueSync(next, {
-          immediate: true,
-          message: `Remove lead ${id} via prospecção`,
-        })
-        return next
-      })
-      setSelectedId((cur) => (cur === id ? null : cur))
-    },
-    [queueSync],
-  )
-
   const discardLocal = () => {
     if (!confirm('Descartar edições locais não sincronizadas e recarregar do servidor?')) return
     clearLocalLeads()
@@ -281,7 +266,6 @@ export default function App() {
               lead={selected}
               onClose={() => setSelectedId(null)}
               onPatch={onPatch}
-              onDelete={onDelete}
             />
           </div>
         </>

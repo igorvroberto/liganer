@@ -5,7 +5,6 @@ type Props = {
   lead: Lead | null
   onClose: () => void
   onPatch: (id: string, patch: Partial<Lead>) => void
-  onDelete: (id: string) => void
 }
 
 function toDateInputValue(raw: string): string {
@@ -17,7 +16,7 @@ function toDateInputValue(raw: string): string {
   return ''
 }
 
-export function LeadDetail({ lead, onClose, onPatch, onDelete }: Props) {
+export function LeadDetail({ lead, onClose, onPatch }: Props) {
   if (!lead) return null
 
   const wa = lead.whatsapp?.replace(/\D/g, '')
@@ -31,7 +30,10 @@ export function LeadDetail({ lead, onClose, onPatch, onDelete }: Props) {
             {CATEGORIA_LABEL[lead.categoria] ?? lead.categoria}
           </p>
           <h2>{lead.empresa}</h2>
-          <p className="muted">Edite aqui — salvamento automático no servidor/GitHub.</p>
+          <p className="muted">
+            Edite aqui — salvamento automático. Para descartar um lead, use Situação =
+            Desqualificado (não há remoção).
+          </p>
         </div>
         <button type="button" className="btn ghost" onClick={onClose} aria-label="Fechar">
           Fechar
@@ -54,15 +56,6 @@ export function LeadDetail({ lead, onClose, onPatch, onDelete }: Props) {
             WhatsApp
           </a>
         ) : null}
-        <button
-          type="button"
-          className="btn ghost danger"
-          onClick={() => {
-            if (confirm(`Remover ${lead.empresa}?`)) onDelete(lead.id)
-          }}
-        >
-          Remover lead
-        </button>
       </div>
 
       <div className="detail-grid edit-grid">
