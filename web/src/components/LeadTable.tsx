@@ -1,10 +1,5 @@
 import type { Lead } from '../types'
-import {
-  CATEGORIA_LABEL,
-  CLASSIFICACAO_OPTIONS,
-  POTENCIAL_OPTIONS,
-  SITUACAO_OPTIONS,
-} from '../types'
+import { CATEGORIA_LABEL, POTENCIAL_OPTIONS, SITUACAO_OPTIONS } from '../types'
 import { potClass } from '../lib/filterLeads'
 
 type Props = {
@@ -30,7 +25,6 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Pr
             <th>Cidade</th>
             <th>Cat.</th>
             <th>Produto</th>
-            <th>Classificação</th>
             <th>Situação</th>
             <th>Próxima ação</th>
             <th></th>
@@ -79,27 +73,6 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onDelete }: Pr
                 </div>
               </td>
               <td className="clamp">{l.produto_provavel}</td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <select
-                  className="table-edit"
-                  value={l.classificacao_comercial}
-                  onChange={(e) => onPatch(l.id, { classificacao_comercial: e.target.value })}
-                  aria-label={`Classificação de ${l.empresa}`}
-                >
-                  {[
-                    ...CLASSIFICACAO_OPTIONS,
-                    ...(CLASSIFICACAO_OPTIONS as readonly string[]).includes(l.classificacao_comercial)
-                      ? []
-                      : [l.classificacao_comercial],
-                  ]
-                    .filter(Boolean)
-                    .map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                </select>
-              </td>
               <td onClick={(e) => e.stopPropagation()}>
                 <select
                   className="table-edit"

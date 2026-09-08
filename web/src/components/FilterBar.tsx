@@ -12,7 +12,6 @@ type Props = {
 export function FilterBar({ leads, filters, onChange, onClear }: Props) {
   const cidades = uniqueSorted(leads.map((l) => l.cidade))
   const situacoes = uniqueSorted(leads.map((l) => l.situacao))
-  const classifs = uniqueSorted(leads.map((l) => l.classificacao_comercial))
   const categorias = uniqueSorted(leads.map((l) => l.categoria))
 
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) =>
@@ -60,21 +59,6 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
           <select value={filters.cidade} onChange={(e) => set('cidade', e.target.value)}>
             <option value="">Todas</option>
             {cidades.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="field">
-          <span>Classificação</span>
-          <select
-            value={filters.classificacao}
-            onChange={(e) => set('classificacao', e.target.value)}
-          >
-            <option value="">Todas</option>
-            {classifs.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>

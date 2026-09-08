@@ -43,8 +43,17 @@ export function downloadLeadsCsv(leads: Lead[], filename = 'LEADS.csv'): void {
   URL.revokeObjectURL(url)
 }
 
-/** Remove campo legado visita_presencial se vier do CSV antigo */
-export function normalizeLead(row: Lead & { visita_presencial?: string }): Lead {
-  const { visita_presencial: _drop, ...rest } = row as Lead & { visita_presencial?: string }
+/** Remove campos legados se vierem de CSV/localStorage antigo */
+export function normalizeLead(
+  row: Lead & { visita_presencial?: string; classificacao_comercial?: string },
+): Lead {
+  const {
+    visita_presencial: _v,
+    classificacao_comercial: _c,
+    ...rest
+  } = row as Lead & {
+    visita_presencial?: string
+    classificacao_comercial?: string
+  }
   return rest as Lead
 }

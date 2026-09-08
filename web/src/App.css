@@ -301,9 +301,13 @@ select {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.9rem;
   align-items: start;
+}
+
+.workspace:has(.detail) {
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
 }
 
 .table-wrap {

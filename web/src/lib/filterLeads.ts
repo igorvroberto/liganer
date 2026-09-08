@@ -8,7 +8,6 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
     if (f.categoria && l.categoria !== f.categoria) return false
     if (f.potencial && l.potencial !== f.potencial) return false
     if (f.cidade && l.cidade !== f.cidade) return false
-    if (f.classificacao && l.classificacao_comercial !== f.classificacao) return false
     if (f.situacao && l.situacao !== f.situacao) return false
     if (f.multiproduto === 'Sim' && !/^sim/i.test(l.multiproduto)) return false
     if (f.multiproduto === 'Não' && /^sim/i.test(l.multiproduto)) return false
@@ -24,7 +23,6 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
       l.proxima_acao,
       l.telefone,
       l.whatsapp,
-      l.classificacao_comercial,
       l.observacoes_comerciais,
     ]
       .join(' ')

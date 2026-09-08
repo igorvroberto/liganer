@@ -27,10 +27,6 @@ export function StatsBar({ all, filtered }: Props) {
         <strong>{count((l) => /^sim/i.test(l.multiproduto))}</strong>
         <span>multiproduto</span>
       </div>
-      <div className="stat">
-        <strong>{count((l) => l.classificacao_comercial === 'PROSPECT')}</strong>
-        <span>prospects</span>
-      </div>
       <div className="stat cats">
         {byCat.map(({ c, n }) => (
           <span key={c} title={CATEGORIA_LABEL[c]}>
