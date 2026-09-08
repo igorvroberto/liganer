@@ -1,5 +1,11 @@
 import type { Filters, Lead } from '../types'
-import { CATEGORIA_LABEL, POTENCIAL_OPTIONS, SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
+import {
+  CATEGORIA_LABEL,
+  POTENCIAL_OPTIONS,
+  RAIO_MAX_KM,
+  SITUACAO_OPTIONS,
+  STATUS_OPTIONS,
+} from '../types'
 import { uniqueSorted } from '../lib/filterLeads'
 
 type Props = {
@@ -39,6 +45,29 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
             value={filters.q}
             onChange={(e) => set('q', e.target.value)}
           />
+        </label>
+
+        <label className="field field-raio">
+          <span>
+            Raio · até <strong>{filters.raioKm} km</strong> de Araçatuba
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={RAIO_MAX_KM}
+            step={10}
+            value={filters.raioKm}
+            onChange={(e) => set('raioKm', Number(e.target.value))}
+            aria-valuemin={0}
+            aria-valuemax={RAIO_MAX_KM}
+            aria-valuenow={filters.raioKm}
+            aria-label="Raio máximo em quilômetros a partir de Araçatuba"
+          />
+          <div className="raio-scale" aria-hidden>
+            <span>0</span>
+            <span>100</span>
+            <span>200</span>
+          </div>
         </label>
 
         <label className="field">

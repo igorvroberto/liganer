@@ -39,6 +39,9 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
     if (f.status && l.status !== f.status) return false
     if (f.multiproduto === 'Sim' && !/^sim/i.test(l.multiproduto)) return false
     if (f.multiproduto === 'Não' && /^sim/i.test(l.multiproduto)) return false
+    const dist = Number(l.distancia_km_aracatuba)
+    const raio = Number.isFinite(f.raioKm) ? f.raioKm : 200
+    if (!Number.isNaN(dist) && dist > raio) return false
     if (!q) return true
     const hay = [
       l.empresa,
