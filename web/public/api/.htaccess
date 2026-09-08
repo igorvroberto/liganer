@@ -1,0 +1,12 @@
+# Bloqueia leitura direta do arquivo de secrets
+<FilesMatch "^(config\.local\.php|config\.sample\.php)$">
+  Require all denied
+</FilesMatch>
+
+# Apache 2.2 fallback
+<IfModule !mod_authz_core.c>
+  <FilesMatch "^(config\.local\.php|config\.sample\.php)$">
+    Order allow,deny
+    Deny from all
+  </FilesMatch>
+</IfModule>

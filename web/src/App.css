@@ -108,6 +108,30 @@ select {
   font-size: 0.8rem;
 }
 
+.sync-pill {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.85);
+  max-width: 28rem;
+}
+
+.sync-pill.sync-ok {
+  border-color: #86efac;
+  color: var(--ok);
+}
+
+.sync-pill.sync-saving {
+  border-color: #fcd34d;
+  color: var(--warn);
+}
+
+.sync-pill.sync-error {
+  border-color: #fecdd3;
+  color: var(--danger);
+}
+
 .tabs {
   display: flex;
   gap: 0.4rem;

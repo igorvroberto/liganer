@@ -12,6 +12,15 @@ Configure os secrets `FTP_*` neste repo (veja [`deploy/README.md`](./deploy/READ
 
 Qualquer merge na `main` que altere leads ou o app → **Actions publica tudo via FTP**.
 
+## Sync automático (editar/remover no site)
+
+Com `LEADS_SYNC_SECRET` + `LEADS_GITHUB_TOKEN` configurados, editar ou remover um lead no site:
+
+1. Atualiza `data/leads.csv` na hospedagem na hora  
+2. Faz commit de `radar-comercial/LEADS.csv` no GitHub  
+
+Sem passo manual de baixar CSV. Detalhes em [`deploy/README.md`](./deploy/README.md).
+
 ## Dev local
 
 ```bash

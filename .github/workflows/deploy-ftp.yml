@@ -2,6 +2,7 @@ name: Deploy prospecção → FTP
 
 # Tudo automático:
 # - mudou web/ ou LEADS.csv → build → FTP do site inteiro (/prospeccao)
+# - se LEADS_SYNC_* estiverem setados, gera api/config.local.php + syncSecret
 # Fonte dos leads: radar-comercial/LEADS.csv (GitHub) → entra no dist/data/leads.csv
 
 on:
@@ -24,6 +25,10 @@ jobs:
       FTP_HOST: ${{ secrets.FTP_HOST }}
       FTP_USER: ${{ secrets.FTP_USER }}
       FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      LEADS_SYNC_SECRET: ${{ secrets.LEADS_SYNC_SECRET }}
+      LEADS_GITHUB_TOKEN: ${{ secrets.LEADS_GITHUB_TOKEN }}
+      LEADS_GITHUB_REPO: ${{ secrets.LEADS_GITHUB_REPO || 'igorvroberto/liganer-prospeccao' }}
+      LEADS_GITHUB_BRANCH: ${{ secrets.LEADS_GITHUB_BRANCH || 'main' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -46,6 +51,43 @@ jobs:
           name: prospeccao-dist
           path: web/dist
           retention-days: 14
+
+      - name: Write sync API config into dist
+        run: |
+          if [ -z "$LEADS_SYNC_SECRET" ] || [ -z "$LEADS_GITHUB_TOKEN" ]; then
+            echo "::warning::LEADS_SYNC_SECRET / LEADS_GITHUB_TOKEN ausentes — sync automático desligado."
+            exit 0
+          fi
+          mkdir -p web/dist/api
+          python3 <<'PY'
+          import json, os, pathlib
+
+          secret = os.environ["LEADS_SYNC_SECRET"]
+          token = os.environ["LEADS_GITHUB_TOKEN"]
+          repo = os.environ.get("LEADS_GITHUB_REPO") or "igorvroberto/liganer-prospeccao"
+          branch = os.environ.get("LEADS_GITHUB_BRANCH") or "main"
+
+          cfg = pathlib.Path("web/dist/api/config.local.php")
+          cfg.write_text(
+              "<?php\nreturn [\n"
+              + f"    'sync_secret' => {json.dumps(secret)},\n"
+              + f"    'github_token' => {json.dumps(token)},\n"
+              + f"    'github_repo' => {json.dumps(repo)},\n"
+              + f"    'github_branch' => {json.dumps(branch)},\n"
+              + "    'github_csv_path' => 'radar-comercial/LEADS.csv',\n"
+              + "];\n",
+              encoding="utf-8",
+          )
+
+          config_path = pathlib.Path("web/dist/config.json")
+          data = {}
+          if config_path.is_file():
+              data = json.loads(config_path.read_text(encoding="utf-8"))
+          data["syncSecret"] = secret
+          data["leadsLabel"] = data.get("leadsLabel") or "GitHub → FTP"
+          config_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          print("Wrote api/config.local.php and syncSecret in config.json")
+          PY
 
       - name: Check FTP secrets
         id: ftp
