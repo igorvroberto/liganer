@@ -1,6 +1,11 @@
-# Calculadora de aproveitamento de blanks
+# Calculadora de aproveitamento de blanks e slitters
 
-Sistema Liganer para calcular o **melhor aproveitamento de corte de blanks em aço inoxidável** a partir da largura original da bobina.
+Sistema Liganer para calcular o **melhor aproveitamento de corte** em aço inoxidável a partir da largura original da bobina.
+
+Modelos disponíveis:
+
+- **Slitters** — mecânica atual de tiras/programas na bobina
+- **Blanks** — base copiada de Slitters; regras específicas em definição
 
 O cálculo considera:
 

@@ -7,6 +7,14 @@ export type BlankInput = {
   minQty: number;
 };
 
+/** Modelo de cálculo selecionado na calculadora. */
+export type CalculatorModel = "slitters" | "blanks";
+
+export const CALCULATOR_MODELS: { value: CalculatorModel; label: string }[] = [
+  { value: "slitters", label: "Slitters" },
+  { value: "blanks", label: "Blanks" },
+];
+
 export type PvcOption = "sem" | "azul" | "preto-branco" | "preto" | "laser";
 
 export const PVC_OPTIONS: { value: PvcOption; label: string }[] = [

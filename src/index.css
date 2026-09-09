@@ -105,6 +105,26 @@ p {
   margin-top: 8px;
 }
 
+.model-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 18px;
+}
+
+.model-picker-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.calculator-model {
+  display: contents;
+}
+
 .hero-actions {
   display: flex;
   gap: 10px;
