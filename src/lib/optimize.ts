@@ -20,10 +20,13 @@ export function unitWeightKg(width: number, length: number, coil: CoilInput): nu
   return (width * length * coil.thickness * coil.density) / MM_TO_KG;
 }
 
-/** Peso unitário do item: blank = peça; slitter = 1 mm de tira. */
+/** Peso unitário do item: blank = peça; slitter = peça (se tiver comprimento) ou 1 mm de tira. */
 export function itemUnitWeightKg(blank: BlankInput, coil: CoilInput): number {
   if (!(blank.width > 0)) return 0;
-  if (isSlitterItem(blank)) return unitWeightKg(blank.width, 1, coil);
+  if (isSlitterItem(blank)) {
+    const cutLength = blank.length > 0 ? blank.length : 1;
+    return unitWeightKg(blank.width, cutLength, coil);
+  }
   if (!(blank.length > 0)) return 0;
   return unitWeightKg(blank.width, blank.length, coil);
 }
@@ -144,12 +147,12 @@ export function usableWidth(coil: CoilInput): number {
 
 export function stripTypesForBlank(blank: BlankInput, productIndex: number): Strip[] {
   if (isSlitterItem(blank)) {
-    // Slitter: tira contínua; peça unitária = 1 mm ao longo da bobina.
+    // SLITTER: sem giro. Comprimento opcional — se vazio, unidade = 1 mm de tira.
     return [
       {
         productIndex,
         stripWidth: blank.width,
-        cutLength: 1,
+        cutLength: blank.length > 0 ? blank.length : 1,
         rotated: false,
       },
     ];
@@ -497,7 +500,9 @@ function patternLabel(pattern: Pattern, blanks: BlankInput[]): string {
       const w = strip.stripWidth;
       const l = strip.cutLength;
       const name = isSlitterItem(blank)
-        ? `${blank.width} mm slitter`
+        ? blank.length > 0
+          ? `${blank.width}×${blank.length} slitter`
+          : `${blank.width} mm slitter`
         : `${blank.width}×${blank.length}`;
       return `${name} ${w}×${l}${strip.rotated ? " girado" : ""}`;
     })

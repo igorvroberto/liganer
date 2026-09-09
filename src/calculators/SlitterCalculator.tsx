@@ -142,7 +142,9 @@ function patternSummary(program: ProgramResult, products: RankedPlan["products"]
     .map((strip) => {
       const blank = products[strip.productIndex].blank;
       const label = isSlitterItem(blank)
-        ? `${blank.width} mm slitter`
+        ? blank.length > 0
+          ? `${blank.width}×${blank.length} slitter`
+          : `${blank.width} mm slitter`
         : `${blank.width}×${blank.length}`;
       return `${label} ${fmtInt(strip.stripWidth)} mm`;
     })
@@ -489,7 +491,9 @@ export default function SlitterCalculator() {
                         <td>
                           <strong style={{ color: BLANK_COLORS[i % BLANK_COLORS.length] }}>
                             {isSlitterItem(product.blank)
-                              ? `${fmtInt(product.blank.width)} mm slitter`
+                              ? product.blank.length > 0
+                                ? fmtDim(product.blank.width, product.blank.length)
+                                : `${fmtInt(product.blank.width)} mm slitter`
                               : fmtDim(product.blank.width, product.blank.length)}
                           </strong>
                         </td>

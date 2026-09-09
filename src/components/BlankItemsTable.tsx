@@ -24,6 +24,7 @@ type Props = {
 
 function dimLabel(blank: BlankInput): string {
   if (isSlitterItem(blank)) {
+    if (blank.width > 0 && blank.length > 0) return `${blank.width}×${blank.length} slitter`;
     return blank.width > 0 ? `${blank.width} mm slitter` : "slitter";
   }
   if (blank.width > 0 && blank.length > 0) {
@@ -74,7 +75,6 @@ export default function BlankItemsTable({
         const next: BlankInput = {
           ...blank,
           itemKind: kind,
-          length: kind === "slitter" ? 0 : blank.length,
         };
         return resyncBlankDemand(next, coil, mode);
       }),
@@ -137,7 +137,7 @@ export default function BlankItemsTable({
           <h2>Itens do pedido</h2>
           <p className="note">
             {allowItemKind
-              ? "Selecione BLANK ou SLITTER. BLANK exige comprimento; SLITTER usa só a largura. Ao editar peso ou quantidade, o outro campo é recalculado."
+              ? "Selecione BLANK ou SLITTER. BLANK exige comprimento; SLITTER pode informar comprimento, mas não é obrigatório. Ao editar peso ou quantidade, o outro campo é recalculado."
               : "Informe largura, comprimento, peso e quantidade. Ao editar peso ou quantidade, o outro campo é recalculado."}
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function BlankItemsTable({
               <th>Largura (mm)</th>
               <th>Comprimento (mm)</th>
               <th>Peso (Kg)</th>
-              <th>{allowItemKind ? "Qtd / mm" : "Quantidade (un)"}</th>
+              <th>{allowItemKind ? "Qtd" : "Quantidade (un)"}</th>
               <th>Peso un.</th>
               <th />
             </tr>
@@ -204,11 +204,10 @@ export default function BlankItemsTable({
                       type="number"
                       min={1}
                       step={1}
-                      value={slitter ? "" : blank.length || ""}
-                      disabled={slitter}
-                      placeholder={slitter ? "—" : undefined}
+                      value={blank.length || ""}
+                      placeholder={slitter ? "opcional" : undefined}
                       onChange={(e) => updateBlank(blank.id, { length: Number(e.target.value) })}
-                      title={slitter ? "SLITTER não usa comprimento fixo" : undefined}
+                      title={slitter ? "Opcional para SLITTER" : undefined}
                     />
                   </td>
                   <td>
@@ -229,14 +228,18 @@ export default function BlankItemsTable({
                       className={mode === "qty" ? "linked-active" : "linked"}
                       value={blank.minQty || ""}
                       onChange={(e) => updateQty(blank.id, e.target.value)}
-                      title={slitter ? "Para SLITTER, quantidade = mm de tira" : undefined}
+                      title={
+                        slitter && !(blank.length > 0)
+                          ? "Sem comprimento: quantidade = mm de tira"
+                          : undefined
+                      }
                     />
                   </td>
                   <td className="unit-cell">
                     {unitKg > 0 ? (
                       <>
                         <strong>{fmtNumber(unitKg, 3)} Kg</strong>
-                        <span>{slitter ? "por mm" : "por peça"}</span>
+                        <span>{slitter && !(blank.length > 0) ? "por mm" : "por peça"}</span>
                       </>
                     ) : (
                       <span className="muted">—</span>
@@ -262,7 +265,7 @@ export default function BlankItemsTable({
 
       <p className="note items-footnote">
         {allowItemKind
-          ? "BLANK pode girar 90° na bobina. SLITTER entra só na largura (tira contínua). A espessura entra no peso unitário."
+          ? "BLANK pode girar 90° na bobina. SLITTER entra só na largura (sem giro); comprimento é opcional. A espessura entra no peso unitário."
           : "Giro automático de 90° na bobina quando melhorar o aproveitamento. A espessura entra no peso unitário."}
       </p>
     </div>

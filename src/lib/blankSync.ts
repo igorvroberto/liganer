@@ -3,7 +3,7 @@ import { itemUnitWeightKg } from "./optimize";
 
 export type BlankDemandMode = "qty" | "weight";
 
-/** Unidade de peso: blank = peça; slitter = 1 mm de tira (sem comprimento fixo). */
+/** Unidade de peso: blank = peça; slitter = peça (com comprimento) ou 1 mm (sem comprimento). */
 export function blankUnitKg(
   blank: Pick<BlankInput, "width" | "length" | "itemKind">,
   coil: CoilInput,

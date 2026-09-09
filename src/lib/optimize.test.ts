@@ -230,6 +230,27 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     expect(result.programs[0].pattern.strips[0].cutLength).toBe(1);
   });
 
+  it("aceita item SLITTER com comprimento opcional preenchido", () => {
+    const result = optimizeCutting({
+      coil: { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 0 },
+      blanks: [
+        {
+          id: "s2",
+          name: "slitter 600x2000",
+          itemKind: "slitter",
+          width: 600,
+          length: 2000,
+          minKg: 1000,
+          minQty: 0,
+        },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.programs[0].pattern.strips[0].cutLength).toBe(2000);
+    expect(result.products[0].weightKg).toBeGreaterThanOrEqual(1000 - 1e-6);
+  });
+
   it("exige comprimento para item BLANK", () => {
     const result = optimizeCutting({
       coil: { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 0 },

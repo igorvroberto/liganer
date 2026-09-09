@@ -340,13 +340,17 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     head: [["Item", "Pedido", "Peso un.", "Produzido", "Peso produzido"]],
     body: plan.products.map((product) => [
       isSlitterItem(product.blank)
-        ? `${fmtInt(product.blank.width)} mm slitter`
+        ? product.blank.length > 0
+          ? `${fmtDim(product.blank.width, product.blank.length)} slitter`
+          : `${fmtInt(product.blank.width)} mm slitter`
         : fmtDim(product.blank.width, product.blank.length),
-      isSlitterItem(product.blank)
+      isSlitterItem(product.blank) && !(product.blank.length > 0)
         ? `${fmtInt(product.pieces)} mm · ${fmtKg(product.blank.minKg)}`
         : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`,
       fmtKg(product.unitWeightKg),
-      isSlitterItem(product.blank) ? `${fmtInt(product.pieces)} mm` : `${fmtInt(product.pieces)} un`,
+      isSlitterItem(product.blank) && !(product.blank.length > 0)
+        ? `${fmtInt(product.pieces)} mm`
+        : `${fmtInt(product.pieces)} un`,
       fmtKg(product.weightKg),
     ]),
     headStyles: { font: fontName, fontStyle: "bold", fillColor: [22, 56, 74], textColor: 255, fontSize: 7.5 },
