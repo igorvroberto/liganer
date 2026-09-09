@@ -233,6 +233,40 @@ p {
   border-radius: 14px;
 }
 
+.items-table-scroll {
+  margin-top: 12px;
+  background: #fff;
+}
+
+.items-table-wide {
+  min-width: 1480px;
+}
+
+.items-table-wide th,
+.items-table-wide td {
+  white-space: nowrap;
+}
+
+.items-table-wide input,
+.items-table-wide select {
+  min-width: 92px;
+}
+
+.items-table-wide input[type="text"] {
+  min-width: 120px;
+}
+
+.item-index {
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+
+.itens-shared {
+  margin-top: 12px;
+}
+
+
 .items-table {
   width: 100%;
   border-collapse: collapse;
