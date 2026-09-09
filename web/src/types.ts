@@ -55,9 +55,9 @@ export const RAIO_MAX_KM = 200
 /** Ordem canônica das categorias comerciais */
 export const CATEGORIA_OPTIONS = [
   'Construtora',
-  'Corte e dobra de ferro para construção',
-  'Corte e dobra de aço carbono',
-  'Corte e dobra de aço inox',
+  'Corte e dobra ferro para construção',
+  'Corte e dobra carbono',
+  'Corte e dobra inox',
   'Indústria inox',
   'Indústria carbono',
   'Metalúrgica inox',
@@ -72,9 +72,9 @@ export type Categoria = (typeof CATEGORIA_OPTIONS)[number]
 /** Abreviação compacta para a barra de stats */
 export const CATEGORIA_ABREV: Record<string, string> = {
   Construtora: 'C',
-  'Corte e dobra de ferro para construção': 'CDF',
-  'Corte e dobra de aço carbono': 'CDC',
-  'Corte e dobra de aço inox': 'CDI',
+  'Corte e dobra ferro para construção': 'CDF',
+  'Corte e dobra carbono': 'CDC',
+  'Corte e dobra inox': 'CDI',
   'Indústria inox': 'II',
   'Indústria carbono': 'IC',
   'Metalúrgica inox': 'MI',

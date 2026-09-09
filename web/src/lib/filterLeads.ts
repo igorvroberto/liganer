@@ -139,7 +139,7 @@ export function topAttackList(leads: Lead[], limit = 20): Lead[] {
     else if (l.potencial === 'Médio') score += 50
     else if (l.potencial === 'Baixo') score += 10
     if (/^sim/i.test(l.multioportunidade)) score += 15
-    if (l.categoria === 'Corte e dobra de ferro para construção') score += 20
+    if (l.categoria === 'Corte e dobra ferro para construção') score += 20
     else if (l.categoria.startsWith('Corte e dobra')) score += 10
     if (l.consumo_estimado === 'Alto') score += 15
     if (l.compra_recorrente === 'Sim') score += 15

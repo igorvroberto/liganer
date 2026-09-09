@@ -2,9 +2,9 @@
 
 CATEGORIAS = [
     "Construtora",
-    "Corte e dobra de ferro para construção",
-    "Corte e dobra de aço carbono",
-    "Corte e dobra de aço inox",
+    "Corte e dobra ferro para construção",
+    "Corte e dobra carbono",
+    "Corte e dobra inox",
     "Indústria inox",
     "Indústria carbono",
     "Metalúrgica inox",
@@ -14,12 +14,19 @@ CATEGORIAS = [
     "Revenda carbono",
 ]
 
+# Nomes antigos → atuais (CSV/UI já publicados)
+_CATEGORIA_ALIASES = {
+    "Corte e dobra de ferro para construção": "Corte e dobra ferro para construção",
+    "Corte e dobra de aço carbono": "Corte e dobra carbono",
+    "Corte e dobra de aço inox": "Corte e dobra inox",
+}
+
 # Abreviações só para UI compacta (stats)
 CATEGORIA_ABREV = {
     "Construtora": "C",
-    "Corte e dobra de ferro para construção": "CDF",
-    "Corte e dobra de aço carbono": "CDC",
-    "Corte e dobra de aço inox": "CDI",
+    "Corte e dobra ferro para construção": "CDF",
+    "Corte e dobra carbono": "CDC",
+    "Corte e dobra inox": "CDI",
     "Indústria inox": "II",
     "Indústria carbono": "IC",
     "Metalúrgica inox": "MI",
@@ -124,7 +131,8 @@ def _classify_revenda(lead: dict) -> str:
 def remap_categoria(lead: dict) -> str:
     """Converte categorias legadas (C/CD/M/I/R/Distribuição) para o vocabulário atual."""
     old = (lead.get("categoria") or "").strip()
-    # Já no novo vocabulário (exceto Distribuição, que foi desmembrada)
+    old = _CATEGORIA_ALIASES.get(old, old)
+    # Já no vocabulário atual (exceto Distribuição, desmembrada abaixo)
     if old in CATEGORIAS:
         return old
 
@@ -138,7 +146,7 @@ def remap_categoria(lead: dict) -> str:
     if old == "C":
         return "Construtora"
     if old == "CD":
-        return "Corte e dobra de ferro para construção"
+        return "Corte e dobra ferro para construção"
     if old in ("R", "Distribuição"):
         return _classify_revenda(lead)
 
@@ -151,7 +159,7 @@ def remap_categoria(lead: dict) -> str:
 
     if old == "M":
         if any(k in emp for k in _CDC_EMPRESAS):
-            return "Corte e dobra de aço carbono"
+            return "Corte e dobra carbono"
         if any(
             k in blob
             for k in (
@@ -163,10 +171,10 @@ def remap_categoria(lead: dict) -> str:
             )
         ):
             if "vergalhão" in blob or "armadura" in blob or "ca-50" in blob:
-                return "Corte e dobra de ferro para construção"
+                return "Corte e dobra ferro para construção"
             if "inox" in prod.split(";")[0] and "carbono" not in prod.split(";")[0]:
-                return "Corte e dobra de aço inox"
-            return "Corte e dobra de aço carbono"
+                return "Corte e dobra inox"
+            return "Corte e dobra carbono"
         if any(k in emp for k in _MI_EMPRESAS) or (
             "inox" in emp and "estrutura" not in emp
         ):
