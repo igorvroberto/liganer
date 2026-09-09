@@ -6,7 +6,6 @@ import {
   priceTableOptions,
 } from "../lib/priceTable";
 import {
-  BLANK_COLORS,
   ITEM_KIND_OPTIONS,
   isSlitterItem,
   itemKindOf,
@@ -226,29 +225,28 @@ export default function SlitterItemsTable({
           </div>
         </div>
 
-        <div className="items-table-wrap itens-table-scroll">
-          <table className="items-table itens-table-wide">
+        <div className="table-scroll">
+          <table className="items-table">
             <thead>
               <tr>
-                <th />
-                <th>Item</th>
-                <th className="col-material">Material</th>
-                <th className="col-tipo">Tipo</th>
-                <th className="col-acabamento">Acabamento</th>
-                <th className="col-pvc">PVC</th>
-                <th className="col-espessura">Espessura</th>
-                <th className="col-coil-width">Largura bobina</th>
-                <th className="col-dim">Largura</th>
-                <th className="col-dim">Comprimento</th>
-                <th className="col-peso">Peso (Kg)</th>
-                <th className="col-qtd">Qtd</th>
-                <th className="col-unit">Peso un.</th>
-                <th className="col-preco-100">Preço fator 100</th>
-                <th className="col-fator">Fator util.</th>
-                <th className="col-preco-util">Preço fator util.</th>
-                <th className="col-servico">Preço serviço</th>
-                <th className="col-desc-servico">Descrição serviço</th>
-                <th />
+                <th className="delete-column" aria-label="Ações" />
+                <th className="item-number-column">Item</th>
+                <th>Material</th>
+                <th>Tipo</th>
+                <th>Acabamento</th>
+                <th>PVC</th>
+                <th>Espessura</th>
+                <th>{"Largura\nbobina"}</th>
+                <th>Largura</th>
+                <th>Comprimento</th>
+                <th>{"Peso\n(Kg)"}</th>
+                <th>Qtd</th>
+                <th>{"Peso\nunitário"}</th>
+                <th>{"Preço\nfator 100"}</th>
+                <th>{"Fator\nutilizado"}</th>
+                <th>{"Preço\nfator utilizado"}</th>
+                <th>{"Preço\nserviço"}</th>
+                <th>{"Descrição\nserviço"}</th>
               </tr>
             </thead>
             <tbody>
@@ -270,16 +268,21 @@ export default function SlitterItemsTable({
 
                 return (
                   <tr key={item.id}>
-                    <td>
-                      <span
-                        className="swatch"
-                        style={{ background: BLANK_COLORS[index % BLANK_COLORS.length] }}
-                      />
+                    <td className="delete-column">
+                      <button
+                        className="trash-button"
+                        type="button"
+                        aria-label={`Remover ${dimLabel(item)}`}
+                        onClick={() => removeItem(item.id)}
+                        disabled={items.length <= 1}
+                      >
+                        ×
+                      </button>
                     </td>
-                    <td className="item-index">{index + 1}</td>
-                    <td className="col-material">
+                    <td className="item-number-cell">{index + 1}</td>
+                    <td>
                       <select
-                        className="item-kind-select"
+                        className="cell-control item-kind-select"
                         value={kind}
                         onChange={(e) => updateItemKind(item.id, e.target.value as ItemKind)}
                         aria-label="Material do item"
@@ -291,8 +294,9 @@ export default function SlitterItemsTable({
                         ))}
                       </select>
                     </td>
-                    <td className="col-tipo">
+                    <td>
                       <select
+                        className="cell-control"
                         value={item.tipo ?? ""}
                         onChange={(e) => {
                           const tipo = e.target.value || undefined;
@@ -320,8 +324,9 @@ export default function SlitterItemsTable({
                         ))}
                       </select>
                     </td>
-                    <td className="col-acabamento">
+                    <td>
                       <select
+                        className="cell-control"
                         value={item.acabamento ?? ""}
                         onChange={(e) => {
                           const acabamento = e.target.value || undefined;
@@ -348,8 +353,9 @@ export default function SlitterItemsTable({
                         ))}
                       </select>
                     </td>
-                    <td className="col-pvc">
+                    <td>
                       <select
+                        className="cell-control"
                         value={item.pvc ?? "sem"}
                         onChange={(e) => updateItem(item.id, { pvc: e.target.value as PvcOption })}
                         aria-label="PVC"
@@ -361,8 +367,9 @@ export default function SlitterItemsTable({
                         ))}
                       </select>
                     </td>
-                    <td className="col-espessura">
+                    <td>
                       <select
+                        className="cell-control"
                         value={item.thickness ? String(item.thickness) : ""}
                         onChange={(e) => {
                           const raw = e.target.value;
@@ -381,8 +388,9 @@ export default function SlitterItemsTable({
                         ))}
                       </select>
                     </td>
-                    <td className="col-coil-width">
+                    <td>
                       <input
+                        className="cell-control"
                         type="number"
                         min={1}
                         step={1}
@@ -393,8 +401,9 @@ export default function SlitterItemsTable({
                         }
                       />
                     </td>
-                    <td className="col-dim">
+                    <td>
                       <input
+                        className="cell-control"
                         type="number"
                         min={1}
                         step={1}
@@ -402,8 +411,9 @@ export default function SlitterItemsTable({
                         onChange={(e) => updateItem(item.id, { width: Number(e.target.value) })}
                       />
                     </td>
-                    <td className="col-dim">
+                    <td>
                       <input
+                        className="cell-control"
                         type="number"
                         min={1}
                         step={1}
@@ -413,38 +423,36 @@ export default function SlitterItemsTable({
                         title={slitter ? "Opcional para SLITTER" : undefined}
                       />
                     </td>
-                    <td className="col-peso">
+                    <td>
                       <input
+                        className={`cell-control ${mode === "weight" ? "linked-active" : "linked"}`}
                         type="number"
                         min={0}
                         step={0.1}
-                        className={mode === "weight" ? "linked-active" : "linked"}
                         value={item.minKg || ""}
                         onChange={(e) => updateWeight(item.id, e.target.value)}
                       />
                     </td>
-                    <td className="col-qtd">
+                    <td>
                       <input
+                        className={`cell-control ${mode === "qty" ? "linked-active" : "linked"}`}
                         type="number"
                         min={0}
                         step={1}
-                        className={mode === "qty" ? "linked-active" : "linked"}
                         value={item.minQty || ""}
                         onChange={(e) => updateQty(item.id, e.target.value)}
                       />
                     </td>
-                    <td className="unit-cell col-unit">
-                      {unitKg > 0 ? (
-                        <>
-                          <strong>{fmtNumber(unitKg, 3)} Kg</strong>
-                          <span>{slitter && !(item.length > 0) ? "por mm" : "por peça"}</span>
-                        </>
-                      ) : (
-                        <span className="muted">—</span>
-                      )}
+                    <td className="formula-cell">
+                      <span className="calculated-cell">
+                        {unitKg > 0
+                          ? `${fmtNumber(unitKg, 3)} Kg${slitter && !(item.length > 0) ? " /mm" : ""}`
+                          : "—"}
+                      </span>
                     </td>
-                    <td className="col-preco-100">
+                    <td>
                       <input
+                        className="cell-control"
                         inputMode="decimal"
                         placeholder="auto"
                         value={item.priceFactor100 != null ? String(item.priceFactor100).replace(".", ",") : ""}
@@ -455,8 +463,9 @@ export default function SlitterItemsTable({
                         title="Preenchido pela tabela; pode editar manualmente"
                       />
                     </td>
-                    <td className="col-fator">
+                    <td>
                       <input
+                        className="cell-control"
                         inputMode="decimal"
                         placeholder="170"
                         value={item.usedFactor != null ? String(item.usedFactor).replace(".", ",") : ""}
@@ -466,11 +475,14 @@ export default function SlitterItemsTable({
                         }}
                       />
                     </td>
-                    <td className="unit-cell col-preco-util">
-                      <strong>{usedPrice != null ? fmtCurrency(usedPrice) : "—"}</strong>
+                    <td className="formula-cell">
+                      <span className="calculated-cell">
+                        {usedPrice != null ? fmtCurrency(usedPrice) : "—"}
+                      </span>
                     </td>
-                    <td className="col-servico">
+                    <td>
                       <input
+                        className="cell-control"
                         inputMode="decimal"
                         placeholder="1,24"
                         value={item.servicePrice != null ? String(item.servicePrice).replace(".", ",") : ""}
@@ -480,8 +492,9 @@ export default function SlitterItemsTable({
                         }}
                       />
                     </td>
-                    <td className="col-desc-servico">
+                    <td>
                       <input
+                        className="cell-control"
                         type="text"
                         placeholder="Corte + PVC"
                         value={item.serviceDescription ?? ""}
@@ -489,17 +502,6 @@ export default function SlitterItemsTable({
                           updateItem(item.id, { serviceDescription: e.target.value || undefined })
                         }
                       />
-                    </td>
-                    <td>
-                      <button
-                        className="btn-icon"
-                        type="button"
-                        aria-label={`Remover ${dimLabel(item)}`}
-                        onClick={() => removeItem(item.id)}
-                        disabled={items.length <= 1}
-                      >
-                        ×
-                      </button>
                     </td>
                   </tr>
                 );
