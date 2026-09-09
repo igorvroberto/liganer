@@ -1,6 +1,6 @@
 import type { Filters, Lead } from '../types'
 import {
-  CATEGORIA_LABEL,
+  CATEGORIA_OPTIONS,
   POTENCIAL_OPTIONS,
   RAIO_MAX_KM,
   SITUACAO_OPTIONS,
@@ -17,7 +17,12 @@ type Props = {
 
 export function FilterBar({ leads, filters, onChange, onClear }: Props) {
   const cidades = uniqueSorted(leads.map((l) => l.cidade))
-  const categorias = uniqueSorted(leads.map((l) => l.categoria))
+  const categorias = [
+    ...CATEGORIA_OPTIONS,
+    ...uniqueSorted(leads.map((l) => l.categoria)).filter(
+      (c) => !(CATEGORIA_OPTIONS as readonly string[]).includes(c),
+    ),
+  ]
   const situacoes = [
     ...SITUACAO_OPTIONS,
     ...uniqueSorted(leads.map((l) => l.situacao)).filter(
@@ -76,7 +81,7 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
             <option value="">Todas</option>
             {categorias.map((c) => (
               <option key={c} value={c}>
-                {c} — {CATEGORIA_LABEL[c] ?? c}
+                {c}
               </option>
             ))}
           </select>
@@ -127,18 +132,6 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
                 {s}
               </option>
             ))}
-          </select>
-        </label>
-
-        <label className="field">
-          <span>Multiproduto</span>
-          <select
-            value={filters.multiproduto}
-            onChange={(e) => set('multiproduto', e.target.value)}
-          >
-            <option value="">Todos</option>
-            <option value="Sim">Sim</option>
-            <option value="Não">Não</option>
           </select>
         </label>
       </div>

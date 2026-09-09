@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Lead } from '../types'
-import { CATEGORIA_LABEL, SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
+import { SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
 import { potClass, sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
 
 type Props = {
@@ -91,11 +91,6 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch }: Props) {
             >
               <td>
                 <span className={`pot-pill ${potClass(l.potencial)}`}>{l.potencial}</span>
-                {/^sim/i.test(l.multiproduto) ? (
-                  <span className="star" title="Multiproduto">
-                    ★
-                  </span>
-                ) : null}
               </td>
               <td>
                 <strong>{l.empresa}</strong>
@@ -108,12 +103,7 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch }: Props) {
                   <div className="muted tiny">{l.distancia_km_aracatuba} km</div>
                 ) : null}
               </td>
-              <td>
-                {l.categoria}
-                <div className="muted tiny">
-                  {l.subcategoria} · {CATEGORIA_LABEL[l.categoria] ?? ''}
-                </div>
-              </td>
+              <td className="cat-cell">{l.categoria}</td>
               <td className="clamp">{l.produto_provavel}</td>
               <td onClick={(e) => e.stopPropagation()}>
                 <select

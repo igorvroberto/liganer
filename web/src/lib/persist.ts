@@ -60,15 +60,21 @@ function mapStatus(value: string | undefined): string {
 
 /** Remove campos legados e normaliza situação/status */
 export function normalizeLead(
-  row: Lead & { visita_presencial?: string; classificacao_comercial?: string },
+  row: Lead & {
+    visita_presencial?: string
+    classificacao_comercial?: string
+    multiproduto?: string
+  },
 ): Lead {
   const {
     visita_presencial: _v,
     classificacao_comercial: _c,
+    multiproduto: _m,
     ...rest
   } = row as Lead & {
     visita_presencial?: string
     classificacao_comercial?: string
+    multiproduto?: string
   }
   return {
     ...rest,
