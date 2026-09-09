@@ -1,38 +1,34 @@
-import { useEffect, useMemo, useState } from "react";
-import BlankItemsTable from "../components/BlankItemsTable";
-import { resyncBlankDemand } from "../lib/blankSync";
-import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseDecimalBr, parseThickness } from "../lib/format";
+import { useMemo, useState } from "react";
+import SlitterItemsTable from "../components/SlitterItemsTable";
+import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
 import { lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
 import { downloadPlanPdf } from "../lib/pdfReport";
+import { coilFromSlitterItems } from "../lib/slitterCoil";
 import {
   BLANK_COLORS,
-  DEFAULT_DENSITY,
-  FIXED_EDGE_TRIM_MM,
-  PVC_OPTIONS,
   isSlitterItem,
   type BlankInput,
   type CoilInput,
   type ProgramResult,
-  type PvcOption,
   type RankedPlan,
 } from "../lib/types";
 
-const EMPTY_COIL: CoilInput = {
-  width: 0,
-  thickness: 0,
-  density: DEFAULT_DENSITY,
-  kerf: 0,
-  edgeTrim: FIXED_EDGE_TRIM_MM,
-  allowOvershoot: true,
-  line: "",
-};
-
-const EMPTY_BLANKS: BlankInput[] = [
-  { id: "blank-1", name: "", itemKind: "blank", width: 0, length: 0, minKg: 0, minQty: 0 },
+const EMPTY_ITEMS: BlankInput[] = [
+  {
+    id: "item-1",
+    name: "",
+    itemKind: "blank",
+    width: 0,
+    length: 0,
+    minKg: 0,
+    minQty: 0,
+    line: "",
+    pvc: "sem",
+  },
 ];
 
 const EMPTY_MODES: Record<string, "qty" | "weight"> = {
-  "blank-1": "weight",
+  "item-1": "weight",
 };
 
 function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult; coilWidth: number; edgeTrim: number }) {
@@ -156,239 +152,84 @@ function calcUsedFactorPrice(priceFactor100: number | undefined, usedFactor: num
   return priceFactor100 / (usedFactor / 100);
 }
 
-/** Calculadora do modelo Slitters (mecânica atual de tiras na bobina). */
+/** Calculadora do modelo Slitters — Itens unificados (como chapas/bobinas). */
 export default function SlitterCalculator() {
-  const [coil, setCoil] = useState<CoilInput>(EMPTY_COIL);
-  const [thicknessText, setThicknessText] = useState("");
-  const [priceFactor100Text, setPriceFactor100Text] = useState("");
-  const [usedFactorText, setUsedFactorText] = useState("");
-  const [servicepriceText, setServicePriceText] = useState("");
-  const [blanks, setBlanks] = useState<BlankInput[]>(EMPTY_BLANKS);
+  const [items, setItems] = useState<BlankInput[]>(EMPTY_ITEMS);
+  const [allowOvershoot, setAllowOvershoot] = useState(true);
   const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(EMPTY_MODES);
   const [selectedAlt, setSelectedAlt] = useState(0);
 
-  useEffect(() => {
-    setBlanks((prev) =>
-      prev.map((blank) => resyncBlankDemand(blank, coil, demandModes[blank.id] ?? "weight")),
-    );
-  }, [coil.thickness]);
+  const coil = useMemo(
+    () => coilFromSlitterItems(items, allowOvershoot),
+    [items, allowOvershoot],
+  );
 
-  const result = useMemo(() => optimizeCutting({ coil, blanks }), [coil, blanks]);
+  const result = useMemo(() => optimizeCutting({ coil, blanks: items }), [coil, items]);
   const plan: RankedPlan | null = result.ok
     ? result.alternatives[selectedAlt] ?? result.alternatives[0] ?? null
     : null;
 
-  const updateCoil = (patch: Partial<CoilInput>) => {
-    setSelectedAlt(0);
-    setCoil((prev) => ({ ...prev, ...patch, density: DEFAULT_DENSITY, edgeTrim: FIXED_EDGE_TRIM_MM }));
-  };
-
-  const setThickness = (value: number) => {
-    updateCoil({ thickness: Number(value.toFixed(2)) });
-    setThicknessText(fmtThickness(value));
-  };
+  const pricing = useMemo(() => {
+    if (!plan) return null;
+    const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
+    const servicePrice = coil.servicePrice ?? 0;
+    const breakdown = lossBreakdown(plan.programs, plan.usefulWeightKg, coil);
+    const longitudinalPct = breakdown.longitudinalPct;
+    return {
+      breakdown,
+      priceWithLongLoss:
+        usedPrice != null ? usedPrice * (1 + longitudinalPct / 100) + servicePrice : null,
+      priceWithoutLoss: usedPrice != null ? usedPrice + servicePrice : null,
+    };
+  }, [plan, coil]);
 
   return (
     <div className="calculator-model" data-model="slitters">
-      <section className="card coil-card">
-        <h2>Bobina</h2>
-        <div className="fields coil-fields">
-          <label className="field">
-            <span>Linha</span>
-            <input
-              type="text"
-              placeholder="Ex.: 304 2B"
-              value={coil.line ?? ""}
-              onChange={(e) => updateCoil({ line: e.target.value })}
-            />
-          </label>
-          <label className="field">
-            <span>Espessura (mm)</span>
-            <input
-              inputMode="decimal"
-              value={thicknessText}
-              onChange={(e) => {
-                const raw = e.target.value.replace(".", ",");
-                if (!/^\d*(,\d{0,2})?$/.test(raw)) return;
-                setThicknessText(raw);
-                const parsed = parseThickness(raw);
-                if (parsed !== null) {
-                  updateCoil({ thickness: Number(parsed.toFixed(2)) });
-                }
-              }}
-              onBlur={() => {
-                const parsed = parseThickness(thicknessText);
-                if (parsed !== null) setThickness(parsed);
-                else setThicknessText(fmtThickness(coil.thickness));
-              }}
-            />
-          </label>
-          <label className="field">
-            <span>Largura original da bobina (mm)</span>
-            <input
-              type="number"
-              min={1}
-              value={coil.width || ""}
-              onChange={(e) => updateCoil({ width: Number(e.target.value) })}
-            />
-          </label>
-        </div>
-        <div className="field span-all">
-          <span>O peso informado pode ser ultrapassado?</span>
-          <div className="chips">
-            <button
-              type="button"
-              className={`chip ${(coil.allowOvershoot ?? true) ? "active" : ""}`}
-              onClick={() => updateCoil({ allowOvershoot: true })}
-            >
-              Sim
-            </button>
-            <button
-              type="button"
-              className={`chip ${coil.allowOvershoot === false ? "active" : ""}`}
-              onClick={() => updateCoil({ allowOvershoot: false })}
-            >
-              Não
-            </button>
+      <SlitterItemsTable
+        items={items}
+        coil={coil}
+        demandModes={demandModes}
+        allowOvershoot={allowOvershoot}
+        onAllowOvershootChange={(value) => {
+          setSelectedAlt(0);
+          setAllowOvershoot(value);
+        }}
+        onDemandModesChange={(next) => {
+          setSelectedAlt(0);
+          setDemandModes(next);
+        }}
+        onItemsChange={(next) => {
+          setSelectedAlt(0);
+          setItems(next);
+        }}
+      />
+
+      {pricing && plan && (
+        <section className="card" style={{ marginTop: 16 }}>
+          <div className="section-head">
+            <h2>Preço do plano</h2>
           </div>
-          <p className="note" style={{ marginTop: 6 }}>
-            {coil.allowOvershoot === false
-              ? "O Kg digitado em cada item é o máximo. Se um programa produzir além disso, as demais tiras são reduzidas."
-              : "O plano pode produzir um pouco acima do Kg informado quando as tiras compartilham o mesmo comprimento de bobina."}
-          </p>
-        </div>
-
-      </section>
-
-      <section className="card">
-        <h2>Formação de preço</h2>
-        <div className="fields coil-fields">
-          <label className="field">
-            <span>Preço bobina reduzida fator 100 (R$/Kg)</span>
-            <input
-              inputMode="decimal"
-              placeholder="Ex.: 45,00"
-              value={priceFactor100Text}
-              onChange={(e) => {
-                const raw = e.target.value;
-                setPriceFactor100Text(raw);
-                const v = parseDecimalBr(raw);
-                updateCoil({ priceFactor100: v ?? undefined });
-              }}
-            />
-          </label>
-          <label className="field">
-            <span>PVC</span>
-            <select
-              value={coil.pvc ?? "sem"}
-              onChange={(e) => updateCoil({ pvc: e.target.value as PvcOption })}
-            >
-              {PVC_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Fator utilizado</span>
-            <input
-              inputMode="decimal"
-              placeholder="Ex.: 170"
-              value={usedFactorText}
-              onChange={(e) => {
-                const raw = e.target.value;
-                setUsedFactorText(raw);
-                const v = parseDecimalBr(raw);
-                updateCoil({ usedFactor: v ?? undefined });
-              }}
-            />
-          </label>
-          <label className="field">
-            <span>Preço fator utilizado (R$/Kg)</span>
-            <input
-              readOnly
-              tabIndex={-1}
-              className="input-readonly"
-              value={(() => {
-                const p = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
-                return p !== null ? fmtCurrency(p) : "—";
-              })()}
-            />
-          </label>
-          <label className="field">
-            <span>Perda longitudinal (%)</span>
-            <input
-              readOnly
-              tabIndex={-1}
-              className="input-readonly"
-              value={plan ? fmtPct(lossBreakdown(plan.programs, plan.usefulWeightKg, coil).longitudinalPct) : "—"}
-            />
-          </label>
-        </div>
-        <div className="fields coil-fields" style={{ marginTop: 16 }}>
-          <label className="field">
-            <span>Preço serviço (R$)</span>
-            <input
-              inputMode="decimal"
-              placeholder="Ex.: 1,24"
-              value={servicepriceText}
-              onChange={(e) => {
-                const raw = e.target.value;
-                setServicePriceText(raw);
-                const v = parseDecimalBr(raw);
-                updateCoil({ servicePrice: v ?? undefined });
-              }}
-            />
-          </label>
-          <label className="field">
-            <span>Descrição do serviço</span>
-            <input
-              type="text"
-              placeholder="Ex.: Corte (0,38) + Recorte (0,38) + PVC azul (0,48)"
-              value={coil.serviceDescription ?? ""}
-              onChange={(e) => updateCoil({ serviceDescription: e.target.value || undefined })}
-            />
-          </label>
-        </div>
-        {(() => {
-          const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
-          const servicePrice = coil.servicePrice ?? 0;
-          const breakdown = plan ? lossBreakdown(plan.programs, plan.usefulWeightKg, coil) : null;
-          const longitudinalPct = breakdown ? breakdown.longitudinalPct : 0;
-          const priceWithLongLoss = usedPrice != null ? usedPrice * (1 + longitudinalPct / 100) + servicePrice : null;
-          const priceWithoutLoss = usedPrice != null ? usedPrice + servicePrice : null;
-          return (
-            <div className="pricing-results" style={{ marginTop: 16 }}>
-              <div className="pricing-result highlight">
-                <span>Preço considerando perda longitudinal (R$/Kg)</span>
-                <b>{priceWithLongLoss != null && plan ? fmtCurrency(priceWithLongLoss) : "—"}</b>
-              </div>
-              <div className="pricing-result">
-                <span>Preço desconsiderando perda (R$/Kg)</span>
-                <b>{priceWithoutLoss != null ? fmtCurrency(priceWithoutLoss) : "—"}</b>
-              </div>
+          <div className="pricing-results">
+            <div className="pricing-result highlight">
+              <span>Preço considerando perda longitudinal (R$/Kg)</span>
+              <b>{pricing.priceWithLongLoss != null ? fmtCurrency(pricing.priceWithLongLoss) : "—"}</b>
             </div>
-          );
-        })()}
-      </section>
-
-      <section className="card">
-        <BlankItemsTable
-          blanks={blanks}
-          coil={coil}
-          demandModes={demandModes}
-          allowItemKind
-          onDemandModesChange={(next) => {
-            setSelectedAlt(0);
-            setDemandModes(next);
-          }}
-          onBlanksChange={(next) => {
-            setSelectedAlt(0);
-            setBlanks(next);
-          }}
-        />
-      </section>
+            <div className="pricing-result">
+              <span>Preço desconsiderando perda (R$/Kg)</span>
+              <b>{pricing.priceWithoutLoss != null ? fmtCurrency(pricing.priceWithoutLoss) : "—"}</b>
+            </div>
+            <div className="pricing-result">
+              <span>Perda longitudinal</span>
+              <b>{fmtPct(pricing.breakdown.longitudinalPct)}</b>
+            </div>
+          </div>
+          <p className="note">
+            Valores com base no 1º item com preço/fator preenchidos · bobina {fmtMm(coil.width)} ·{" "}
+            {fmtNumber(coil.thickness, 2)} mm
+            {coil.line ? ` · ${coil.line}` : ""}
+          </p>
+        </section>
+      )}
 
       <div className="grid results-grid">
         <section className="card span-all">

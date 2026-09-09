@@ -5,6 +5,20 @@ export const ITEM_KIND_OPTIONS: { value: ItemKind; label: string }[] = [
   { value: "slitter", label: "SLITTER" },
 ];
 
+export type PvcOption = "sem" | "azul" | "preto-branco" | "preto" | "laser";
+
+export const PVC_OPTIONS: { value: PvcOption; label: string }[] = [
+  { value: "sem", label: "Sem PVC" },
+  { value: "azul", label: "Azul" },
+  { value: "preto-branco", label: "Preto e branco" },
+  { value: "preto", label: "Preto" },
+  { value: "laser", label: "Laser" },
+];
+
+export function pvcLabel(pvc: PvcOption | undefined): string {
+  return PVC_OPTIONS.find((o) => o.value === pvc)?.label ?? "Sem PVC";
+}
+
 export type BlankInput = {
   id: string;
   name: string;
@@ -14,6 +28,16 @@ export type BlankInput = {
   length: number;
   minKg: number;
   minQty: number;
+  /** Campos comerciais/por linha (modelo Slitters unificado em Itens). */
+  line?: string;
+  thickness?: number;
+  /** Largura da bobina-mãe usada no plano de corte. */
+  coilWidth?: number;
+  pvc?: PvcOption;
+  priceFactor100?: number;
+  usedFactor?: number;
+  servicePrice?: number;
+  serviceDescription?: string;
 };
 
 export function itemKindOf(blank: Pick<BlankInput, "itemKind">): ItemKind {
@@ -31,20 +55,6 @@ export const CALCULATOR_MODELS: { value: CalculatorModel; label: string }[] = [
   { value: "slitters", label: "Slitters" },
   { value: "blanks", label: "Blanks" },
 ];
-
-export type PvcOption = "sem" | "azul" | "preto-branco" | "preto" | "laser";
-
-export const PVC_OPTIONS: { value: PvcOption; label: string }[] = [
-  { value: "sem", label: "Sem PVC" },
-  { value: "azul", label: "Azul" },
-  { value: "preto-branco", label: "Preto e branco" },
-  { value: "preto", label: "Preto" },
-  { value: "laser", label: "Laser" },
-];
-
-export function pvcLabel(pvc: PvcOption | undefined): string {
-  return PVC_OPTIONS.find((o) => o.value === pvc)?.label ?? "Sem PVC";
-}
 
 export type CoilInput = {
   width: number;
