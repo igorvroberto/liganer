@@ -9,7 +9,9 @@ CATEGORIAS = [
     "Indústria carbono",
     "Metalúrgica inox",
     "Metalúrgica carbono",
-    "Distribuição",
+    "Revenda ferro para construção",
+    "Revenda inox",
+    "Revenda carbono",
 ]
 
 # Abreviações só para UI compacta (stats)
@@ -22,7 +24,9 @@ CATEGORIA_ABREV = {
     "Indústria carbono": "IC",
     "Metalúrgica inox": "MI",
     "Metalúrgica carbono": "MC",
-    "Distribuição": "D",
+    "Revenda ferro para construção": "RF",
+    "Revenda inox": "RI",
+    "Revenda carbono": "RC",
 }
 
 _CDC_EMPRESAS = (
@@ -47,11 +51,80 @@ _MI_EMPRESAS = (
     "aquinox",
 )
 
+_REVENDA_FERRO = (
+    "ca-50",
+    "ca-60",
+    "si 50",
+    "vergalhão",
+    "aço construção",
+    "aco construcao",
+    "ferro para constru",
+    "ferragens",
+    "treliça",
+    "trelica",
+    "armadura",
+    "construção civil",
+    "construcao civil",
+)
+
+_REVENDA_CARBONO = (
+    "chapa",
+    "bobina",
+    "tubo",
+    "perfil",
+    "laser",
+    "oxicorte",
+    "plasma",
+    "laminado",
+    "viga",
+    "metalon",
+)
+
+
+def _classify_revenda(lead: dict) -> str:
+    """Desmembra R / Distribuição em Revenda ferro / inox / carbono."""
+    sub = (lead.get("subcategoria") or "").strip().upper()
+    emp = (lead.get("empresa") or "").lower()
+    tipo = (lead.get("tipo_operacao") or "").lower()
+    prod = (lead.get("produto_provavel") or "").lower()
+    sec = (lead.get("produto_secundario") or "").lower()
+    just = (lead.get("justificativa_produto") or "").lower()
+    fab = (lead.get("o_que_fabrica_constroi") or "").lower()
+    blob = f"{sub} | {tipo} | {prod} | {sec} | {just} | {fab} | {emp}"
+    prod_pri = prod.split(";")[0]
+
+    if sub == "R2" or (
+        "inox" in prod_pri and not any(k in prod_pri for k in ("carbono", "ca-50", "vergalhão"))
+    ):
+        return "Revenda inox"
+
+    if sub == "R1" or any(k in blob for k in _REVENDA_FERRO):
+        # Primário só chapa/bobina, sem armadura/construção → carbono
+        if any(k in prod_pri for k in ("chapa", "bobina")) and not any(
+            k in prod_pri
+            for k in (
+                "ca-50",
+                "ca-60",
+                "si 50",
+                "vergalhão",
+                "construção",
+                "construcao",
+                "ferro",
+            )
+        ):
+            return "Revenda carbono"
+        return "Revenda ferro para construção"
+
+    if sub == "R5" or any(k in blob for k in _REVENDA_CARBONO):
+        return "Revenda carbono"
+
+    return "Revenda carbono"
+
 
 def remap_categoria(lead: dict) -> str:
-    """Converte categorias legadas (C/CD/M/I/R) para o novo vocabulário."""
+    """Converte categorias legadas (C/CD/M/I/R/Distribuição) para o vocabulário atual."""
     old = (lead.get("categoria") or "").strip()
-    # Já no novo vocabulário
+    # Já no novo vocabulário (exceto Distribuição, que foi desmembrada)
     if old in CATEGORIAS:
         return old
 
@@ -66,8 +139,8 @@ def remap_categoria(lead: dict) -> str:
         return "Construtora"
     if old == "CD":
         return "Corte e dobra de ferro para construção"
-    if old == "R":
-        return "Distribuição"
+    if old in ("R", "Distribuição"):
+        return _classify_revenda(lead)
 
     if old == "I":
         if any(k in emp for k in _MI_EMPRESAS) or sub in ("I4", "I5"):
