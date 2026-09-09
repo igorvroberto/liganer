@@ -239,7 +239,9 @@ p {
 }
 
 .items-table-wide {
-  min-width: 1480px;
+  /* Cabeçalhos longos (ex.: Preço fator util.) + selects (Preto e branco) */
+  min-width: 1880px;
+  table-layout: auto;
 }
 
 .items-table-wide th,
@@ -250,6 +252,81 @@ p {
 .items-table-wide input,
 .items-table-wide select {
   min-width: 92px;
+  box-sizing: border-box;
+}
+
+/* Larguras mínimas pelo maior texto da coluna (conteúdo ou cabeçalho). */
+.items-table-wide .col-material,
+.items-table-wide .col-material select {
+  min-width: 7.2rem;
+}
+
+.items-table-wide .col-tipo,
+.items-table-wide .col-tipo select {
+  min-width: 6.4rem;
+}
+
+.items-table-wide .col-acabamento,
+.items-table-wide .col-acabamento select {
+  min-width: 7.6rem;
+}
+
+.items-table-wide .col-pvc,
+.items-table-wide .col-pvc select {
+  min-width: 10.5rem;
+}
+
+.items-table-wide .col-espessura,
+.items-table-wide .col-espessura select {
+  min-width: 6.2rem;
+}
+
+.items-table-wide .col-coil-width,
+.items-table-wide .col-coil-width input {
+  min-width: 7.6rem;
+}
+
+.items-table-wide .col-dim,
+.items-table-wide .col-dim input {
+  min-width: 6.6rem;
+}
+
+.items-table-wide .col-peso,
+.items-table-wide .col-peso input {
+  min-width: 5.6rem;
+}
+
+.items-table-wide .col-qtd,
+.items-table-wide .col-qtd input {
+  min-width: 4.2rem;
+}
+
+.items-table-wide .col-unit {
+  min-width: 5.2rem;
+}
+
+.items-table-wide .col-preco-100,
+.items-table-wide .col-preco-100 input {
+  min-width: 8.2rem;
+}
+
+.items-table-wide .col-fator,
+.items-table-wide .col-fator input {
+  min-width: 6.2rem;
+}
+
+.items-table-wide .col-preco-util {
+  min-width: 9.2rem;
+}
+
+.items-table-wide .col-servico,
+.items-table-wide .col-servico input {
+  min-width: 7.2rem;
+}
+
+.items-table-wide .col-desc-servico,
+.items-table-wide .col-desc-servico input {
+  min-width: 9.5rem;
 }
 
 .items-table-wide input[type="text"] {

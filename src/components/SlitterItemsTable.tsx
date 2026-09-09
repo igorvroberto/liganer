@@ -232,22 +232,22 @@ export default function SlitterItemsTable({
               <tr>
                 <th />
                 <th>Item</th>
-                <th>Material</th>
-                <th>Tipo</th>
-                <th>Acabamento</th>
-                <th>PVC</th>
-                <th>Espessura</th>
-                <th>Largura bobina</th>
-                <th>Largura</th>
-                <th>Comprimento</th>
-                <th>Peso (Kg)</th>
-                <th>Qtd</th>
-                <th>Peso un.</th>
-                <th>Preço fator 100</th>
-                <th>Fator util.</th>
-                <th>Preço fator util.</th>
-                <th>Preço serviço</th>
-                <th>Descrição serviço</th>
+                <th className="col-material">Material</th>
+                <th className="col-tipo">Tipo</th>
+                <th className="col-acabamento">Acabamento</th>
+                <th className="col-pvc">PVC</th>
+                <th className="col-espessura">Espessura</th>
+                <th className="col-coil-width">Largura bobina</th>
+                <th className="col-dim">Largura</th>
+                <th className="col-dim">Comprimento</th>
+                <th className="col-peso">Peso (Kg)</th>
+                <th className="col-qtd">Qtd</th>
+                <th className="col-unit">Peso un.</th>
+                <th className="col-preco-100">Preço fator 100</th>
+                <th className="col-fator">Fator util.</th>
+                <th className="col-preco-util">Preço fator util.</th>
+                <th className="col-servico">Preço serviço</th>
+                <th className="col-desc-servico">Descrição serviço</th>
                 <th />
               </tr>
             </thead>
@@ -277,7 +277,7 @@ export default function SlitterItemsTable({
                       />
                     </td>
                     <td className="item-index">{index + 1}</td>
-                    <td>
+                    <td className="col-material">
                       <select
                         className="item-kind-select"
                         value={kind}
@@ -291,7 +291,7 @@ export default function SlitterItemsTable({
                         ))}
                       </select>
                     </td>
-                    <td>
+                    <td className="col-tipo">
                       <select
                         value={item.tipo ?? ""}
                         onChange={(e) => {
@@ -320,7 +320,7 @@ export default function SlitterItemsTable({
                         ))}
                       </select>
                     </td>
-                    <td>
+                    <td className="col-acabamento">
                       <select
                         value={item.acabamento ?? ""}
                         onChange={(e) => {
@@ -348,7 +348,7 @@ export default function SlitterItemsTable({
                         ))}
                       </select>
                     </td>
-                    <td>
+                    <td className="col-pvc">
                       <select
                         value={item.pvc ?? "sem"}
                         onChange={(e) => updateItem(item.id, { pvc: e.target.value as PvcOption })}
@@ -361,7 +361,7 @@ export default function SlitterItemsTable({
                         ))}
                       </select>
                     </td>
-                    <td>
+                    <td className="col-espessura">
                       <select
                         value={item.thickness ? String(item.thickness) : ""}
                         onChange={(e) => {
@@ -381,7 +381,7 @@ export default function SlitterItemsTable({
                         ))}
                       </select>
                     </td>
-                    <td>
+                    <td className="col-coil-width">
                       <input
                         type="number"
                         min={1}
@@ -393,7 +393,7 @@ export default function SlitterItemsTable({
                         }
                       />
                     </td>
-                    <td>
+                    <td className="col-dim">
                       <input
                         type="number"
                         min={1}
@@ -402,7 +402,7 @@ export default function SlitterItemsTable({
                         onChange={(e) => updateItem(item.id, { width: Number(e.target.value) })}
                       />
                     </td>
-                    <td>
+                    <td className="col-dim">
                       <input
                         type="number"
                         min={1}
@@ -413,7 +413,7 @@ export default function SlitterItemsTable({
                         title={slitter ? "Opcional para SLITTER" : undefined}
                       />
                     </td>
-                    <td>
+                    <td className="col-peso">
                       <input
                         type="number"
                         min={0}
@@ -423,7 +423,7 @@ export default function SlitterItemsTable({
                         onChange={(e) => updateWeight(item.id, e.target.value)}
                       />
                     </td>
-                    <td>
+                    <td className="col-qtd">
                       <input
                         type="number"
                         min={0}
@@ -433,7 +433,7 @@ export default function SlitterItemsTable({
                         onChange={(e) => updateQty(item.id, e.target.value)}
                       />
                     </td>
-                    <td className="unit-cell">
+                    <td className="unit-cell col-unit">
                       {unitKg > 0 ? (
                         <>
                           <strong>{fmtNumber(unitKg, 3)} Kg</strong>
@@ -443,7 +443,7 @@ export default function SlitterItemsTable({
                         <span className="muted">—</span>
                       )}
                     </td>
-                    <td>
+                    <td className="col-preco-100">
                       <input
                         inputMode="decimal"
                         placeholder="auto"
@@ -455,7 +455,7 @@ export default function SlitterItemsTable({
                         title="Preenchido pela tabela; pode editar manualmente"
                       />
                     </td>
-                    <td>
+                    <td className="col-fator">
                       <input
                         inputMode="decimal"
                         placeholder="170"
@@ -466,10 +466,10 @@ export default function SlitterItemsTable({
                         }}
                       />
                     </td>
-                    <td className="unit-cell">
+                    <td className="unit-cell col-preco-util">
                       <strong>{usedPrice != null ? fmtCurrency(usedPrice) : "—"}</strong>
                     </td>
-                    <td>
+                    <td className="col-servico">
                       <input
                         inputMode="decimal"
                         placeholder="1,24"
@@ -480,7 +480,7 @@ export default function SlitterItemsTable({
                         }}
                       />
                     </td>
-                    <td>
+                    <td className="col-desc-servico">
                       <input
                         type="text"
                         placeholder="Corte + PVC"
