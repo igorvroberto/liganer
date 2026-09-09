@@ -1,11 +1,28 @@
+export type ItemKind = "blank" | "slitter";
+
+export const ITEM_KIND_OPTIONS: { value: ItemKind; label: string }[] = [
+  { value: "blank", label: "BLANK" },
+  { value: "slitter", label: "SLITTER" },
+];
+
 export type BlankInput = {
   id: string;
   name: string;
+  /** Tipo do item no modelo Slitters. Default: blank. */
+  itemKind?: ItemKind;
   width: number;
   length: number;
   minKg: number;
   minQty: number;
 };
+
+export function itemKindOf(blank: Pick<BlankInput, "itemKind">): ItemKind {
+  return blank.itemKind === "slitter" ? "slitter" : "blank";
+}
+
+export function isSlitterItem(blank: Pick<BlankInput, "itemKind">): boolean {
+  return itemKindOf(blank) === "slitter";
+}
 
 /** Modelo de cálculo selecionado na calculadora. */
 export type CalculatorModel = "slitters" | "blanks";
