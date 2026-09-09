@@ -11,12 +11,21 @@ import type {
   RankedPlan,
   Strip,
 } from "./types";
+import { isSlitterItem } from "./types";
 
 const MM_TO_KG = 1_000_000;
 const LENGTH_EPS = 1e-6;
 
 export function unitWeightKg(width: number, length: number, coil: CoilInput): number {
   return (width * length * coil.thickness * coil.density) / MM_TO_KG;
+}
+
+/** Peso unitário do item: blank = peça; slitter = 1 mm de tira. */
+export function itemUnitWeightKg(blank: BlankInput, coil: CoilInput): number {
+  if (!(blank.width > 0)) return 0;
+  if (isSlitterItem(blank)) return unitWeightKg(blank.width, 1, coil);
+  if (!(blank.length > 0)) return 0;
+  return unitWeightKg(blank.width, blank.length, coil);
 }
 
 export function coilWeightKg(coilLengthMm: number, coil: CoilInput): number {
@@ -134,6 +143,18 @@ export function usableWidth(coil: CoilInput): number {
 }
 
 export function stripTypesForBlank(blank: BlankInput, productIndex: number): Strip[] {
+  if (isSlitterItem(blank)) {
+    // Slitter: tira contínua; peça unitária = 1 mm ao longo da bobina.
+    return [
+      {
+        productIndex,
+        stripWidth: blank.width,
+        cutLength: 1,
+        rotated: false,
+      },
+    ];
+  }
+
   const types: Strip[] = [
     {
       productIndex,
@@ -327,7 +348,7 @@ function productResults(
   nMin: number[],
 ): ProductResult[] {
   return blanks.map((blank, i) => {
-    const unit = unitWeightKg(blank.width, blank.length, coil);
+    const unit = itemUnitWeightKg(blank, coil);
     return {
       blank,
       unitWeightKg: unit,
@@ -357,7 +378,7 @@ function fillProgramWeights(programs: ProgramResult[], blanks: BlankInput[], coi
   for (const program of programs) {
     program.weightPerProductKg = program.piecesPerProduct.map((qty, i) => {
       const blank = blanks[i];
-      return qty * unitWeightKg(blank.width, blank.length, coil);
+      return qty * itemUnitWeightKg(blank, coil);
     });
   }
 }
@@ -445,7 +466,7 @@ function buildSequentialPlan(
       const pieces = piecesFromLength(pattern, length, nTarget.length);
       const gain = pieces.reduce((sum, qty, i) => {
         if (remaining[i] <= 0 || qty <= 0) return sum;
-        const unit = unitWeightKg(blanks[i].width, blanks[i].length, coil);
+        const unit = itemUnitWeightKg(blanks[i], coil);
         return sum + Math.min(qty, remaining[i]) * unit;
       }, 0);
 
@@ -475,7 +496,9 @@ function patternLabel(pattern: Pattern, blanks: BlankInput[]): string {
       const blank = blanks[strip.productIndex];
       const w = strip.stripWidth;
       const l = strip.cutLength;
-      const name = `${blank.width}×${blank.length}`;
+      const name = isSlitterItem(blank)
+        ? `${blank.width} mm slitter`
+        : `${blank.width}×${blank.length}`;
       return `${name} ${w}×${l}${strip.rotated ? " girado" : ""}`;
     })
     .join(" + ");
@@ -623,39 +646,54 @@ function validateInput(input: CalcInput): string | null {
   const usable = usableWidth(coil);
   if (usable <= 0) return "O refile de borda deixa a largura útil zerada.";
   const active = blanks.filter((b) => b.minKg > 0 || b.minQty > 0);
-  if (active.length === 0) return "Informe peso mínimo (Kg) ou quantidade para pelo menos um blank.";
+  if (active.length === 0) return "Informe peso mínimo (Kg) ou quantidade para pelo menos um item.";
   for (const blank of blanks) {
-    if (!(blank.width > 0) || !(blank.length > 0)) {
-      return "Cada blank precisa de largura e comprimento maiores que zero.";
+    if (!(blank.width > 0)) {
+      return "Cada item precisa de largura maior que zero.";
     }
-    const minDim = Math.min(blank.width, blank.length);
-    if (minDim > usable + 1e-9) {
-      return `O blank ${blank.width}×${blank.length} mm não cabe na largura útil de ${usable} mm.`;
+    if (!isSlitterItem(blank) && !(blank.length > 0)) {
+      return "Itens BLANK precisam de comprimento maior que zero.";
+    }
+    if (isSlitterItem(blank)) {
+      if (blank.width > usable + 1e-9) {
+        return `O slitter de ${blank.width} mm não cabe na largura útil de ${usable} mm.`;
+      }
+    } else {
+      const minDim = Math.min(blank.width, blank.length);
+      if (minDim > usable + 1e-9) {
+        return `O blank ${blank.width}×${blank.length} mm não cabe na largura útil de ${usable} mm.`;
+      }
     }
   }
   return null;
+}
+
+function isActiveItem(blank: BlankInput): boolean {
+  if (!(blank.width > 0)) return false;
+  if (isSlitterItem(blank)) return true;
+  return blank.length > 0;
 }
 
 export function optimizeCutting(input: CalcInput): CalcResult | CalcError {
   const error = validateInput(input);
   if (error) return { ok: false, message: error };
 
-  const blanks = input.blanks.filter((b) => b.width > 0 && b.length > 0);
+  const blanks = input.blanks.filter(isActiveItem);
   const coil = input.coil;
   const allow = overshootAllowed(coil);
-  const units = blanks.map((b) => unitWeightKg(b.width, b.length, coil));
+  const units = blanks.map((b) => itemUnitWeightKg(b, coil));
   const nTarget = blanks.map((b, i) => targetPiecesForBlank(b, units[i], allow));
 
   const activeIdx = nTarget.map((v, i) => (v > 0 ? i : -1)).filter((i) => i >= 0);
   if (activeIdx.length === 0) {
-    return { ok: false, message: "Informe peso (Kg) ou quantidade para pelo menos um blank." };
+    return { ok: false, message: "Informe peso (Kg) ou quantidade para pelo menos um item." };
   }
 
   const types = blanks.flatMap((blank, i) =>
     nTarget[i] > 0 ? stripTypesForBlank(blank, i).filter((s) => s.stripWidth <= usableWidth(coil) + 1e-9) : [],
   );
   if (types.length === 0) {
-    return { ok: false, message: "Nenhuma orientação de blank cabe na largura da bobina." };
+    return { ok: false, message: "Nenhuma orientação de item cabe na largura da bobina." };
   }
 
   const usable = usableWidth(coil);

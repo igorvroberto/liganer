@@ -9,6 +9,7 @@ import {
   DEFAULT_DENSITY,
   FIXED_EDGE_TRIM_MM,
   PVC_OPTIONS,
+  isSlitterItem,
   type BlankInput,
   type CoilInput,
   type ProgramResult,
@@ -27,7 +28,7 @@ const EMPTY_COIL: CoilInput = {
 };
 
 const EMPTY_BLANKS: BlankInput[] = [
-  { id: "blank-1", name: "", width: 0, length: 0, minKg: 0, minQty: 0 },
+  { id: "blank-1", name: "", itemKind: "blank", width: 0, length: 0, minKg: 0, minQty: 0 },
 ];
 
 const EMPTY_MODES: Record<string, "qty" | "weight"> = {
@@ -140,7 +141,9 @@ function patternSummary(program: ProgramResult, products: RankedPlan["products"]
   return program.pattern.strips
     .map((strip) => {
       const blank = products[strip.productIndex].blank;
-      const label = `${blank.width}×${blank.length}`;
+      const label = isSlitterItem(blank)
+        ? `${blank.width} mm slitter`
+        : `${blank.width}×${blank.length}`;
       return `${label} ${fmtInt(strip.stripWidth)} mm`;
     })
     .join(" + ");
@@ -373,6 +376,7 @@ export default function SlitterCalculator() {
           blanks={blanks}
           coil={coil}
           demandModes={demandModes}
+          allowItemKind
           onDemandModesChange={(next) => {
             setSelectedAlt(0);
             setDemandModes(next);
@@ -484,7 +488,9 @@ export default function SlitterCalculator() {
                       <tr key={product.blank.id}>
                         <td>
                           <strong style={{ color: BLANK_COLORS[i % BLANK_COLORS.length] }}>
-                            {fmtDim(product.blank.width, product.blank.length)}
+                            {isSlitterItem(product.blank)
+                              ? `${fmtInt(product.blank.width)} mm slitter`
+                              : fmtDim(product.blank.width, product.blank.length)}
                           </strong>
                         </td>
                         <td>

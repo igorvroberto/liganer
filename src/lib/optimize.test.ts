@@ -208,6 +208,46 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     expect(loss.lossPercent).toBeGreaterThanOrEqual(0);
   });
 
+  it("aceita item SLITTER só com largura (sem comprimento)", () => {
+    const result = optimizeCutting({
+      coil: { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 0 },
+      blanks: [
+        {
+          id: "s1",
+          name: "slitter 600",
+          itemKind: "slitter",
+          width: 600,
+          length: 0,
+          minKg: 1000,
+          minQty: 0,
+        },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.products[0].weightKg).toBeGreaterThanOrEqual(1000 - 1e-6);
+    expect(result.programs[0].pattern.strips[0].stripWidth).toBe(600);
+    expect(result.programs[0].pattern.strips[0].cutLength).toBe(1);
+  });
+
+  it("exige comprimento para item BLANK", () => {
+    const result = optimizeCutting({
+      coil: { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 0 },
+      blanks: [
+        {
+          id: "b1",
+          name: "blank sem comprimento",
+          itemKind: "blank",
+          width: 600,
+          length: 0,
+          minKg: 1000,
+          minQty: 0,
+        },
+      ],
+    });
+    expect(result.ok).toBe(false);
+  });
+
   it("não ultrapassa o peso quando allowOvershoot é falso", () => {
     const coil = { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 0, allowOvershoot: false };
     const result = optimizeCutting({

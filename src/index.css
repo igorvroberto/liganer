@@ -259,6 +259,20 @@ p {
   padding: 8px 10px;
 }
 
+.items-table select.item-kind-select {
+  min-width: 108px;
+  padding: 8px 10px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.items-table input:disabled {
+  opacity: 0.55;
+  background: #eef2f5;
+  cursor: not-allowed;
+}
+
 .items-table input.linked-active {
   border-color: var(--brand-2);
   background: #f3f8fb;

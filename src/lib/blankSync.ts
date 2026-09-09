@@ -1,11 +1,14 @@
 import type { BlankInput, CoilInput } from "./types";
-import { unitWeightKg } from "./optimize";
+import { itemUnitWeightKg } from "./optimize";
 
 export type BlankDemandMode = "qty" | "weight";
 
-export function blankUnitKg(blank: Pick<BlankInput, "width" | "length">, coil: CoilInput): number {
-  if (!(blank.width > 0) || !(blank.length > 0)) return 0;
-  return unitWeightKg(blank.width, blank.length, coil);
+/** Unidade de peso: blank = peça; slitter = 1 mm de tira (sem comprimento fixo). */
+export function blankUnitKg(
+  blank: Pick<BlankInput, "width" | "length" | "itemKind">,
+  coil: CoilInput,
+): number {
+  return itemUnitWeightKg(blank as BlankInput, coil);
 }
 
 export function syncBlankFromQty(
