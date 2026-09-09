@@ -5,14 +5,15 @@ export const ITEM_KIND_OPTIONS: { value: ItemKind; label: string }[] = [
   { value: "slitter", label: "SLITTER" },
 ];
 
-export type PvcOption = "sem" | "azul" | "preto-branco" | "preto" | "laser";
+export type PvcOption = "sem" | "azul" | "preto-branco" | "preto" | "nitto";
 
+/** Fallback estático; no modelo Slitters as opções vêm da tabela de preços. */
 export const PVC_OPTIONS: { value: PvcOption; label: string }[] = [
   { value: "sem", label: "Sem PVC" },
   { value: "azul", label: "Azul" },
   { value: "preto-branco", label: "Preto e branco" },
   { value: "preto", label: "Preto" },
-  { value: "laser", label: "Laser" },
+  { value: "nitto", label: "Nitto Fiber" },
 ];
 
 export function pvcLabel(pvc: PvcOption | undefined): string {
@@ -22,7 +23,7 @@ export function pvcLabel(pvc: PvcOption | undefined): string {
 export type BlankInput = {
   id: string;
   name: string;
-  /** Tipo do item no modelo Slitters. Default: blank. */
+  /** Material do item no modelo Slitters (BLANK/SLITTER). Default: blank. */
   itemKind?: ItemKind;
   width: number;
   length: number;
@@ -30,6 +31,10 @@ export type BlankInput = {
   minQty: number;
   /** Campos comerciais/por linha (modelo Slitters unificado em Itens). */
   line?: string;
+  /** Tipo da tabela de preços (ex.: 304, 201). */
+  tipo?: string;
+  /** Acabamento da tabela de preços (ex.: 2B, ESCOVADO). */
+  acabamento?: string;
   thickness?: number;
   /** Largura da bobina-mãe usada no plano de corte. */
   coilWidth?: number;

@@ -1,9 +1,13 @@
 import { blankUnitKg, resyncBlankDemand, syncBlankFromQty, syncBlankFromWeight } from "../lib/blankSync";
-import { fmtCurrency, fmtNumber, fmtThickness, parseDecimalBr, parseThickness } from "../lib/format";
+import { fmtCurrency, fmtNumber, fmtThickness, parseDecimalBr } from "../lib/format";
+import {
+  lineLabelFromSpecs,
+  lookupPriceFator100,
+  priceTableOptions,
+} from "../lib/priceTable";
 import {
   BLANK_COLORS,
   ITEM_KIND_OPTIONS,
-  PVC_OPTIONS,
   isSlitterItem,
   itemKindOf,
   type BlankInput,
@@ -19,6 +23,8 @@ type Props = {
   coil: CoilInput;
   demandModes: DemandModeMap;
   allowOvershoot: boolean;
+  /** Força re-render quando a tabela de preços carrega. */
+  priceTableRevision?: number;
   onAllowOvershootChange: (value: boolean) => void;
   onDemandModesChange: (next: DemandModeMap) => void;
   onItemsChange: (next: BlankInput[]) => void;
@@ -38,15 +44,47 @@ function dimLabel(item: BlankInput): string {
   return "item";
 }
 
+function withPriceFromTable(item: BlankInput, patch: Partial<BlankInput>): BlankInput {
+  const next = { ...item, ...patch };
+  const tipo = next.tipo ?? "";
+  const acabamento = next.acabamento ?? "";
+  next.line = lineLabelFromSpecs(tipo, acabamento) || next.line;
+
+  const specsChanged =
+    patch.tipo !== undefined ||
+    patch.acabamento !== undefined ||
+    patch.thickness !== undefined ||
+    patch.pvc !== undefined;
+
+  if (!specsChanged) return next;
+
+  if (tipo && acabamento && next.thickness && next.thickness > 0) {
+    const lookup = lookupPriceFator100({
+      tipo,
+      acabamento,
+      espessura: next.thickness,
+      pvc: next.pvc ?? "sem",
+    });
+    next.priceFactor100 = lookup.matched ? lookup.precoFator100 : undefined;
+  } else {
+    next.priceFactor100 = undefined;
+  }
+  return next;
+}
+
 export default function SlitterItemsTable({
   items,
   coil,
   demandModes,
   allowOvershoot,
+  priceTableRevision = 0,
   onAllowOvershootChange,
   onDemandModesChange,
   onItemsChange,
 }: Props) {
+  void priceTableRevision;
+  const globalOpts = priceTableOptions();
+
   const setItems = (updater: (prev: BlankInput[]) => BlankInput[]) => {
     onItemsChange(updater(items));
   };
@@ -65,7 +103,7 @@ export default function SlitterItemsTable({
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
-        const next = { ...item, ...patch };
+        const next = withPriceFromTable(item, patch);
         const activeMode = mode ?? demandModes[id] ?? "weight";
         if (
           patch.width !== undefined ||
@@ -130,10 +168,12 @@ export default function SlitterItemsTable({
         minKg: 0,
         minQty: 0,
         line: template?.line ?? "",
+        tipo: template?.tipo,
+        acabamento: template?.acabamento,
         thickness: template?.thickness,
         coilWidth: template?.coilWidth,
         pvc: template?.pvc ?? "sem",
-        priceFactor100: undefined,
+        priceFactor100: template?.priceFactor100,
         usedFactor: undefined,
         servicePrice: undefined,
         serviceDescription: undefined,
@@ -156,9 +196,9 @@ export default function SlitterItemsTable({
           <div>
             <h2>Itens</h2>
             <p className="note">
-              Como em chapas/bobinas: tudo na linha do item (tipo, bobina, dimensões e preço). BLANK exige
-              comprimento; SLITTER pode deixar em branco. O plano de corte usa a largura/espessura da bobina
-              do primeiro item preenchido.
+              Tipo, acabamento, PVC e espessura vêm da tabela de preços. O preço fator 100 é preenchido
+              automaticamente conforme o PVC. Material BLANK exige comprimento; SLITTER pode deixar em
+              branco. O plano de corte usa a largura/espessura da bobina do primeiro item preenchido.
             </p>
           </div>
           <button className="btn btn-primary" type="button" onClick={addItem}>
@@ -192,8 +232,9 @@ export default function SlitterItemsTable({
               <tr>
                 <th />
                 <th>Item</th>
+                <th>Material</th>
                 <th>Tipo</th>
-                <th>Linha</th>
+                <th>Acabamento</th>
                 <th>PVC</th>
                 <th>Espessura</th>
                 <th>Largura bobina</th>
@@ -218,6 +259,15 @@ export default function SlitterItemsTable({
                 const kind = itemKindOf(item);
                 const slitter = kind === "slitter";
                 const usedPrice = calcUsedFactorPrice(item.priceFactor100, item.usedFactor);
+                const rowOpts = priceTableOptions({
+                  tipo: item.tipo,
+                  acabamento: item.acabamento,
+                });
+                const tipoOpts = globalOpts.tipo;
+                const acabOpts = item.tipo ? rowOpts.acabamento : globalOpts.acabamento;
+                const espOpts = item.tipo && item.acabamento ? rowOpts.espessura : globalOpts.espessura;
+                const pvcOpts = globalOpts.pvc;
+
                 return (
                   <tr key={item.id}>
                     <td>
@@ -232,7 +282,7 @@ export default function SlitterItemsTable({
                         className="item-kind-select"
                         value={kind}
                         onChange={(e) => updateItemKind(item.id, e.target.value as ItemKind)}
-                        aria-label="Tipo do item"
+                        aria-label="Material do item"
                       >
                         {ITEM_KIND_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -242,19 +292,69 @@ export default function SlitterItemsTable({
                       </select>
                     </td>
                     <td>
-                      <input
-                        type="text"
-                        placeholder="304 2B"
-                        value={item.line ?? ""}
-                        onChange={(e) => updateItem(item.id, { line: e.target.value })}
-                      />
+                      <select
+                        value={item.tipo ?? ""}
+                        onChange={(e) => {
+                          const tipo = e.target.value || undefined;
+                          const nextAcabOpts = priceTableOptions({ tipo }).acabamento;
+                          const acabamento =
+                            tipo && item.acabamento && nextAcabOpts.includes(item.acabamento)
+                              ? item.acabamento
+                              : undefined;
+                          const nextEspOpts = priceTableOptions({ tipo, acabamento }).espessura;
+                          const thickness =
+                            acabamento &&
+                            item.thickness &&
+                            nextEspOpts.includes(item.thickness)
+                              ? item.thickness
+                              : undefined;
+                          updateItem(item.id, { tipo, acabamento, thickness });
+                        }}
+                        aria-label="Tipo"
+                      >
+                        <option value="">—</option>
+                        {tipoOpts.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <select
+                        value={item.acabamento ?? ""}
+                        onChange={(e) => {
+                          const acabamento = e.target.value || undefined;
+                          const nextEspOpts = priceTableOptions({
+                            tipo: item.tipo,
+                            acabamento,
+                          }).espessura;
+                          const thickness =
+                            acabamento &&
+                            item.thickness &&
+                            nextEspOpts.includes(item.thickness)
+                              ? item.thickness
+                              : undefined;
+                          updateItem(item.id, { acabamento, thickness });
+                        }}
+                        aria-label="Acabamento"
+                        disabled={!item.tipo}
+                      >
+                        <option value="">—</option>
+                        {acabOpts.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td>
                       <select
                         value={item.pvc ?? "sem"}
                         onChange={(e) => updateItem(item.id, { pvc: e.target.value as PvcOption })}
+                        aria-label="PVC"
                       >
-                        {PVC_OPTIONS.map((opt) => (
+                        {pvcOpts.map((opt) => (
                           <option key={opt.value} value={opt.value}>
                             {opt.label}
                           </option>
@@ -262,17 +362,24 @@ export default function SlitterItemsTable({
                       </select>
                     </td>
                     <td>
-                      <input
-                        inputMode="decimal"
-                        placeholder="0,40"
-                        value={item.thickness ? fmtThickness(item.thickness) : ""}
+                      <select
+                        value={item.thickness ? String(item.thickness) : ""}
                         onChange={(e) => {
-                          const raw = e.target.value.replace(".", ",");
-                          if (!/^\d*(,\d{0,2})?$/.test(raw) && raw !== "") return;
-                          const parsed = parseThickness(raw);
-                          updateItem(item.id, { thickness: parsed ?? undefined });
+                          const raw = e.target.value;
+                          updateItem(item.id, {
+                            thickness: raw ? Number(raw) : undefined,
+                          });
                         }}
-                      />
+                        aria-label="Espessura"
+                        disabled={!item.tipo || !item.acabamento}
+                      >
+                        <option value="">—</option>
+                        {espOpts.map((opt) => (
+                          <option key={opt} value={String(opt)}>
+                            {fmtThickness(opt)}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td>
                       <input
@@ -339,12 +446,13 @@ export default function SlitterItemsTable({
                     <td>
                       <input
                         inputMode="decimal"
-                        placeholder="45,00"
+                        placeholder="auto"
                         value={item.priceFactor100 != null ? String(item.priceFactor100).replace(".", ",") : ""}
                         onChange={(e) => {
                           const v = parseDecimalBr(e.target.value);
                           updateItem(item.id, { priceFactor100: v ?? undefined });
                         }}
+                        title="Preenchido pela tabela; pode editar manualmente"
                       />
                     </td>
                     <td>
