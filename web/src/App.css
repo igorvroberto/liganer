@@ -417,6 +417,13 @@ select {
   overflow: hidden;
 }
 
+.cat-cell {
+  max-width: 160px;
+  font-size: 0.85rem;
+  line-height: 1.25;
+  white-space: normal;
+}
+
 .tiny {
   font-size: 0.75rem;
 }

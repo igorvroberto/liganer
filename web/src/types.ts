@@ -11,7 +11,6 @@ export type Lead = {
   produto_secundario: string
   justificativa_produto: string
   potencial: string
-  multiproduto: string
   multioportunidade: string
   consumo_estimado: string
   compra_recorrente: string
@@ -47,19 +46,38 @@ export type Filters = {
   cidade: string
   situacao: string
   status: string
-  multiproduto: string
   /** Distância máxima a partir de Araçatuba (km) */
   raioKm: number
 }
 
 export const RAIO_MAX_KM = 200
 
-export const CATEGORIA_LABEL: Record<string, string> = {
-  C: 'Construção',
-  CD: 'Corte e Dobra',
-  M: 'Metalúrgica',
-  I: 'Indústria / Inox',
-  R: 'Distribuição',
+/** Ordem canônica das categorias comerciais */
+export const CATEGORIA_OPTIONS = [
+  'Construtora',
+  'Corte e dobra de ferro para construção',
+  'Corte e dobra de aço carbono',
+  'Corte e dobra de aço inox',
+  'Indústria inox',
+  'Indústria carbono',
+  'Metalúrgica inox',
+  'Metalúrgica carbono',
+  'Distribuição',
+] as const
+
+export type Categoria = (typeof CATEGORIA_OPTIONS)[number]
+
+/** Abreviação compacta para a barra de stats */
+export const CATEGORIA_ABREV: Record<string, string> = {
+  Construtora: 'C',
+  'Corte e dobra de ferro para construção': 'CDF',
+  'Corte e dobra de aço carbono': 'CDC',
+  'Corte e dobra de aço inox': 'CDI',
+  'Indústria inox': 'II',
+  'Indústria carbono': 'IC',
+  'Metalúrgica inox': 'MI',
+  'Metalúrgica carbono': 'MC',
+  Distribuição: 'D',
 }
 
 export const POTENCIAL_OPTIONS = ['Alto', 'Médio', 'Baixo'] as const
@@ -80,7 +98,6 @@ export const EMPTY_FILTERS: Filters = {
   cidade: '',
   situacao: '',
   status: '',
-  multiproduto: '',
   raioKm: RAIO_MAX_KM,
 }
 
@@ -95,15 +112,13 @@ export const EDITABLE_FIELDS: {
   { key: 'cnpj', label: 'CNPJ', kind: 'text' },
   { key: 'cidade', label: 'Cidade', kind: 'text' },
   { key: 'estado', label: 'Estado', kind: 'text' },
-  { key: 'categoria', label: 'Categoria', kind: 'select', options: ['C', 'CD', 'M', 'I', 'R'] },
-  { key: 'subcategoria', label: 'Subcategoria', kind: 'text' },
+  { key: 'categoria', label: 'Categoria', kind: 'select', options: CATEGORIA_OPTIONS },
   { key: 'potencial', label: 'Potencial', kind: 'select', options: POTENCIAL_OPTIONS },
   { key: 'situacao', label: 'Situação', kind: 'select', options: SITUACAO_OPTIONS },
   { key: 'ultimo_contato', label: 'Último contato', kind: 'date' },
   { key: 'status', label: 'Status', kind: 'select', options: STATUS_OPTIONS },
   { key: 'proximo_contato', label: 'Próximo contato', kind: 'date' },
   { key: 'ultima_compra', label: 'Última compra', kind: 'date' },
-  { key: 'multiproduto', label: 'Multiproduto', kind: 'select', options: ['Sim', 'Não'] },
   { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },
   { key: 'produto_secundario', label: 'Produto secundário', kind: 'textarea' },
   { key: 'proxima_acao', label: 'Próxima ação', kind: 'textarea' },

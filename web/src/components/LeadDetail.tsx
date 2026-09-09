@@ -1,5 +1,5 @@
 import type { Lead } from '../types'
-import { CATEGORIA_LABEL, EDITABLE_FIELDS } from '../types'
+import { EDITABLE_FIELDS } from '../types'
 
 type Props = {
   lead: Lead | null
@@ -26,8 +26,7 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
       <header className="detail-header">
         <div>
           <p className="eyebrow">
-            {lead.id} · {lead.categoria}/{lead.subcategoria} ·{' '}
-            {CATEGORIA_LABEL[lead.categoria] ?? lead.categoria}
+            {lead.id} · {lead.categoria}
           </p>
           <h2>{lead.empresa}</h2>
           <p className="muted">

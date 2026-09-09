@@ -1,5 +1,5 @@
 import type { Lead } from '../types'
-import { CATEGORIA_LABEL } from '../types'
+import { CATEGORIA_ABREV, CATEGORIA_OPTIONS } from '../types'
 
 type Props = {
   all: Lead[]
@@ -8,10 +8,10 @@ type Props = {
 
 export function StatsBar({ all, filtered }: Props) {
   const count = (pred: (l: Lead) => boolean) => filtered.filter(pred).length
-  const byCat = Object.keys(CATEGORIA_LABEL).map((c) => ({
+  const byCat = CATEGORIA_OPTIONS.map((c) => ({
     c,
     n: count((l) => l.categoria === c),
-  }))
+  })).filter((x) => x.n > 0)
 
   return (
     <section className="stats" aria-label="Resumo">
@@ -23,14 +23,10 @@ export function StatsBar({ all, filtered }: Props) {
         <strong>{count((l) => l.potencial === 'Alto')}</strong>
         <span>potencial Alto</span>
       </div>
-      <div className="stat">
-        <strong>{count((l) => /^sim/i.test(l.multiproduto))}</strong>
-        <span>multiproduto</span>
-      </div>
       <div className="stat cats">
         {byCat.map(({ c, n }) => (
-          <span key={c} title={CATEGORIA_LABEL[c]}>
-            {c}:{n}
+          <span key={c} title={c}>
+            {CATEGORIA_ABREV[c] ?? c}:{n}
           </span>
         ))}
       </div>

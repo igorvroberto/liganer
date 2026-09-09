@@ -37,8 +37,6 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
     if (f.cidade && l.cidade !== f.cidade) return false
     if (f.situacao && l.situacao !== f.situacao) return false
     if (f.status && l.status !== f.status) return false
-    if (f.multiproduto === 'Sim' && !/^sim/i.test(l.multiproduto)) return false
-    if (f.multiproduto === 'Não' && /^sim/i.test(l.multiproduto)) return false
     const dist = Number(l.distancia_km_aracatuba)
     const raio = Number.isFinite(f.raioKm) ? f.raioKm : 200
     if (!Number.isNaN(dist) && dist > raio) return false
@@ -90,10 +88,7 @@ function cmp(a: Lead, b: Lead, key: SortKey): number {
     case 'ultima_compra':
       return dateSortValue(a.ultima_compra ?? '') - dateSortValue(b.ultima_compra ?? '')
     case 'categoria':
-      return `${a.categoria}/${a.subcategoria}`.localeCompare(
-        `${b.categoria}/${b.subcategoria}`,
-        'pt-BR',
-      )
+      return (a.categoria ?? '').localeCompare(b.categoria ?? '', 'pt-BR')
     case 'produto_provavel':
       return (a.produto_provavel ?? '').localeCompare(b.produto_provavel ?? '', 'pt-BR')
     case 'proxima_acao':
@@ -143,9 +138,9 @@ export function topAttackList(leads: Lead[], limit = 20): Lead[] {
     if (l.potencial === 'Alto') score += 100
     else if (l.potencial === 'Médio') score += 50
     else if (l.potencial === 'Baixo') score += 10
-    if (/^sim/i.test(l.multiproduto)) score += 25
     if (/^sim/i.test(l.multioportunidade)) score += 15
-    if (l.categoria === 'CD') score += 20
+    if (l.categoria === 'Corte e dobra de ferro para construção') score += 20
+    else if (l.categoria.startsWith('Corte e dobra')) score += 10
     if (l.consumo_estimado === 'Alto') score += 15
     if (l.compra_recorrente === 'Sim') score += 15
     const dist = Number(l.distancia_km_aracatuba)

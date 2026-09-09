@@ -248,8 +248,8 @@ export default function App() {
             />
           ) : (
             <p className="banner">
-              TOP 20 ordenado por potencial, recorrência, multiproduto, CD e proximidade. Datas e
-              status editam na tabela; demais campos no painel.
+              TOP 20 ordenado por potencial, recorrência, corte/dobra e proximidade. Datas e status
+              editam na tabela; demais campos no painel.
             </p>
           )}
 
