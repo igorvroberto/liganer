@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SlitterItemsTable from "../components/SlitterItemsTable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
 import { lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
 import { downloadPlanPdf } from "../lib/pdfReport";
+import { loadPriceTable } from "../lib/priceTable";
 import { coilFromSlitterItems } from "../lib/slitterCoil";
 import {
   BLANK_COLORS,
@@ -158,6 +159,17 @@ export default function SlitterCalculator() {
   const [allowOvershoot, setAllowOvershoot] = useState(true);
   const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(EMPTY_MODES);
   const [selectedAlt, setSelectedAlt] = useState(0);
+  const [priceTableRevision, setPriceTableRevision] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadPriceTable().then(() => {
+      if (!cancelled) setPriceTableRevision((n) => n + 1);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const coil = useMemo(
     () => coilFromSlitterItems(items, allowOvershoot),
@@ -190,6 +202,7 @@ export default function SlitterCalculator() {
         coil={coil}
         demandModes={demandModes}
         allowOvershoot={allowOvershoot}
+        priceTableRevision={priceTableRevision}
         onAllowOvershootChange={(value) => {
           setSelectedAlt(0);
           setAllowOvershoot(value);
