@@ -198,6 +198,24 @@ select {
   grid-column: span 1;
 }
 
+.field-raio {
+  grid-column: 1 / -1;
+}
+
+.field-raio input[type='range'] {
+  width: 100%;
+  padding: 0.35rem 0;
+  accent-color: var(--accent-2);
+  cursor: pointer;
+}
+
+.raio-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
 .filters-actions {
   margin-top: 0.85rem;
 }

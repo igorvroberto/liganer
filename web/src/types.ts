@@ -48,7 +48,11 @@ export type Filters = {
   situacao: string
   status: string
   multiproduto: string
+  /** Distância máxima a partir de Araçatuba (km) */
+  raioKm: number
 }
+
+export const RAIO_MAX_KM = 200
 
 export const CATEGORIA_LABEL: Record<string, string> = {
   C: 'Construção',
@@ -77,6 +81,7 @@ export const EMPTY_FILTERS: Filters = {
   situacao: '',
   status: '',
   multiproduto: '',
+  raioKm: RAIO_MAX_KM,
 }
 
 /** Campos editáveis no painel (follow-up também na tabela) */

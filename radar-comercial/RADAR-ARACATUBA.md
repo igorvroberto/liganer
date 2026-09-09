@@ -1,5 +1,5 @@
 # Radar Comercial — Aço & Metalurgia
-## Foco inicial: Araçatuba/SP + raio ~300 km
+## Foco: Araçatuba/SP + raio até 200 km
 
 **Data da pesquisa:** 08/09/2026  
 **Objetivo:** CRM de prospecção — quem ligar, visitar e o que oferecer.  
