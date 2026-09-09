@@ -1,5 +1,8 @@
 name: Deploy Blanks to HostGator
 
+# Public URL: https://vendas.liganer.com.br/orcamento/blanks-slitters/
+# FTP dir secret (FTP_SERVER_DIR): vendas.liganer.com.br/orcamento/blanks-slitters
+
 on:
   push:
     branches:
