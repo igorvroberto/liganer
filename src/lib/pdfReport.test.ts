@@ -88,7 +88,7 @@ describe("pdfReport", () => {
     expect(text).toContain("Orienta\u00e7\u00e3o");
     expect(text).toContain("Pe\u00e7as nesta tira");
     expect(text).toContain("Sobra");
-    expect(text).toContain("Produ\u00e7\u00e3o por blank");
+    expect(text).toContain("Produ\u00e7\u00e3o por item");
     expect(text).toContain("P\u00e1gina");
     expect(text).toContain("s\u00e3o");
     expect(text).toContain("necess\u00e1rio");

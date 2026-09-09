@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness } from "./format";
-import { BLANK_COLORS, pvcLabel, type CoilInput, type RankedPlan } from "./types";
+import { BLANK_COLORS, isSlitterItem, pvcLabel, type CoilInput, type RankedPlan } from "./types";
 import { lossBreakdown, programLoss } from "./optimize";
 import { registerPdfFonts } from "./pdfFonts";
 
@@ -331,18 +331,22 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
   doc.setFont(fontName, "bold");
   doc.setFontSize(10);
   doc.setTextColor(27, 36, 44);
-  doc.text("Produção por blank", margin, y);
+  doc.text("Produção por item", margin, y);
   y += 2;
 
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
-    head: [["Blank", "Pedido", "Peso un.", "Produzido", "Peso produzido"]],
+    head: [["Item", "Pedido", "Peso un.", "Produzido", "Peso produzido"]],
     body: plan.products.map((product) => [
-      fmtDim(product.blank.width, product.blank.length),
-      `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`,
+      isSlitterItem(product.blank)
+        ? `${fmtInt(product.blank.width)} mm slitter`
+        : fmtDim(product.blank.width, product.blank.length),
+      isSlitterItem(product.blank)
+        ? `${fmtInt(product.pieces)} mm · ${fmtKg(product.blank.minKg)}`
+        : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`,
       fmtKg(product.unitWeightKg),
-      `${fmtInt(product.pieces)} un`,
+      isSlitterItem(product.blank) ? `${fmtInt(product.pieces)} mm` : `${fmtInt(product.pieces)} un`,
       fmtKg(product.weightKg),
     ]),
     headStyles: { font: fontName, fontStyle: "bold", fillColor: [22, 56, 74], textColor: 255, fontSize: 7.5 },
