@@ -596,6 +596,12 @@ select:focus {
   margin-bottom: 14px;
 }
 
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
 .client-fields-card .grid-2 {
   margin: 0;
 }
@@ -900,6 +906,11 @@ th {
   .summary-grid,
   .grid-2 {
     grid-template-columns: 1fr;
+  }
+
+  /* Nome do cliente + CNPJ permanecem lado a lado (como chapas-bobinas). */
+  .client-fields-card .grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hero,
