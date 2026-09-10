@@ -1,4 +1,5 @@
 import { combinations, minSumWithCoverage } from "./math";
+import { groupBlanksByMaterialSpec } from "./materialGroups";
 import type {
   BlankInput,
   CalcError,
@@ -683,6 +684,135 @@ export function optimizeCutting(input: CalcInput): CalcResult | CalcError {
   const error = validateInput(input);
   if (error) return { ok: false, message: error };
 
+  const active = input.blanks.filter(isActiveItem);
+  if (active.length === 0) {
+    return { ok: false, message: "Informe peso mínimo (Kg) ou quantidade para pelo menos um item." };
+  }
+
+  const groups = groupBlanksByMaterialSpec(active);
+  if (groups.length <= 1) {
+    return optimizeCuttingSingle({ ...input, blanks: active });
+  }
+
+  const groupRuns: { result: CalcResult; indices: number[] }[] = [];
+  for (const group of groups) {
+    const source = group.blanks[0];
+    const coil: CoilInput = {
+      ...input.coil,
+      width: source.coilWidth && source.coilWidth > 0 ? source.coilWidth : input.coil.width,
+      thickness: source.thickness && source.thickness > 0 ? source.thickness : input.coil.thickness,
+      pvc: source.pvc ?? input.coil.pvc,
+      line: source.line ?? input.coil.line,
+      priceFactor100: source.priceFactor100 ?? input.coil.priceFactor100,
+      usedFactor: source.usedFactor ?? input.coil.usedFactor,
+      servicePrice: source.servicePrice ?? input.coil.servicePrice,
+      serviceDescription: source.serviceDescription ?? input.coil.serviceDescription,
+    };
+    const result = optimizeCuttingSingle({ coil, blanks: group.blanks });
+    if (!result.ok) return result;
+    groupRuns.push({ result, indices: group.indices });
+  }
+
+  return mergeGroupedResults(groupRuns, active);
+}
+
+function remapProgram(
+  program: ProgramResult,
+  indexMap: number[],
+  globalCount: number,
+): ProgramResult {
+  const piecesPerProduct = Array.from({ length: globalCount }, () => 0);
+  const weightPerProductKg = Array.from({ length: globalCount }, () => 0);
+  program.piecesPerProduct.forEach((qty, local) => {
+    const global = indexMap[local];
+    piecesPerProduct[global] = qty;
+    weightPerProductKg[global] = program.weightPerProductKg[local] ?? 0;
+  });
+  return {
+    ...program,
+    pattern: {
+      ...program.pattern,
+      strips: program.pattern.strips.map((strip) => ({
+        ...strip,
+        productIndex: indexMap[strip.productIndex],
+      })),
+    },
+    piecesPerProduct,
+    weightPerProductKg,
+  };
+}
+
+function mergeGroupedResults(
+  groupRuns: { result: CalcResult; indices: number[] }[],
+  globalBlanks: BlankInput[],
+): CalcResult {
+  const n = globalBlanks.length;
+  const altCount = Math.min(...groupRuns.map((g) => g.result.alternatives.length), 6);
+
+  const mergeAt = (altIndex: number): RankedPlan => {
+    const programs: ProgramResult[] = [];
+    const products: ProductResult[] = Array.from({ length: n });
+    let coilWeightKg = 0;
+    let usefulWeightKg = 0;
+    let scrapKg = 0;
+    let totalCoilLengthMm = 0;
+
+    for (const { result, indices } of groupRuns) {
+      const plan = result.alternatives[altIndex] ?? result.alternatives[0];
+      coilWeightKg += plan.coilWeightKg;
+      usefulWeightKg += plan.usefulWeightKg;
+      scrapKg += plan.scrapKg;
+      totalCoilLengthMm += plan.totalCoilLengthMm;
+      for (const program of plan.programs) {
+        programs.push(remapProgram(program, indices, n));
+      }
+      plan.products.forEach((product, local) => {
+        products[indices[local]] = product;
+      });
+    }
+
+    const label =
+      programs.length === 1
+        ? `1 programa · specs separadas`
+        : `${programs.length} programas · por tipo/acab./PVC/esp.`;
+
+    return {
+      label,
+      yieldPercent: coilWeightKg > 0 ? (usefulWeightKg / coilWeightKg) * 100 : 0,
+      coilWeightKg,
+      usefulWeightKg,
+      scrapKg,
+      totalCoilLengthMm,
+      programs,
+      products: products as ProductResult[],
+      setupCount: programs.length,
+      overshootKg: groupRuns.reduce(
+        (s, g) => s + (g.result.alternatives[altIndex] ?? g.result.alternatives[0]).overshootKg,
+        0,
+      ),
+      shortfallKg: groupRuns.reduce(
+        (s, g) => s + (g.result.alternatives[altIndex] ?? g.result.alternatives[0]).shortfallKg,
+        0,
+      ),
+    };
+  };
+
+  const alternatives = Array.from({ length: Math.max(1, altCount) }, (_, i) => mergeAt(i));
+  const best = alternatives[0];
+  return {
+    ok: true,
+    coilWeightKg: best.coilWeightKg,
+    usefulWeightKg: best.usefulWeightKg,
+    scrapKg: best.scrapKg,
+    yieldPercent: best.yieldPercent,
+    totalCoilLengthMm: best.totalCoilLengthMm,
+    programs: best.programs,
+    products: best.products,
+    alternatives,
+  };
+}
+
+function optimizeCuttingSingle(input: CalcInput): CalcResult | CalcError {
   const blanks = input.blanks.filter(isActiveItem);
   const coil = input.coil;
   const allow = overshootAllowed(coil);

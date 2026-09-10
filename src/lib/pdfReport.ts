@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness } from "./format";
+import { blankSpecCitation, blankSpecCitationLine } from "./materialGroups";
 import { BLANK_COLORS, isSlitterItem, pvcLabel, type CoilInput, type RankedPlan } from "./types";
 import { lossBreakdown, programLoss } from "./optimize";
 import { registerPdfFonts } from "./pdfFonts";
@@ -282,8 +283,16 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     doc.setFont(fontName, "bold");
     doc.setFontSize(10);
     doc.setTextColor(27, 36, 44);
-    const strips = program.pattern.strips.map((s) => `${fmtInt(s.stripWidth)} mm`).join(" + ");
-    doc.text(`Programa ${idx + 1}  ·  ${fmtMeters(program.coilLengthMm)}  ·  ${strips}`, margin, y);
+    const seen = new Set<number>();
+    const specs: string[] = [];
+    for (const strip of program.pattern.strips) {
+      if (seen.has(strip.productIndex)) continue;
+      seen.add(strip.productIndex);
+      const blank = plan.products[strip.productIndex]?.blank;
+      if (blank) specs.push(blankSpecCitationLine(blank));
+    }
+    const titleExtra = specs.length ? specs.join(" + ") : program.pattern.strips.map((s) => `${fmtInt(s.stripWidth)} mm`).join(" + ");
+    doc.text(`Programa ${idx + 1}  ·  ${fmtMeters(program.coilLengthMm)}  ·  ${titleExtra}`, margin, y);
     y += 3;
     drawStripBar(doc, plan, coil.width, coil.edgeTrim, idx, margin, y, contentW, 8, fontName);
     y += 20;
@@ -291,19 +300,25 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [["Tira", "Orientação", "Peças nesta tira"]],
+      head: [["Tipo", "Acabamento", "PVC", "Espessura", "Largura", "Comprimento", "Peças"]],
       body: program.pattern.strips.map((strip) => {
         const n = Math.floor((program.coilLengthMm + 1e-6) / strip.cutLength);
+        const blank = plan.products[strip.productIndex]?.blank;
+        const spec = blank ? blankSpecCitation(blank) : null;
         return [
+          spec?.tipo ?? "—",
+          spec?.acabamento ?? "—",
+          spec?.pvc ?? "—",
+          spec?.espessura ?? "—",
           fmtMm(strip.stripWidth),
-          `${fmtDim(strip.stripWidth, strip.cutLength)}${strip.rotated ? " (girado)" : ""}`,
+          `${fmtMm(strip.cutLength)}${strip.rotated ? " (girado)" : ""}`,
           fmtInt(n),
         ];
       }),
-      headStyles: { font: fontName, fontStyle: "bold", fillColor: [22, 56, 74], textColor: 255, fontSize: 7.5 },
+      headStyles: { font: fontName, fontStyle: "bold", fillColor: [22, 56, 74], textColor: 255, fontSize: 6.5 },
       bodyStyles: { font: fontName },
-      styles: { font: fontName, fontSize: 8, cellPadding: 1.6 },
-      columnStyles: { 2: { halign: "right" } },
+      styles: { font: fontName, fontSize: 7, cellPadding: 1.2 },
+      columnStyles: { 6: { halign: "right" } },
     });
     y = lastTableY(doc) + 4;
     const loss = programLoss(program, coil);
