@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { combinations, minSumWithCoverage, solveLinearSystem } from "./math";
 import {
   generatePatterns,
+  groupIdenticalStrips,
   lossBreakdown,
   minPiecesForBlank,
   optimizeCutting,
@@ -10,7 +11,7 @@ import {
   unitWeightKg,
   usableWidth,
 } from "./optimize";
-import type { CalcInput } from "./types";
+import type { CalcInput, Strip } from "./types";
 
 const exampleInput = (overrides: Partial<CalcInput["coil"]> = {}): CalcInput => ({
   coil: {
@@ -338,5 +339,19 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     expect(best.usedWidth).toBe(1200);
     expect(best.waste).toBe(40);
     expect(result.alternatives[0].yieldPercent).toBeGreaterThan(95);
+  });
+
+  it("agrupa cortes idênticos e conta ocorrências", () => {
+    const strips: Strip[] = [
+      { productIndex: 0, stripWidth: 800, cutLength: 100, rotated: false },
+      { productIndex: 0, stripWidth: 100, cutLength: 800, rotated: true },
+      { productIndex: 0, stripWidth: 100, cutLength: 800, rotated: true },
+      { productIndex: 0, stripWidth: 100, cutLength: 800, rotated: true },
+      { productIndex: 0, stripWidth: 100, cutLength: 800, rotated: true },
+    ];
+    const grouped = groupIdenticalStrips(strips);
+    expect(grouped).toHaveLength(2);
+    expect(grouped[0]).toMatchObject({ stripWidth: 800, cutLength: 100, stripCount: 1 });
+    expect(grouped[1]).toMatchObject({ stripWidth: 100, cutLength: 800, rotated: true, stripCount: 4 });
   });
 });

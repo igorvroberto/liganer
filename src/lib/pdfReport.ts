@@ -3,7 +3,7 @@ import autoTable from "jspdf-autotable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness } from "./format";
 import { blankSpecCitation, blankSpecCitationLine } from "./materialGroups";
 import { BLANK_COLORS, isSlitterItem, pvcLabel, type CoilInput, type RankedPlan } from "./types";
-import { lossBreakdown, programLoss } from "./optimize";
+import { groupIdenticalStrips, lossBreakdown, programLoss } from "./optimize";
 import { registerPdfFonts } from "./pdfFonts";
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -304,8 +304,8 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [["Tipo", "Acabamento", "PVC", "Espessura", "Largura", "Comprimento", "Peças"]],
-      body: program.pattern.strips.map((strip) => {
+      head: [["Tipo", "Acabamento", "PVC", "Espessura", "Largura", "Comprimento", "Peças", "Cortes"]],
+      body: groupIdenticalStrips(program.pattern.strips).map((strip) => {
         const blank = plan.products[strip.productIndex]?.blank;
         const continuous = blank && isSlitterItem(blank) && strip.cutLength <= 1 + 1e-9;
         const n = continuous ? 1 : Math.floor((program.coilLengthMm + 1e-6) / strip.cutLength);
@@ -319,12 +319,13 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
           fmtMm(strip.stripWidth),
           `${fmtMm(displayLen)}${strip.rotated ? " (girado)" : ""}`,
           fmtInt(n),
+          fmtInt(strip.stripCount),
         ];
       }),
       headStyles: { font: fontName, fontStyle: "bold", fillColor: [22, 56, 74], textColor: 255, fontSize: 6.5 },
       bodyStyles: { font: fontName },
       styles: { font: fontName, fontSize: 7, cellPadding: 1.2 },
-      columnStyles: { 6: { halign: "right" } },
+      columnStyles: { 6: { halign: "right" }, 7: { halign: "right" } },
     });
     y = lastTableY(doc) + 4;
     const loss = programLoss(program, coil);
