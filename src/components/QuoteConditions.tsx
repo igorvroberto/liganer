@@ -9,6 +9,7 @@ type Props = {
   onSave: () => void;
   onPdfCliente: () => void;
   onPdfLiganer: () => void;
+  onPdfGestao: () => void;
   onExcel: () => void;
   onCsv: () => void;
   statusText?: string;
@@ -22,6 +23,7 @@ export default function QuoteConditions({
   onSave,
   onPdfCliente,
   onPdfLiganer,
+  onPdfGestao,
   onExcel,
   onCsv,
   statusText,
@@ -65,6 +67,9 @@ export default function QuoteConditions({
         </button>
         <button type="button" className="btn btn-secondary" onClick={onPdfLiganer}>
           PDF Liganer
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={onPdfGestao}>
+          PDF gestão
         </button>
         <button type="button" className="btn btn-secondary" onClick={onExcel}>
           Excel

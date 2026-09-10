@@ -109,5 +109,44 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).toContain("Fator");
     expect(html).toContain("ICMS");
     expect(html).toContain("Sem condições preenchidas");
+    expect(html).toContain("print-color-adjust: exact");
   });
+
+  it("PDF gestão inclui resultado do corte sem colunas internas sensíveis", () => {
+    const coil = {
+      width: 1250,
+      thickness: 0.4,
+      density: DEFAULT_DENSITY,
+      kerf: 0,
+      edgeTrim: 5,
+      allowOvershoot: true,
+    };
+    const result = optimizeCutting({ coil, blanks });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const html = buildQuotePdfHtml({
+      kind: "gestao",
+      items: blanks,
+      conditions: EMPTY_QUOTE_CONDITIONS,
+      summary: { totalKg: 0, subtotal: 0, ipi: 0, total: 0, frete: 0 },
+      plan: result.alternatives[0],
+      coil,
+    });
+    expect(html).toContain('class="pdf-liganer"');
+    expect(html).toContain("Resultado do corte");
+    expect(html).toContain("Melhor aproveitamento");
+    expect(html).toContain("Peso necessário");
+    expect(html).toContain("Fator\nutilizado");
+    expect(html).not.toContain("Observação");
+    expect(html).not.toContain("Preço\nfator\n100");
+    expect(html).not.toContain("Fator\nmáximo");
+    expect(html).not.toContain(">Comissão<");
+    expect(html).not.toContain("FIL\nIND\nMTO");
+    expect(html).not.toContain("AÇOS\nPRIME\nMTO");
+    expect(html).not.toContain("IMG\nMTO");
+    expect(html).not.toContain("CSA\nMTO");
+    expect(html).not.toContain("TETTO\nMTO");
+  });
+
 });
