@@ -5,7 +5,7 @@ import SlitterItemsTable from "../components/SlitterItemsTable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
 import { blankSpecCitation, blankSpecCitationLine } from "../lib/materialGroups";
 import { groupIdenticalStrips, lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
-import { downloadQuotePdf } from "../lib/pdfReport";
+import { exportQuotePdf } from "../lib/quotePdfExport";
 import { loadPriceTable } from "../lib/priceTable";
 import {
   downloadItemsCsv,
@@ -218,8 +218,8 @@ export default function SlitterCalculator() {
       setStatus({ text: "Calcule um plano de corte antes de gerar o PDF Liganer.", kind: "error" });
       return;
     }
-    downloadQuotePdf({
-      variant,
+    exportQuotePdf({
+      kind: variant,
       items,
       conditions,
       summary,
