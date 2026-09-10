@@ -100,6 +100,9 @@ describe("quotePdfExport (layout chapas)", () => {
     });
     expect(html).toContain('class="pdf-liganer"');
     expect(html).toContain("Resultado do corte");
+    expect(html).toContain("pattern-bar");
+    expect(html).toContain("cut-legacy");
+    expect(html).toContain("Peso necessário");
     expect(html).toContain("Produção por item");
     expect(html).toContain("Fator");
     expect(html).toContain("ICMS");

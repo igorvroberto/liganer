@@ -23,6 +23,7 @@ import {
 } from "./quoteSummary";
 import { localPrintNumber } from "./storage";
 import {
+  BLANK_COLORS,
   COMMISSION_OPTIONS,
   isSlitterItem,
   itemKindOf,
@@ -30,6 +31,7 @@ import {
   pvcLabel,
   type BlankInput,
   type CoilInput,
+  type ProgramResult,
   type RankedPlan,
 } from "./types";
 
@@ -276,6 +278,63 @@ function coilForItem(item: BlankInput, coil?: CoilInput): CoilInput {
   };
 }
 
+function stripBarHtml(program: ProgramResult, coilWidth: number, edgeTrim: number): string {
+  const pct = (mm: number) => `${(mm / coilWidth) * 100}%`;
+  const stripColor = (idx: number) => BLANK_COLORS[idx % BLANK_COLORS.length];
+
+  const topSegs: string[] = [];
+  if (edgeTrim > 0) {
+    topSegs.push(
+      `<div class="pattern-seg refile" style="width:${pct(edgeTrim)}">${
+        edgeTrim >= 8 ? escapeHtml(fmtInt(edgeTrim)) : ""
+      }</div>`,
+    );
+  }
+  program.pattern.strips.forEach((strip, idx) => {
+    topSegs.push(
+      `<div class="pattern-seg" style="width:${pct(strip.stripWidth)};background:${stripColor(idx)}">${escapeHtml(
+        fmtInt(strip.stripWidth),
+      )}</div>`,
+    );
+  });
+  if (program.pattern.waste > 0.5) {
+    topSegs.push(
+      `<div class="pattern-seg waste" style="width:${pct(program.pattern.waste)}">sobra ${escapeHtml(
+        fmtInt(program.pattern.waste),
+      )}</div>`,
+    );
+  }
+  if (edgeTrim > 0) {
+    topSegs.push(
+      `<div class="pattern-seg refile" style="width:${pct(edgeTrim)}">${
+        edgeTrim >= 8 ? escapeHtml(fmtInt(edgeTrim)) : ""
+      }</div>`,
+    );
+  }
+
+  const usableWidth = coilWidth - 2 * edgeTrim;
+  const usedWidth = program.pattern.strips.reduce((s, strip) => s + strip.stripWidth, 0);
+  const blankScale = usedWidth > 0 ? usableWidth / usedWidth : 1;
+  const laneSegs = program.pattern.strips
+    .map((strip, idx) => {
+      const displayLen = strip.cutLength <= 1 + 1e-9 ? program.coilLengthMm : strip.cutLength;
+      const w = strip.stripWidth * blankScale;
+      return `<div class="lane" style="flex:${w} 1 0">
+        <div class="blank-rect" style="background:${stripColor(idx)}">${escapeHtml(
+          fmtDim(strip.stripWidth, displayLen),
+        )}</div>
+      </div>`;
+    })
+    .join("");
+
+  return `<div class="cut-preview">
+    <div class="pattern-bar">${topSegs.join("")}</div>
+    <div class="cut-preview-gap"></div>
+    <div class="lanes">${laneSegs}</div>
+  </div>`;
+}
+
+/** Resultado do corte no layout antigo (barras coloridas), não no painel chapas. */
 function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
   const programsHtml = plan.programs
     .map((program, idx) => {
@@ -315,9 +374,10 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
         .join("");
 
       return `
-        <section class="panel cut-program" style="margin-top:10px">
-          <h2>Programa ${idx + 1} · Comprimento total: ${escapeHtml(fmtMeters(program.coilLengthMm))} · ${escapeHtml(titleExtra)}</h2>
-          <table class="items" style="margin:0">
+        <section class="cut-legacy-program">
+          <h3>Programa ${idx + 1} · Comprimento total: ${escapeHtml(fmtMeters(program.coilLengthMm))} · ${escapeHtml(titleExtra)}</h3>
+          ${stripBarHtml(program, coil.width, coil.edgeTrim)}
+          <table class="cut-legacy-table">
             <thead>
               <tr>
                 <th>Tipo</th><th>Acabamento</th><th>PVC</th><th>Espessura</th>
@@ -326,10 +386,8 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
             </thead>
             <tbody>${stripRows}</tbody>
           </table>
-          <div class="kv">
-            <div><strong>Sobra</strong><span>${escapeHtml(`${fmtInt(loss.widthWasteMm)}mm (${fmtPct(loss.widthLossPercent)})`)}</span></div>
-            <div><strong>Aproveitamento</strong><span>${escapeHtml(fmtPct(breakdown.yieldPercent))}</span></div>
-          </div>
+          <p class="cut-legacy-note">Sobra ${escapeHtml(fmtInt(loss.widthWasteMm))}mm (${escapeHtml(fmtPct(loss.widthLossPercent))})</p>
+          <p class="cut-legacy-note">Aproveitamento: ${escapeHtml(fmtPct(breakdown.yieldPercent))} · Refile: ${escapeHtml(fmtMm(coil.edgeTrim * 2))} · Sobra transversal: ${escapeHtml(fmtPct(breakdown.transversalPct))}</p>
         </section>`;
     })
     .join("");
@@ -358,23 +416,49 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
     })
     .join("");
 
+  const overshootNote =
+    coil.allowOvershoot === false
+      ? "O peso de cada item não ultrapassa o valor digitado. Tiras do mesmo programa são reduzidas quando necessário."
+      : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina.";
+
   return `
-    <section class="panel" style="margin-top:14px">
+    <section class="cut-legacy">
       <h2>Resultado do corte</h2>
-      <div class="kv">
-        <div><strong>Programas</strong><span>${escapeHtml(String(plan.setupCount))}</span></div>
-        <div><strong>Aproveitamento</strong><span>${escapeHtml(fmtPct(plan.yieldPercent))}</span></div>
-        <div><strong>Peso necessário</strong><span>${escapeHtml(fmtKg(plan.coilWeightKg))}</span></div>
-        <div><strong>Peso útil</strong><span>${escapeHtml(fmtKg(plan.usefulWeightKg))}</span></div>
-        <div><strong>Largura bobina</strong><span>${escapeHtml(fmtMm(coil.width))}</span></div>
-        <div><strong>Espessura</strong><span>${escapeHtml(`${fmtThickness(coil.thickness)} mm`)}</span></div>
-        <div><strong>Refile (cada lado)</strong><span>${escapeHtml(fmtMm(coil.edgeTrim))}</span></div>
-      </div>
-    </section>
-    ${programsHtml}
-    <section class="panel" style="margin-top:10px">
-      <h2>Produção por item</h2>
-      <table class="items" style="margin:0">
+      <p class="cut-legacy-lead">${escapeHtml(String(plan.setupCount))} programa${plan.setupCount > 1 ? "s" : ""} de corte</p>
+
+      <h3>Bobina</h3>
+      <table class="cut-legacy-meta">
+        <tbody>
+          <tr><th>Linha</th><td>${escapeHtml(coil.line?.trim() ? coil.line.trim() : "-")}</td></tr>
+          <tr><th>Espessura</th><td>${escapeHtml(`${fmtThickness(coil.thickness)} mm`)}</td></tr>
+          <tr><th>Largura</th><td>${escapeHtml(fmtMm(coil.width))}</td></tr>
+          <tr><th>Refile (cada lado)</th><td>${escapeHtml(fmtMm(coil.edgeTrim))}</td></tr>
+          <tr><th>Peso pode ultrapassar</th><td>${coil.allowOvershoot === false ? "Não" : "Sim"}</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Resumo do plano</h3>
+      <table class="cut-legacy-summary">
+        <thead>
+          <tr>
+            <th>Aproveitamento</th>
+            <th>Peso necessário</th>
+            <th>Peso útil</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${escapeHtml(fmtPct(plan.yieldPercent))}</td>
+            <td>${escapeHtml(fmtKg(plan.coilWeightKg))}</td>
+            <td>${escapeHtml(fmtKg(plan.usefulWeightKg))}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      ${programsHtml}
+
+      <h3>Produção por item</h3>
+      <table class="cut-legacy-table">
         <thead>
           <tr>
             <th>Item</th><th>Pedido</th><th>Peso un.</th><th>Produzido</th><th>Peso produzido</th>
@@ -382,6 +466,7 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
         </thead>
         <tbody>${productionRows}</tbody>
       </table>
+      <p class="cut-legacy-note">${escapeHtml(overshootNote)}</p>
     </section>`;
 }
 
@@ -673,6 +758,129 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
     body.pdf-liganer .kv strong { font-size: 6px; }
     body.pdf-liganer .kv span { font-size: 8px; }
     .cut-program { break-inside: avoid; }
+
+    /* Layout legado do corte com barras coloridas */
+    .cut-legacy {
+      margin-top: 14px;
+      break-inside: avoid;
+      color: #1b242c;
+    }
+    .cut-legacy h2 {
+      margin: 0 0 6px;
+      color: #c60000;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    body.pdf-liganer .cut-legacy h2 { font-size: 10px; }
+    .cut-legacy h3 {
+      margin: 10px 0 4px;
+      color: #1b242c;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    body.pdf-liganer .cut-legacy h3 { font-size: 8px; }
+    .cut-legacy-lead {
+      margin: 0 0 8px;
+      font-size: 9px;
+    }
+    .cut-legacy-program {
+      margin-top: 10px;
+      break-inside: avoid;
+    }
+    .cut-legacy-meta,
+    .cut-legacy-summary,
+    .cut-legacy-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 6px;
+    }
+    .cut-legacy-meta th,
+    .cut-legacy-meta td {
+      padding: 2px 6px;
+      text-align: left;
+      font-size: 8px;
+      border: 0;
+    }
+    .cut-legacy-meta th {
+      width: 140px;
+      font-weight: 800;
+      color: #1b242c;
+    }
+    .cut-legacy-summary th,
+    .cut-legacy-summary td,
+    .cut-legacy-table th,
+    .cut-legacy-table td {
+      border: 1px solid #d5dde4;
+      padding: 4px 6px;
+      text-align: center;
+      font-size: 8px;
+    }
+    .cut-legacy-summary th,
+    .cut-legacy-table th {
+      background: #c60000;
+      color: #fff;
+      font-weight: 800;
+    }
+    .cut-legacy-summary td {
+      font-weight: 800;
+      font-size: 10px;
+    }
+    .cut-legacy-note {
+      margin: 2px 0 6px;
+      color: #5b6773;
+      font-size: 8px;
+    }
+    .cut-preview { margin: 4px 0 8px; }
+    .pattern-bar {
+      display: flex;
+      width: 100%;
+      height: 22px;
+      border: 1px solid #d5dde4;
+      overflow: hidden;
+      background: #f3f5f7;
+    }
+    .pattern-seg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .pattern-seg.refile {
+      background: #b4bcc4;
+      color: #465058;
+      font-size: 7px;
+    }
+    .pattern-seg.waste {
+      background: #d2d6da;
+      color: #465058;
+      font-size: 8px;
+    }
+    .cut-preview-gap { height: 4px; }
+    .lanes {
+      display: flex;
+      width: 100%;
+      gap: 0;
+      min-height: 22px;
+    }
+    .lane {
+      min-width: 0;
+    }
+    .blank-rect {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      color: #fff;
+      font-size: 8px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body class="${pdfClass}">
