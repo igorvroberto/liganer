@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
   fmtCurrency,
+  fmtDecimal2,
   fmtDim,
   fmtInt,
   fmtKg,
@@ -218,7 +219,6 @@ function appendItemsTable(
 
   const headCliente = [
     "Item",
-    "Material",
     "Tipo",
     "Acab.",
     "PVC",
@@ -227,12 +227,10 @@ function appendItemsTable(
     "Comp.",
     "Qtd",
     "Peso un.",
-    "Peso total",
+    "ICMS",
     "Preço sem IPI",
     "Subtotal",
     "Observação",
-    "Perda mm",
-    "Perda %",
   ];
 
   const headLiganer = [
@@ -282,7 +280,6 @@ function appendItemsTable(
     if (!liganer) {
       return [
         String(index + 1),
-        material,
         dash(item.tipo),
         dash(item.acabamento),
         item.pvc ? pvcLabel(item.pvc) : "—",
@@ -290,13 +287,11 @@ function appendItemsTable(
         item.width > 0 ? fmtInt(item.width) : "—",
         item.length > 0 ? fmtInt(item.length) : "—",
         item.minQty > 0 ? fmtInt(item.minQty) : "—",
-        unitKg > 0 ? fmtNumber(unitKg, 3) : "—",
-        item.minKg > 0 ? fmtNumber(item.minKg, 1) : "—",
+        unitKg > 0 ? fmtDecimal2(unitKg) : "—",
+        commercial.icms != null ? `${fmtNumber(commercial.icms, 0)}%` : "—",
         commercial.priceWithoutIpi != null ? fmtCurrency(commercial.priceWithoutIpi) : "—",
         commercial.subtotal != null ? fmtCurrency(commercial.subtotal) : "—",
         dash(item.observation),
-        commercial.perdaMm != null ? fmtInt(commercial.perdaMm) : "—",
-        commercial.perdaPct != null ? fmtPct(commercial.perdaPct) : "—",
       ];
     }
 

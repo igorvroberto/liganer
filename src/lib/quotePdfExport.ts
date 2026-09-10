@@ -1,6 +1,7 @@
 import { blankUnitKg } from "./blankSync";
 import {
   fmtCurrency,
+  fmtDecimal2,
   fmtDim,
   fmtInt,
   fmtKg,
@@ -45,20 +46,21 @@ export type QuotePdfExportInput = {
   client?: { name?: string; cnpj?: string };
 };
 
-/** Campos internos ocultos no PDF cliente (paridade chapas HIDDEN_FROM_CLIENT). */
-const HIDDEN_FROM_CLIENT = new Set([
-  "maxFactor",
-  "usedFactor",
-  "commission",
-  "priceFactor100",
-  "usedPrice",
-  "servicePrice",
-  "serviceDescription",
-  "acrescimoPerda",
-  "totalPrice",
+/** Colunas do PDF cliente — ordem fixa pedida (Item é a 1ª coluna à parte). */
+const CLIENT_PDF_COLUMN_KEYS = [
+  "tipo",
+  "acabamento",
+  "pvc",
+  "thickness",
+  "width",
+  "length",
+  "minQty",
+  "unitKg",
   "icms",
-  ...MTO_FIELDS.map((f) => f.key),
-]);
+  "priceWithoutIpi",
+  "subtotal",
+  "observation",
+] as const;
 
 type PdfColumn = {
   key: string;
@@ -244,7 +246,18 @@ function allColumns(): PdfColumn[] {
 function exportableColumns(kind: PdfKind): PdfColumn[] {
   const cols = allColumns();
   if (kind === "liganer") return cols;
-  return cols.filter((c) => !HIDDEN_FROM_CLIENT.has(c.key));
+  const byKey = new Map(cols.map((c) => [c.key, c]));
+  return CLIENT_PDF_COLUMN_KEYS.map((key) => {
+    const col = byKey.get(key);
+    if (!col) throw new Error(`Coluna PDF cliente ausente: ${key}`);
+    if (key === "unitKg") {
+      return {
+        ...col,
+        value: ({ unitKg }) => (unitKg > 0 ? fmtDecimal2(unitKg) : "—"),
+      };
+    }
+    return col;
+  });
 }
 
 function coilForItem(item: BlankInput, coil?: CoilInput): CoilInput {

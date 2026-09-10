@@ -51,7 +51,30 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).toContain("#c60000");
     expect(html).not.toContain("Resultado do corte");
     expect(html).not.toContain("Fator\nutilizado");
-    expect(html).not.toContain(">ICMS<");
+    expect(html).not.toContain("Material");
+    expect(html).not.toContain("Peso\ntotal");
+    expect(html).not.toContain("Perda\nmm");
+    // Colunas do PDF cliente na ordem pedida (Item + campos).
+    const headMatch = html.match(/<table class="items">[\s\S]*?<thead>[\s\S]*?<tr>([\s\S]*?)<\/tr>[\s\S]*?<\/thead>/);
+    expect(headMatch).toBeTruthy();
+    const headers = [...(headMatch?.[1].matchAll(/<th[^>]*>([\s\S]*?)<\/th>/g) ?? [])].map((m) =>
+      m[1].replace(/<br\s*\/?>/gi, "\n").replace(/&nbsp;/g, " ").trim(),
+    );
+    expect(headers).toEqual([
+      "Item",
+      "Tipo",
+      "Acabamento",
+      "PVC",
+      "Espessura",
+      "Largura",
+      "Comprimento",
+      "Quantidade",
+      "Peso\nunitário",
+      "ICMS",
+      "Preço\nsem\nIPI",
+      "Subtotal",
+      "Observação",
+    ]);
   });
 
   it("PDF Liganer inclui Resultado do corte e campos internos", () => {
