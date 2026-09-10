@@ -1,52 +1,8 @@
 import * as XLSX from "xlsx";
 import { blankSpecCitationLine } from "./materialGroups";
-import { EMPTY_QUOTE_CLIENT, type QuoteClientInfo } from "./quoteClient";
 import { itemCommercial, type QuoteConditions } from "./quoteSummary";
 import type { BlankInput } from "./types";
 import { itemKindOf, pvcLabel } from "./types";
-
-const STORAGE_KEY = "liganer-blanks-slitters-quote-v1";
-
-export type SavedQuoteDraft = {
-  conditions: QuoteConditions;
-  client?: QuoteClientInfo;
-  savedAt: string;
-};
-
-export function loadQuoteConditions(): QuoteConditions | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as SavedQuoteDraft;
-    return parsed.conditions ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export function loadQuoteClient(): QuoteClientInfo | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as SavedQuoteDraft;
-    if (!parsed.client) return null;
-    return { ...EMPTY_QUOTE_CLIENT, ...parsed.client };
-  } catch {
-    return null;
-  }
-}
-
-export function saveQuoteDraft(
-  conditions: QuoteConditions,
-  client: QuoteClientInfo = EMPTY_QUOTE_CLIENT,
-): void {
-  const draft: SavedQuoteDraft = {
-    conditions,
-    client,
-    savedAt: new Date().toISOString(),
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-}
 
 function itemExportRows(items: BlankInput[]) {
   return items.map((item, index) => {

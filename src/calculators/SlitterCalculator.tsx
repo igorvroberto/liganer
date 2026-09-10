@@ -9,19 +9,14 @@ import { groupIdenticalStrips, lossBreakdown, optimizeCutting, programLoss } fro
 import { EMPTY_QUOTE_CLIENT, type QuoteClientInfo } from "../lib/quoteClient";
 import { exportQuotePdf } from "../lib/quotePdfExport";
 import { loadPriceTable } from "../lib/priceTable";
-import {
-  downloadItemsCsv,
-  downloadItemsExcel,
-  loadQuoteClient,
-  loadQuoteConditions,
-  saveQuoteDraft,
-} from "../lib/quoteExport";
+import { downloadItemsCsv, downloadItemsExcel } from "../lib/quoteExport";
 import {
   EMPTY_QUOTE_CONDITIONS,
   itemLossFromPlan,
   quoteSummary,
   type QuoteConditions as QuoteConditionsState,
 } from "../lib/quoteSummary";
+import { loadDraft, saveDraft } from "../lib/storage";
 import { coilFromSlitterItems } from "../lib/slitterCoil";
 import {
   BLANK_COLORS,
@@ -141,24 +136,38 @@ function patternSummary(program: ProgramResult, products: RankedPlan["products"]
 
 /** Calculadora do modelo Slitters — Itens unificados (como chapas/bobinas). */
 export default function SlitterCalculator() {
-  const [items, setItems] = useState<BlankInput[]>(EMPTY_ITEMS);
-  const [allowOvershoot, setAllowOvershoot] = useState(true);
-  const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(EMPTY_MODES);
+  const draft = useMemo(() => loadDraft(), []);
+  const [items, setItems] = useState<BlankInput[]>(() =>
+    draft?.items?.length ? draft.items : EMPTY_ITEMS,
+  );
+  const [allowOvershoot, setAllowOvershoot] = useState(() => draft?.allowOvershoot ?? true);
+  const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(() => {
+    if (draft?.demandModes && Object.keys(draft.demandModes).length > 0) {
+      return draft.demandModes;
+    }
+    if (draft?.items?.length) {
+      return Object.fromEntries(draft.items.map((item) => [item.id, "weight" as const]));
+    }
+    return EMPTY_MODES;
+  });
   const [selectedAlt, setSelectedAlt] = useState(0);
   const [priceTableRevision, setPriceTableRevision] = useState(0);
-  const [conditions, setConditions] = useState<QuoteConditionsState>(EMPTY_QUOTE_CONDITIONS);
-  const [client, setClient] = useState<QuoteClientInfo>(EMPTY_QUOTE_CLIENT);
+  const [conditions, setConditions] = useState<QuoteConditionsState>(() => ({
+    ...EMPTY_QUOTE_CONDITIONS,
+    ...(draft?.conditions ?? {}),
+  }));
+  const [client, setClient] = useState<QuoteClientInfo>(() => ({
+    ...EMPTY_QUOTE_CLIENT,
+    ...(draft?.client ?? {}),
+  }));
   const [status, setStatus] = useState<{ text: string; kind: "" | "ok" | "error" }>({
     text: "",
     kind: "",
   });
 
   useEffect(() => {
-    const saved = loadQuoteConditions();
-    if (saved) setConditions({ ...EMPTY_QUOTE_CONDITIONS, ...saved });
-    const savedClient = loadQuoteClient();
-    if (savedClient) setClient(savedClient);
-  }, []);
+    saveDraft({ client, items, conditions, demandModes, allowOvershoot });
+  }, [client, items, conditions, demandModes, allowOvershoot]);
 
   useEffect(() => {
     let cancelled = false;
@@ -193,7 +202,7 @@ export default function SlitterCalculator() {
 
   const handleSave = () => {
     try {
-      saveQuoteDraft(conditions, client);
+      saveDraft({ client, items, conditions, demandModes, allowOvershoot });
       setStatus({ text: "Orçamento salvo neste navegador.", kind: "ok" });
     } catch {
       setStatus({ text: "Não foi possível salvar.", kind: "error" });
