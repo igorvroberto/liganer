@@ -76,8 +76,8 @@ export type BlankInput = {
 export type MtoFieldKey = "filIndMto" | "acosPrimeMto" | "imgMto" | "csaMto" | "tettoMto";
 
 export const MTO_FIELDS: { key: MtoFieldKey; label: string }[] = [
-  { key: "filIndMto", label: "FIL IND\nMTO" },
-  { key: "acosPrimeMto", label: "AÇOS PRIME\nMTO" },
+  { key: "filIndMto", label: "FIL\nIND\nMTO" },
+  { key: "acosPrimeMto", label: "AÇOS\nPRIME\nMTO" },
   { key: "imgMto", label: "IMG\nMTO" },
   { key: "csaMto", label: "CSA\nMTO" },
   { key: "tettoMto", label: "TETTO\nMTO" },
