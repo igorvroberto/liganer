@@ -192,19 +192,15 @@ export default function SlitterCalculator() {
 
   const summary = useMemo(() => quoteSummary(items, itemLossById), [items, itemLossById]);
 
-  const pricing = useMemo(() => {
-    if (!plan) return null;
+  const basePrice = useMemo(() => {
     const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
     const servicePrice = coil.servicePrice ?? 0;
-    const breakdown = lossBreakdown(plan.programs, plan.usefulWeightKg, coil);
-    const longitudinalPct = breakdown.longitudinalPct;
     return {
-      breakdown,
-      priceWithLongLoss:
-        usedPrice != null ? usedPrice * (1 + longitudinalPct / 100) + servicePrice : null,
+      usedPrice,
+      servicePrice,
       priceWithoutLoss: usedPrice != null ? usedPrice + servicePrice : null,
     };
-  }, [plan, coil]);
+  }, [coil]);
 
   const updateCondition = (key: keyof QuoteConditionsState, value: string) => {
     setConditions((prev) => ({ ...prev, [key]: value }));
@@ -389,37 +385,39 @@ export default function SlitterCalculator() {
                       </div>
                     </div>
 
-                    {pricing && (
+                    {basePrice.usedPrice != null && (
                       <>
                         <div className="section-head" style={{ marginTop: 16 }}>
-                          <h3>Preço do plano</h3>
+                          <h3>Preço programa {idx + 1}</h3>
                         </div>
                         <div className="pricing-results">
                           <div className="pricing-result highlight">
                             <span>Preço considerando perda longitudinal (R$/Kg)</span>
                             <b>
-                              {pricing.priceWithLongLoss != null
-                                ? fmtCurrency(pricing.priceWithLongLoss)
-                                : "—"}
+                              {fmtCurrency(
+                                basePrice.usedPrice * (1 + breakdown.longitudinalPct / 100) +
+                                  basePrice.servicePrice,
+                              )}
                             </b>
                           </div>
                           <div className="pricing-result">
                             <span>Preço desconsiderando perda (R$/Kg)</span>
                             <b>
-                              {pricing.priceWithoutLoss != null
-                                ? fmtCurrency(pricing.priceWithoutLoss)
+                              {basePrice.priceWithoutLoss != null
+                                ? fmtCurrency(basePrice.priceWithoutLoss)
                                 : "—"}
                             </b>
                           </div>
                           <div className="pricing-result">
                             <span>Perda longitudinal</span>
-                            <b>{fmtPct(pricing.breakdown.longitudinalPct)}</b>
+                            <b>{fmtPct(breakdown.longitudinalPct)}</b>
                           </div>
                         </div>
                         <p className="note">
                           Valores com base no 1º item com preço/fator preenchidos · bobina{" "}
                           {fmtMm(coil.width)} · {fmtNumber(coil.thickness, 2)} mm
                           {coil.line ? ` · ${coil.line}` : ""}
+                          {" "}· perda deste programa
                         </p>
                       </>
                     )}
