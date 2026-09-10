@@ -181,7 +181,7 @@ button {
 .detail,
 .banner {
   background: var(--paper);
-  border: 1px solid #d8dfd9e6;
+  border: 1px solid #e0e0e0e6;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
