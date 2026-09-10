@@ -552,10 +552,87 @@ select:focus {
   color: white;
 }
 
+.btn-dark {
+  background: var(--ink);
+  color: #fff;
+}
+
 .btn-secondary {
   border: 1px solid var(--line);
   color: var(--ink);
   background: #fff;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.summary-item {
+  background: #f2f2f2;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.summary-item span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: block;
+}
+
+.summary-item strong {
+  font-size: 1.05rem;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
+label.field {
+  color: var(--muted);
+  gap: 6px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  display: grid;
+}
+
+label.field span {
+  white-space: pre-line;
+}
+
+label.field input,
+label.field select {
+  border: 1px solid var(--line);
+  background: var(--panel-warm);
+  width: 100%;
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.status {
+  min-height: 1.3em;
+  color: var(--muted);
+  margin: 8px 2px 0;
+  font-size: 0.92rem;
+}
+
+.status.error {
+  color: var(--danger);
+}
+
+.status.ok {
+  color: var(--good);
 }
 
 .btn-ghost {
@@ -842,6 +919,11 @@ th {
 }
 
 @media (max-width: 900px) {
+  .summary-grid,
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
   .hero,
   .grid,
   .fields,

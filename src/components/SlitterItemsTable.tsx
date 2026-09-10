@@ -15,6 +15,7 @@ import {
   parseDecimalBr,
   round2,
 } from "../lib/format";
+import { itemCommercial } from "../lib/quoteSummary";
 import {
   lineLabelFromSpecs,
   lookupPriceFator100,
@@ -49,29 +50,6 @@ type Props = {
   onDemandModesChange: (next: DemandModeMap) => void;
   onItemsChange: (next: BlankInput[]) => void;
 };
-
-function calcUsedFactorPrice(priceFactor100: number | undefined, usedFactor: number | undefined): number | null {
-  if (!priceFactor100 || !usedFactor || usedFactor <= 0) return null;
-  return priceFactor100 / (usedFactor / 100);
-}
-
-/** Valores comerciais bloqueados — mesma lógica base do chapas-bobinas (sem frete ainda). */
-function itemCommercialDisplay(item: BlankInput) {
-  const usedPrice = calcUsedFactorPrice(item.priceFactor100, item.usedFactor);
-  const service = item.servicePrice ?? 0;
-  const totalPrice = usedPrice != null ? usedPrice + service : null;
-  const priceWithoutIpi = totalPrice;
-  const subtotal =
-    priceWithoutIpi != null && item.minKg > 0 ? priceWithoutIpi * item.minKg : null;
-  return {
-    priceFactor100: item.priceFactor100,
-    icms: item.icms,
-    usedPrice,
-    totalPrice,
-    priceWithoutIpi,
-    subtotal,
-  };
-}
 
 function dimLabel(item: BlankInput): string {
   if (isSlitterItem(item)) {
@@ -410,7 +388,7 @@ export default function SlitterItemsTable({
                 const kind = index === 0 ? itemKindOf(item) : (lockedKind ?? itemKindOf(item));
                 const slitter = kind === "slitter";
                 const materialLocked = index > 0;
-                const commercial = itemCommercialDisplay(item);
+                const commercial = itemCommercial(item);
                 const rowOpts = priceTableOptions({
                   tipo: item.tipo,
                   acabamento: item.acabamento,
