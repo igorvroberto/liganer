@@ -281,17 +281,17 @@ export default function SlitterItemsTable({
               <tr>
                 <th className="delete-column" aria-label="Ações" />
                 <th className="item-number-column">Item</th>
+                <th>{"LARGURA\nORIGINAL\nBOBINA"}</th>
                 <th>Material</th>
                 <th>Tipo</th>
                 <th>Acabamento</th>
                 <th>PVC</th>
                 <th>Espessura</th>
-                <th>{"Largura\nbobina"}</th>
                 <th>Largura</th>
                 <th>Comprimento</th>
-                <th>{"Peso\n(Kg)"}</th>
-                <th>Qtd</th>
+                <th>Quantidade</th>
                 <th>{"Peso\nunitário"}</th>
+                <th>{"Peso\ntotal"}</th>
                 <th>{"Preço\nfator 100"}</th>
                 <th>{"Fator\nutilizado"}</th>
                 <th>{"Preço\nfator utilizado"}</th>
@@ -333,6 +333,19 @@ export default function SlitterItemsTable({
                       </button>
                     </td>
                     <td className="item-number-cell">{index + 1}</td>
+                    <td>
+                      <input
+                        className="cell-control"
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={item.coilWidth || ""}
+                        onChange={(e) =>
+                          updateItem(item.id, { coilWidth: Number(e.target.value) || undefined })
+                        }
+                        aria-label="Largura original bobina"
+                      />
+                    </td>
                     <td>
                       <select
                         className="cell-control item-kind-select"
@@ -462,18 +475,6 @@ export default function SlitterItemsTable({
                         type="number"
                         min={1}
                         step={1}
-                        value={item.coilWidth || ""}
-                        onChange={(e) =>
-                          updateItem(item.id, { coilWidth: Number(e.target.value) || undefined })
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        className="cell-control"
-                        type="number"
-                        min={1}
-                        step={1}
                         value={item.width || ""}
                         onChange={(e) => updateItem(item.id, { width: Number(e.target.value) })}
                       />
@@ -489,28 +490,13 @@ export default function SlitterItemsTable({
                         title={
                           slitter
                             ? lengthEditable
-                              ? "Altera o peso mantendo a Qtd"
-                              : "Informe o peso (Kg) para calcular/editar o comprimento"
+                              ? "Altera o peso total mantendo a quantidade"
+                              : "Informe o peso total para calcular/editar o comprimento"
                             : undefined
                         }
                         onChange={(e) =>
                           updateItem(item.id, { length: Number(e.target.value) || 0 })
                         }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        className={`cell-control ${!slitter && mode === "weight" ? "linked-active" : ""}`}
-                        type="number"
-                        min={0}
-                        step={0.1}
-                        value={item.minKg || ""}
-                        title={
-                          slitter
-                            ? "Calcula o comprimento automaticamente (Qtd só muda se você editar)"
-                            : undefined
-                        }
-                        onChange={(e) => updateWeight(item.id, e.target.value)}
                       />
                     </td>
                     <td>
@@ -522,6 +508,7 @@ export default function SlitterItemsTable({
                         value={item.minQty || ""}
                         title={slitter ? "Somente manual no SLITTER" : undefined}
                         onChange={(e) => updateQty(item.id, e.target.value)}
+                        aria-label="Quantidade"
                       />
                     </td>
                     <td className="formula-cell">
@@ -530,6 +517,22 @@ export default function SlitterItemsTable({
                           ? `${fmtNumber(unitKg, 3)} Kg${slitter && !(item.length > 0) ? " /mm" : ""}`
                           : "—"}
                       </span>
+                    </td>
+                    <td>
+                      <input
+                        className={`cell-control ${!slitter && mode === "weight" ? "linked-active" : ""}`}
+                        type="number"
+                        min={0}
+                        step={0.1}
+                        value={item.minKg || ""}
+                        title={
+                          slitter
+                            ? "Calcula o comprimento automaticamente (quantidade só muda se você editar)"
+                            : undefined
+                        }
+                        onChange={(e) => updateWeight(item.id, e.target.value)}
+                        aria-label="Peso total"
+                      />
                     </td>
                     <td>
                       <input
