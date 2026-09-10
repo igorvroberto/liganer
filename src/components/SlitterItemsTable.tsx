@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   blankUnitKg,
   resyncBlankDemand,
@@ -10,11 +9,9 @@ import {
 } from "../lib/blankSync";
 import {
   fmtCurrency,
-  fmtDecimal2,
   fmtNumber,
   fmtThickness,
   parseDecimalBr,
-  parseDecimalBr2,
   round2,
 } from "../lib/format";
 import {
@@ -25,12 +22,14 @@ import {
 import {
   COMMISSION_OPTIONS,
   ITEM_KIND_OPTIONS,
+  MTO_FIELDS,
   isSlitterItem,
   itemKindOf,
   type BlankInput,
   type CoilInput,
   type CommissionOption,
   type ItemKind,
+  type MtoFieldKey,
   type PvcOption,
 } from "../lib/types";
 
@@ -51,6 +50,24 @@ type Props = {
 function calcUsedFactorPrice(priceFactor100: number | undefined, usedFactor: number | undefined): number | null {
   if (!priceFactor100 || !usedFactor || usedFactor <= 0) return null;
   return priceFactor100 / (usedFactor / 100);
+}
+
+/** Valores comerciais bloqueados — mesma lógica base do chapas-bobinas (sem frete ainda). */
+function itemCommercialDisplay(item: BlankInput) {
+  const usedPrice = calcUsedFactorPrice(item.priceFactor100, item.usedFactor);
+  const service = item.servicePrice ?? 0;
+  const totalPrice = usedPrice != null ? usedPrice + service : null;
+  const priceWithoutIpi = totalPrice;
+  const subtotal =
+    priceWithoutIpi != null && item.minKg > 0 ? priceWithoutIpi * item.minKg : null;
+  return {
+    priceFactor100: item.priceFactor100,
+    icms: item.icms,
+    usedPrice,
+    totalPrice,
+    priceWithoutIpi,
+    subtotal,
+  };
 }
 
 function dimLabel(item: BlankInput): string {
@@ -117,7 +134,6 @@ export default function SlitterItemsTable({
 }: Props) {
   void priceTableRevision;
   const globalOpts = priceTableOptions();
-  const [priceFactorDrafts, setPriceFactorDrafts] = useState<Record<string, string>>({});
 
   const setItems = (updater: (prev: BlankInput[]) => BlankInput[]) => {
     onItemsChange(updater(items));
@@ -134,19 +150,6 @@ export default function SlitterItemsTable({
   });
 
   const updateItem = (id: string, patch: Partial<BlankInput>, mode?: "qty" | "weight") => {
-    if (
-      patch.tipo !== undefined ||
-      patch.acabamento !== undefined ||
-      patch.thickness !== undefined ||
-      patch.pvc !== undefined
-    ) {
-      setPriceFactorDrafts((prev) => {
-        if (!(id in prev)) return prev;
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-    }
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
@@ -310,6 +313,11 @@ export default function SlitterItemsTable({
                 <th>{"Preço\nserviço"}</th>
                 <th>{"Descrição\nserviço"}</th>
                 <th>{"Preço\ntotal"}</th>
+                {MTO_FIELDS.map((field) => (
+                  <th key={field.key} className="boolean-column">
+                    {field.label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -321,7 +329,7 @@ export default function SlitterItemsTable({
                 const kind = index === 0 ? itemKindOf(item) : (lockedKind ?? itemKindOf(item));
                 const slitter = kind === "slitter";
                 const materialLocked = index > 0;
-                const usedPrice = calcUsedFactorPrice(item.priceFactor100, item.usedFactor);
+                const commercial = itemCommercialDisplay(item);
                 const rowOpts = priceTableOptions({
                   tipo: item.tipo,
                   acabamento: item.acabamento,
@@ -547,46 +555,22 @@ export default function SlitterItemsTable({
                         aria-label="Peso total"
                       />
                     </td>
-                    <td>
-                      <input
-                        className="cell-control"
-                        inputMode="decimal"
-                        value={
-                          item.priceWithoutIpi != null
-                            ? String(item.priceWithoutIpi).replace(".", ",")
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const v = parseDecimalBr(e.target.value);
-                          updateItem(item.id, { priceWithoutIpi: v ?? undefined });
-                        }}
-                        aria-label="Preço sem IPI"
-                      />
+                    <td className="formula-cell">
+                      <span className="calculated-cell" title="Calculado (bloqueado)">
+                        {commercial.priceWithoutIpi != null
+                          ? fmtCurrency(commercial.priceWithoutIpi)
+                          : "—"}
+                      </span>
                     </td>
-                    <td>
-                      <input
-                        className="cell-control"
-                        inputMode="decimal"
-                        value={item.icms != null ? String(item.icms).replace(".", ",") : ""}
-                        onChange={(e) => {
-                          const v = parseDecimalBr(e.target.value);
-                          updateItem(item.id, { icms: v ?? undefined });
-                        }}
-                        aria-label="ICMS"
-                        title="Percentual (ex.: 4 = 4%). Preenchido pela tabela quando possível."
-                      />
+                    <td className="formula-cell">
+                      <span className="calculated-cell" title="Da tabela de preços (bloqueado)">
+                        {commercial.icms != null ? `${fmtNumber(commercial.icms, 0)}%` : "—"}
+                      </span>
                     </td>
-                    <td>
-                      <input
-                        className="cell-control"
-                        inputMode="decimal"
-                        value={item.subtotal != null ? String(item.subtotal).replace(".", ",") : ""}
-                        onChange={(e) => {
-                          const v = parseDecimalBr(e.target.value);
-                          updateItem(item.id, { subtotal: v ?? undefined });
-                        }}
-                        aria-label="Subtotal"
-                      />
+                    <td className="formula-cell">
+                      <span className="calculated-cell" title="Peso total × preço sem IPI (bloqueado)">
+                        {commercial.subtotal != null ? fmtCurrency(commercial.subtotal) : "—"}
+                      </span>
                     </td>
                     <td>
                       <input
@@ -599,33 +583,12 @@ export default function SlitterItemsTable({
                         aria-label="Observação"
                       />
                     </td>
-                    <td>
-                      <input
-                        className="cell-control"
-                        inputMode="decimal"
-                        placeholder="0,00"
-                        value={
-                          priceFactorDrafts[item.id] ??
-                          (item.priceFactor100 != null ? fmtDecimal2(item.priceFactor100) : "")
-                        }
-                        onChange={(e) => {
-                          const raw = e.target.value.replace(".", ",");
-                          if (!/^\d*(,\d{0,2})?$/.test(raw) && raw !== "") return;
-                          setPriceFactorDrafts((prev) => ({ ...prev, [item.id]: raw }));
-                          updateItem(item.id, {
-                            priceFactor100: raw === "" ? undefined : (parseDecimalBr2(raw) ?? undefined),
-                          });
-                        }}
-                        onBlur={() => {
-                          setPriceFactorDrafts((prev) => {
-                            if (!(item.id in prev)) return prev;
-                            const next = { ...prev };
-                            delete next[item.id];
-                            return next;
-                          });
-                        }}
-                        title="Preenchido pela tabela; pode editar manualmente (2 casas)"
-                      />
+                    <td className="formula-cell">
+                      <span className="calculated-cell" title="Da tabela de preços (bloqueado)">
+                        {commercial.priceFactor100 != null
+                          ? fmtCurrency(commercial.priceFactor100)
+                          : "—"}
+                      </span>
                     </td>
                     <td>
                       <input
@@ -652,8 +615,8 @@ export default function SlitterItemsTable({
                       />
                     </td>
                     <td className="formula-cell">
-                      <span className="calculated-cell">
-                        {usedPrice != null ? fmtCurrency(usedPrice) : "—"}
+                      <span className="calculated-cell" title="Preço fator 100 ÷ (fator utilizado / 100)">
+                        {commercial.usedPrice != null ? fmtCurrency(commercial.usedPrice) : "—"}
                       </span>
                     </td>
                     <td>
@@ -700,20 +663,26 @@ export default function SlitterItemsTable({
                         aria-label="Descrição serviço"
                       />
                     </td>
-                    <td>
-                      <input
-                        className="cell-control"
-                        inputMode="decimal"
-                        value={
-                          item.totalPrice != null ? String(item.totalPrice).replace(".", ",") : ""
-                        }
-                        onChange={(e) => {
-                          const v = parseDecimalBr(e.target.value);
-                          updateItem(item.id, { totalPrice: v ?? undefined });
-                        }}
-                        aria-label="Preço total"
-                      />
+                    <td className="formula-cell">
+                      <span className="calculated-cell" title="Preço fator utilizado + preço serviço">
+                        {commercial.totalPrice != null ? fmtCurrency(commercial.totalPrice) : "—"}
+                      </span>
                     </td>
+                    {MTO_FIELDS.map((field) => (
+                      <td key={field.key} className="boolean-column">
+                        <input
+                          className="cell-check"
+                          type="checkbox"
+                          checked={Boolean(item[field.key])}
+                          onChange={(e) =>
+                            updateItem(item.id, {
+                              [field.key]: e.target.checked,
+                            } as Pick<BlankInput, MtoFieldKey>)
+                          }
+                          aria-label={field.label.replace("\n", " ")}
+                        />
+                      </td>
+                    ))}
                   </tr>
                 );
               })}
