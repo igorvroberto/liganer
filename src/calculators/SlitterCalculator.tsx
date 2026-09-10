@@ -112,11 +112,7 @@ function ProgramLossNote({ program, coil }: { program: ProgramResult; coil: Coil
   const loss = programLoss(program, coil);
   return (
     <p className="program-loss">
-      Sobra (longitudinal): <strong>{fmtPct(loss.lossPercent)}</strong>
-      <span>
-        {" "}
-        · sucata {fmtKg(loss.scrapKg)} · sobra {fmtMm(loss.widthWasteMm)} ({fmtPct(loss.widthLossPercent)})
-      </span>
+      Sobra <strong>{fmtInt(loss.widthWasteMm)}mm</strong> ({fmtPct(loss.widthLossPercent)})
     </p>
   );
 }
@@ -370,16 +366,12 @@ export default function SlitterCalculator() {
                         <b>{fmtPct(breakdown.yieldPercent)}</b>
                       </div>
                       <div className="kpi">
-                        <span>Peso da bobina</span>
+                        <span>Peso necessário</span>
                         <b>{fmtKg(breakdown.physicalCoilKg)}</b>
                       </div>
                       <div className="kpi">
                         <span>Peso útil</span>
                         <b>{fmtKg(usefulKg)}</b>
-                      </div>
-                      <div className="kpi">
-                        <span>Sucata (longitudinal)</span>
-                        <b>{fmtKg(breakdown.scrapKg)}</b>
                       </div>
                     </div>
                   </div>
@@ -470,8 +462,8 @@ export default function SlitterCalculator() {
                 {alt.label}
               </strong>
               <div className="note" style={{ marginTop: 4 }}>
-                {fmtPct(alt.yieldPercent)} aproveit. · {fmtKg(alt.coilWeightKg)} bobina ·{" "}
-                {alt.setupCount} programa{alt.setupCount > 1 ? "s" : ""} · sucata {fmtKg(alt.scrapKg)}
+                {fmtPct(alt.yieldPercent)} aproveit. · {fmtKg(alt.coilWeightKg)} necessário ·{" "}
+                {alt.setupCount} programa{alt.setupCount > 1 ? "s" : ""}
                 {alt.programs.length > 1 && (
                   <>
                     {" "}
