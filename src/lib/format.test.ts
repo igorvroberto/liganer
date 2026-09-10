@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { fmtDecimal2, fmtThickness, parseDecimalBr2, parseThickness, round2 } from "./format";
+import {
+  fmtDecimal2,
+  fmtPct,
+  fmtThickness,
+  parseDecimalBr2,
+  parseThickness,
+  round2,
+} from "./format";
 
 describe("espessura", () => {
   it("formata sempre com duas casas e vírgula", () => {
@@ -26,5 +33,13 @@ describe("fator 100 (2 casas)", () => {
     expect(parseDecimalBr2("30,70")).toBe(30.7);
     expect(parseDecimalBr2("30,704")).toBeNull();
     expect(parseDecimalBr2("")).toBeNull();
+  });
+});
+
+describe("percentuais (2 casas)", () => {
+  it("formata perda %, acréscimo e aproveitamento com duas casas", () => {
+    expect(fmtPct(5)).toBe("5,00%");
+    expect(fmtPct(3.2)).toBe("3,20%");
+    expect(fmtPct(97.456)).toBe("97,46%");
   });
 });

@@ -137,6 +137,7 @@ export type QuoteConditions = {
   cidade_cliente: string;
   tipo_frete: string;
   observacoes_gerais: string;
+  frete: string;
 };
 
 export const EMPTY_QUOTE_CONDITIONS: QuoteConditions = {
@@ -146,6 +147,7 @@ export const EMPTY_QUOTE_CONDITIONS: QuoteConditions = {
   cidade_cliente: "",
   tipo_frete: "",
   observacoes_gerais: "",
+  frete: "",
 };
 
 export const LOCAL_EXPEDICAO_OPTIONS = ["SP", "CE"] as const;
@@ -163,4 +165,5 @@ export const QUOTE_CONDITION_FIELDS: Array<{
   { key: "cidade_cliente", label: "Cidade do cliente", kind: "text" },
   { key: "tipo_frete", label: "Tipo de frete", kind: "select", options: TIPO_FRETE_OPTIONS },
   { key: "observacoes_gerais", label: "Observações gerais", kind: "text" },
+  { key: "frete", label: "Frete", kind: "text" },
 ];

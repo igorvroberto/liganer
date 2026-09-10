@@ -685,6 +685,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       cidade_cliente: "",
       tipo_frete: "",
       observacoes_gerais: "",
+      frete: "",
     },
     summary: { totalKg: 0, subtotal: 0, ipi: 0, total: 0, frete: 0 },
     plan,

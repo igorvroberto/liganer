@@ -1,7 +1,7 @@
 const numberFmt = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 });
 const intFmt = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 const kgFmt = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const pctFmt = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+const pctFmt = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function fmtNumber(value: number, digits = 2): string {
   return new Intl.NumberFormat("pt-BR", {
