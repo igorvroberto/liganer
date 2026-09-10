@@ -327,9 +327,7 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
             <tbody>${stripRows}</tbody>
           </table>
           <div class="kv">
-            <div><strong>Sobra longitudinal</strong><span>${escapeHtml(fmtPct(loss.lossPercent))}</span></div>
-            <div><strong>Sucata</strong><span>${escapeHtml(fmtKg(loss.scrapKg))}</span></div>
-            <div><strong>Sobra</strong><span>${escapeHtml(`${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})`)}</span></div>
+            <div><strong>Sobra</strong><span>${escapeHtml(`${fmtInt(loss.widthWasteMm)}mm (${fmtPct(loss.widthLossPercent)})`)}</span></div>
             <div><strong>Aproveitamento</strong><span>${escapeHtml(fmtPct(breakdown.yieldPercent))}</span></div>
           </div>
         </section>`;
@@ -366,9 +364,8 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
       <div class="kv">
         <div><strong>Programas</strong><span>${escapeHtml(String(plan.setupCount))}</span></div>
         <div><strong>Aproveitamento</strong><span>${escapeHtml(fmtPct(plan.yieldPercent))}</span></div>
-        <div><strong>Peso da bobina</strong><span>${escapeHtml(fmtKg(plan.coilWeightKg))}</span></div>
+        <div><strong>Peso necessário</strong><span>${escapeHtml(fmtKg(plan.coilWeightKg))}</span></div>
         <div><strong>Peso útil</strong><span>${escapeHtml(fmtKg(plan.usefulWeightKg))}</span></div>
-        <div><strong>Sucata (longitudinal)</strong><span>${escapeHtml(fmtKg(plan.scrapKg))}</span></div>
         <div><strong>Largura bobina</strong><span>${escapeHtml(fmtMm(coil.width))}</span></div>
         <div><strong>Espessura</strong><span>${escapeHtml(`${fmtThickness(coil.thickness)} mm`)}</span></div>
         <div><strong>Refile (cada lado)</strong><span>${escapeHtml(fmtMm(coil.edgeTrim))}</span></div>

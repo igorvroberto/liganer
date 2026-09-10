@@ -486,8 +486,8 @@ function appendCuttingResult(
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
-    head: [["Aproveitamento", "Peso da bobina", "Peso útil", "Sucata (longitudinal)"]],
-    body: [[fmtPct(plan.yieldPercent), fmtKg(plan.coilWeightKg), fmtKg(plan.usefulWeightKg), fmtKg(plan.scrapKg)]],
+    head: [["Aproveitamento", "Peso necessário", "Peso útil"]],
+    body: [[fmtPct(plan.yieldPercent), fmtKg(plan.coilWeightKg), fmtKg(plan.usefulWeightKg)]],
     headStyles: { font: fontName, fontStyle: "bold", fillColor: BRAND, textColor: 255, fontSize: 7.5, halign: "center" },
     bodyStyles: { font: fontName, fontStyle: "bold", fontSize: 9, halign: "center" },
     styles: { font: fontName, cellPadding: 2 },
@@ -553,13 +553,7 @@ function appendCuttingResult(
       theme: "plain",
       styles: { font: fontName, fontSize: 8, cellPadding: 1, textColor: [91, 103, 115] },
       bodyStyles: { font: fontName },
-      body: [
-        [
-          `Sobra (longitudinal): ${fmtPct(loss.lossPercent)}`,
-          `Sucata: ${fmtKg(loss.scrapKg)}`,
-          `Sobra: ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})`,
-        ],
-      ],
+      body: [[`Sobra ${fmtInt(loss.widthWasteMm)}mm (${fmtPct(loss.widthLossPercent)})`]],
     });
     y = lastTableY(doc) + 7;
 
