@@ -370,14 +370,14 @@ export default function SlitterItemsTable({
                 <th>Quantidade</th>
                 <th>{"Peso\nunitário"}</th>
                 <th>{"Peso\ntotal"}</th>
-                <th>{"Preço\nsem IPI"}</th>
+                <th>{"Preço\nsem\nIPI"}</th>
                 <th>ICMS</th>
                 <th>Subtotal</th>
                 <th>Observação</th>
-                <th>{"Preço\nfator 100"}</th>
+                <th>{"Preço\nfator\n100"}</th>
                 <th>{"Fator\nmáximo"}</th>
                 <th>{"Fator\nutilizado"}</th>
-                <th>{"Preço\nfator utilizado"}</th>
+                <th>{"Preço\nfator\nutilizado"}</th>
                 <th>Comissão</th>
                 <th>{"Preço\nserviço"}</th>
                 <th>{"Descrição\nserviço"}</th>
