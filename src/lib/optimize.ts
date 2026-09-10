@@ -148,12 +148,13 @@ export function usableWidth(coil: CoilInput): number {
 
 export function stripTypesForBlank(blank: BlankInput, productIndex: number): Strip[] {
   if (isSlitterItem(blank)) {
-    // SLITTER: sem giro. Comprimento opcional — se vazio, unidade = 1 mm de tira.
+    // SLITTER: planejamento em mm contínuos para maximizar a largura.
+    // O comprimento comercial (blank.length) não define o passo de corte no plano.
     return [
       {
         productIndex,
         stripWidth: blank.width,
-        cutLength: blank.length > 0 ? blank.length : 1,
+        cutLength: 1,
         rotated: false,
       },
     ];
@@ -176,6 +177,15 @@ export function stripTypesForBlank(blank: BlankInput, productIndex: number): Str
     });
   }
   return types;
+}
+
+/** Unidade de planejamento: blank = peça; slitter = 1 mm de tira (sempre). */
+export function planningUnitWeightKg(blank: BlankInput, coil: CoilInput): number {
+  if (isSlitterItem(blank)) {
+    if (!(blank.width > 0)) return 0;
+    return unitWeightKg(blank.width, 1, coil);
+  }
+  return itemUnitWeightKg(blank, coil);
 }
 
 function patternKey(strips: Strip[]): string {
@@ -379,7 +389,7 @@ function productResults(
   nMin: number[],
 ): ProductResult[] {
   return blanks.map((blank, i) => {
-    const unit = itemUnitWeightKg(blank, coil);
+    const unit = planningUnitWeightKg(blank, coil);
     return {
       blank,
       unitWeightKg: unit,
@@ -409,7 +419,7 @@ function fillProgramWeights(programs: ProgramResult[], blanks: BlankInput[], coi
   for (const program of programs) {
     program.weightPerProductKg = program.piecesPerProduct.map((qty, i) => {
       const blank = blanks[i];
-      return qty * itemUnitWeightKg(blank, coil);
+      return qty * planningUnitWeightKg(blank, coil);
     });
   }
 }
@@ -663,6 +673,10 @@ function rankPlans(plans: RankedPlan[]): RankedPlan[] {
 
   return [...uniq.values()].sort((a, b) => {
     if (Math.abs(a.shortfallKg - b.shortfallKg) > 0.5) return a.shortfallKg - b.shortfallKg;
+    // Prioriza aproveitamento de largura (menos sobra longitudinal).
+    const wasteA = a.programs.reduce((s, p) => s + p.pattern.waste, 0);
+    const wasteB = b.programs.reduce((s, p) => s + p.pattern.waste, 0);
+    if (Math.abs(wasteA - wasteB) > 0.5) return wasteA - wasteB;
     if (Math.abs(b.yieldPercent - a.yieldPercent) > 0.05) return b.yieldPercent - a.yieldPercent;
     if (a.setupCount !== b.setupCount) return a.setupCount - b.setupCount;
     if (Math.abs(a.overshootKg - b.overshootKg) > 0.5) return a.overshootKg - b.overshootKg;
@@ -843,7 +857,7 @@ function optimizeCuttingSingle(input: CalcInput): CalcResult | CalcError {
   const blanks = input.blanks.filter(isActiveItem);
   const coil = input.coil;
   const allow = overshootAllowed(coil);
-  const units = blanks.map((b) => itemUnitWeightKg(b, coil));
+  const units = blanks.map((b) => planningUnitWeightKg(b, coil));
   const nTarget = blanks.map((b, i) => targetPiecesForBlank(b, units[i], allow));
 
   const activeIdx = nTarget.map((v, i) => (v > 0 ? i : -1)).filter((i) => i >= 0);

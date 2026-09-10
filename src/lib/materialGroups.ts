@@ -1,5 +1,5 @@
 import type { BlankInput, PvcOption } from "./types";
-import { pvcLabel } from "./types";
+import { isSlitterItem, pvcLabel } from "./types";
 import { fmtThickness } from "./format";
 
 /** Chave de material: só itens iguais podem compartilhar o mesmo programa de corte. */
@@ -65,11 +65,12 @@ export function blankSpecCitation(blank: BlankInput): BlankSpecCitation {
 
 export function blankSpecCitationLine(blank: BlankInput): string {
   const c = blankSpecCitation(blank);
+  const size = isSlitterItem(blank) ? `${c.largura} mm` : `${c.largura}×${c.comprimento} mm`;
   return [
     `Tipo ${c.tipo}`,
     `Acab. ${c.acabamento}`,
     `PVC ${c.pvc}`,
     `Esp. ${c.espessura}`,
-    `${c.largura}×${c.comprimento} mm`,
+    size,
   ].join(" · ");
 }

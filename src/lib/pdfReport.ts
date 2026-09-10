@@ -126,7 +126,7 @@ function drawStripBar(
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(7);
     doc.setFont(fontName, "bold");
-    const label = `${fmtInt(strip.stripWidth)}×${fmtInt(strip.cutLength)}`;
+    const label = `${fmtInt(strip.stripWidth)}×${fmtInt(strip.cutLength <= 1 + 1e-9 ? program.coilLengthMm : strip.cutLength)}`;
     if (w > doc.getTextWidth(label) + 2) {
       doc.text(label, cursor2 + w / 2, y + height + 2 + height / 2 + 1, { align: "center" });
     }
@@ -302,8 +302,10 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       margin: { left: margin, right: margin },
       head: [["Tipo", "Acabamento", "PVC", "Espessura", "Largura", "Comprimento", "Peças"]],
       body: program.pattern.strips.map((strip) => {
-        const n = Math.floor((program.coilLengthMm + 1e-6) / strip.cutLength);
         const blank = plan.products[strip.productIndex]?.blank;
+        const continuous = blank && isSlitterItem(blank) && strip.cutLength <= 1 + 1e-9;
+        const n = continuous ? 1 : Math.floor((program.coilLengthMm + 1e-6) / strip.cutLength);
+        const displayLen = continuous ? program.coilLengthMm : strip.cutLength;
         const spec = blank ? blankSpecCitation(blank) : null;
         return [
           spec?.tipo ?? "—",
@@ -311,7 +313,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
           spec?.pvc ?? "—",
           spec?.espessura ?? "—",
           fmtMm(strip.stripWidth),
-          `${fmtMm(strip.cutLength)}${strip.rotated ? " (girado)" : ""}`,
+          `${fmtMm(displayLen)}${strip.rotated ? " (girado)" : ""}`,
           fmtInt(n),
         ];
       }),
@@ -355,17 +357,15 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
     head: [["Item", "Pedido", "Peso un.", "Produzido", "Peso produzido"]],
     body: plan.products.map((product) => [
       isSlitterItem(product.blank)
-        ? product.blank.length > 0
-          ? `${fmtDim(product.blank.width, product.blank.length)} slitter`
-          : `${fmtInt(product.blank.width)} mm slitter`
+        ? `${fmtInt(product.blank.width)} mm slitter`
         : fmtDim(product.blank.width, product.blank.length),
-      isSlitterItem(product.blank) && !(product.blank.length > 0)
-        ? `${fmtInt(product.pieces)} mm · ${fmtKg(product.blank.minKg)}`
+      isSlitterItem(product.blank)
+        ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
         : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`,
-      fmtKg(product.unitWeightKg),
-      isSlitterItem(product.blank) && !(product.blank.length > 0)
-        ? `${fmtInt(product.pieces)} mm`
-        : `${fmtInt(product.pieces)} un`,
+      isSlitterItem(product.blank)
+        ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
+        : fmtKg(product.unitWeightKg),
+      isSlitterItem(product.blank) ? fmtMeters(product.pieces) : `${fmtInt(product.pieces)} un`,
       fmtKg(product.weightKg),
     ]),
     headStyles: { font: fontName, fontStyle: "bold", fillColor: [22, 56, 74], textColor: 255, fontSize: 7.5 },

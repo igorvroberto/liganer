@@ -247,7 +247,7 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.programs[0].pattern.strips[0].cutLength).toBe(2000);
+    expect(result.programs[0].pattern.strips[0].cutLength).toBe(1);
     expect(result.products[0].weightKg).toBeGreaterThanOrEqual(1000 - 1e-6);
   });
 
@@ -313,5 +313,30 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     expect(best.strips.every((s) => s.stripWidth === 122)).toBe(true);
     expect(best.usedWidth).toBe(1220);
     expect(best.waste).toBe(20);
+  });
+
+  it("empacota 12 tiras de 100 mm priorizando a largura (slitter 3000 Kg)", () => {
+    const coil = { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 5, allowOvershoot: true };
+    const result = optimizeCutting({
+      coil,
+      blanks: [
+        {
+          id: "s100",
+          name: "",
+          itemKind: "slitter",
+          width: 100,
+          length: 9_375_000,
+          minKg: 3000,
+          minQty: 1,
+        },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const best = result.alternatives[0].programs[0].pattern;
+    expect(best.strips).toHaveLength(12);
+    expect(best.usedWidth).toBe(1200);
+    expect(best.waste).toBe(40);
+    expect(result.alternatives[0].yieldPercent).toBeGreaterThan(95);
   });
 });
