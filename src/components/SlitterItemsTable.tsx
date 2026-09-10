@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   blankUnitKg,
   resyncBlankDemand,
@@ -40,6 +41,16 @@ import {
 } from "../lib/types";
 
 type DemandModeMap = Record<string, "qty" | "weight">;
+
+function formatDecimalBr(value: number | undefined | null): string {
+  if (value == null) return "";
+  return String(value).replace(".", ",");
+}
+
+/** Aceita digitação parcial (ex.: "0," → "0,55"). */
+function isPartialDecimalBr(raw: string): boolean {
+  return raw === "" || /^\d*([.,]\d*)?$/.test(raw);
+}
 
 type Props = {
   items: BlankInput[];
@@ -187,6 +198,7 @@ export default function SlitterItemsTable({
 }: Props) {
   void priceTableRevision;
   const globalOpts = priceTableOptions();
+  const [servicePriceDraft, setServicePriceDraft] = useState<Record<string, string>>({});
 
   const setItems = (updater: (prev: BlankInput[]) => BlankInput[]) => {
     onItemsChange(updater(items));
@@ -714,10 +726,37 @@ export default function SlitterItemsTable({
                         className="cell-control"
                         inputMode="decimal"
                         value={
-                          item.servicePrice != null ? String(item.servicePrice).replace(".", ",") : ""
+                          servicePriceDraft[item.id] !== undefined
+                            ? servicePriceDraft[item.id]
+                            : formatDecimalBr(item.servicePrice)
                         }
                         onChange={(e) => {
-                          const v = parseDecimalBr(e.target.value);
+                          const raw = e.target.value;
+                          if (!isPartialDecimalBr(raw)) return;
+                          setServicePriceDraft((prev) => ({ ...prev, [item.id]: raw }));
+                          if (raw.trim() === "") {
+                            updateItem(item.id, { servicePrice: undefined });
+                            return;
+                          }
+                          // Mantém "0," / "0,5" enquanto digita; só grava número completo.
+                          if (/[.,]$/.test(raw.trim())) return;
+                          const v = parseDecimalBr(raw);
+                          if (v != null) updateItem(item.id, { servicePrice: v });
+                        }}
+                        onBlur={() => {
+                          const raw = servicePriceDraft[item.id];
+                          setServicePriceDraft((prev) => {
+                            const next = { ...prev };
+                            delete next[item.id];
+                            return next;
+                          });
+                          if (raw === undefined) return;
+                          const trimmed = raw.trim();
+                          if (trimmed === "" || trimmed === "," || trimmed === ".") {
+                            updateItem(item.id, { servicePrice: undefined });
+                            return;
+                          }
+                          const v = parseDecimalBr(trimmed);
                           updateItem(item.id, { servicePrice: v ?? undefined });
                         }}
                         aria-label="Preço serviço"
