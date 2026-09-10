@@ -18,13 +18,10 @@ const EMPTY_ITEMS: BlankInput[] = [
   {
     id: "item-1",
     name: "",
-    itemKind: "blank",
     width: 0,
     length: 0,
     minKg: 0,
     minQty: 0,
-    line: "",
-    pvc: "sem",
   },
 ];
 

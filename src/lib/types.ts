@@ -45,12 +45,18 @@ export type BlankInput = {
   serviceDescription?: string;
 };
 
-export function itemKindOf(blank: Pick<BlankInput, "itemKind">): ItemKind {
-  return blank.itemKind === "slitter" ? "slitter" : "blank";
+export function itemKindOf(blank: Pick<BlankInput, "itemKind">): ItemKind | undefined {
+  if (blank.itemKind === "slitter") return "slitter";
+  if (blank.itemKind === "blank") return "blank";
+  return undefined;
 }
 
 export function isSlitterItem(blank: Pick<BlankInput, "itemKind">): boolean {
-  return itemKindOf(blank) === "slitter";
+  return blank.itemKind === "slitter";
+}
+
+export function isBlankItem(blank: Pick<BlankInput, "itemKind">): boolean {
+  return blank.itemKind === "blank";
 }
 
 /** Modelo de cálculo selecionado na calculadora. */

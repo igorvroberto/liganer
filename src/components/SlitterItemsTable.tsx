@@ -1,5 +1,22 @@
-import { blankUnitKg, resyncBlankDemand, syncBlankFromQty, syncBlankFromWeight } from "../lib/blankSync";
-import { fmtCurrency, fmtDecimal2, fmtNumber, fmtThickness, parseDecimalBr, parseDecimalBr2, round2 } from "../lib/format";
+import { useState } from "react";
+import {
+  blankUnitKg,
+  resyncBlankDemand,
+  syncBlankFromQty,
+  syncBlankFromWeight,
+  syncSlitterFromLength,
+  syncSlitterFromQty,
+  syncSlitterFromWeight,
+} from "../lib/blankSync";
+import {
+  fmtCurrency,
+  fmtDecimal2,
+  fmtNumber,
+  fmtThickness,
+  parseDecimalBr,
+  parseDecimalBr2,
+  round2,
+} from "../lib/format";
 import {
   lineLabelFromSpecs,
   lookupPriceFator100,
@@ -14,7 +31,6 @@ import {
   type ItemKind,
   type PvcOption,
 } from "../lib/types";
-import { useState } from "react";
 
 type DemandModeMap = Record<string, "qty" | "weight">;
 
@@ -58,18 +74,29 @@ function withPriceFromTable(item: BlankInput, patch: Partial<BlankInput>): Blank
 
   if (!specsChanged) return next;
 
-  if (tipo && acabamento && next.thickness && next.thickness > 0) {
+  if (tipo && acabamento && next.thickness && next.thickness > 0 && next.pvc) {
     const lookup = lookupPriceFator100({
       tipo,
       acabamento,
       espessura: next.thickness,
-      pvc: next.pvc ?? "sem",
+      pvc: next.pvc,
     });
     next.priceFactor100 = lookup.matched ? round2(lookup.precoFator100) : undefined;
   } else {
     next.priceFactor100 = undefined;
   }
   return next;
+}
+
+function emptyItem(id: string): BlankInput {
+  return {
+    id,
+    name: "",
+    width: 0,
+    length: 0,
+    minKg: 0,
+    minQty: 0,
+  };
 }
 
 export default function SlitterItemsTable({
@@ -117,82 +144,92 @@ export default function SlitterItemsTable({
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
-        const next = withPriceFromTable(item, patch);
+        let next = withPriceFromTable(item, patch);
+        const localCoil = coilForItem(next);
         const activeMode = mode ?? demandModes[id] ?? "weight";
+
+        if (isSlitterItem(next)) {
+          if (patch.length !== undefined) {
+            next = syncSlitterFromLength(next, localCoil);
+          } else if (
+            patch.width !== undefined ||
+            patch.thickness !== undefined ||
+            patch.coilWidth !== undefined
+          ) {
+            if (next.minKg > 0) next = syncSlitterFromWeight(next, localCoil);
+          }
+          return next;
+        }
+
         if (
           patch.width !== undefined ||
           patch.length !== undefined ||
           patch.itemKind !== undefined ||
           patch.thickness !== undefined
         ) {
-          return resyncBlankDemand(next, coilForItem(next), activeMode);
+          return resyncBlankDemand(next, localCoil, activeMode);
         }
         return next;
       }),
     );
   };
 
-  const updateItemKind = (id: string, kind: ItemKind) => {
+  const updateItemKind = (id: string, kind: ItemKind | undefined) => {
     const mode = demandModes[id] ?? "weight";
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
-        const next = { ...item, itemKind: kind };
-        return resyncBlankDemand(next, coilForItem(next), mode);
+        const next: BlankInput = { ...item, itemKind: kind };
+        if (kind === "slitter") {
+          if (next.minKg > 0) return syncSlitterFromWeight(next, coilForItem(next));
+          return next;
+        }
+        if (kind === "blank") {
+          return resyncBlankDemand(next, coilForItem(next), mode);
+        }
+        return next;
       }),
     );
   };
 
   const updateQty = (id: string, raw: string) => {
-    setMode(id, "qty");
     const qty = raw === "" ? 0 : Number(raw);
+    const current = items.find((i) => i.id === id);
+    if (current && !isSlitterItem(current)) setMode(id, "qty");
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
+        const minQty = Number.isFinite(qty) ? Math.max(0, Math.floor(qty)) : 0;
+        if (isSlitterItem(item)) {
+          return syncSlitterFromQty({ ...item, minQty }, coilForItem(item));
+        }
         const unitKg = blankUnitKg(item, coilForItem(item));
-        return { ...item, ...syncBlankFromQty(Number.isFinite(qty) ? qty : 0, unitKg) };
+        return { ...item, ...syncBlankFromQty(minQty, unitKg) };
       }),
     );
   };
 
   const updateWeight = (id: string, raw: string) => {
-    setMode(id, "weight");
     const kg = raw === "" ? 0 : Number(raw);
+    const current = items.find((i) => i.id === id);
+    if (current && !isSlitterItem(current)) setMode(id, "weight");
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
+        const minKg = Number.isFinite(kg) ? Math.max(0, kg) : 0;
+        if (isSlitterItem(item)) {
+          return syncSlitterFromWeight({ ...item, minKg }, coilForItem(item));
+        }
         const unitKg = blankUnitKg(item, coilForItem(item));
-        return { ...item, ...syncBlankFromWeight(Number.isFinite(kg) ? kg : 0, unitKg) };
+        return { ...item, ...syncBlankFromWeight(minKg, unitKg) };
       }),
     );
   };
 
   const addItem = () => {
     const id = `item-${Date.now()}`;
-    const template = items[0];
     onDemandModesChange({ ...demandModes, [id]: "weight" });
-    setItems((prev) => [
-      ...prev,
-      {
-        id,
-        name: "",
-        itemKind: "blank",
-        width: 0,
-        length: 0,
-        minKg: 0,
-        minQty: 0,
-        line: template?.line ?? "",
-        tipo: template?.tipo,
-        acabamento: template?.acabamento,
-        thickness: template?.thickness,
-        coilWidth: template?.coilWidth,
-        pvc: template?.pvc ?? "sem",
-        priceFactor100: template?.priceFactor100,
-        usedFactor: undefined,
-        servicePrice: undefined,
-        serviceDescription: undefined,
-      },
-    ]);
+    setItems((prev) => [...prev, emptyItem(id)]);
   };
 
   const removeItem = (id: string) => {
@@ -210,9 +247,9 @@ export default function SlitterItemsTable({
           <div>
             <h2>Itens</h2>
             <p className="note">
-              Tipo, acabamento, PVC e espessura vêm da tabela de preços. O preço fator 100 é preenchido
-              automaticamente conforme o PVC. Material BLANK exige comprimento; SLITTER pode deixar em
-              branco. O plano de corte usa a largura/espessura da bobina do primeiro item preenchido.
+              Nenhum campo vem pré-preenchido. No SLITTER, o comprimento é calculado pelo peso (e Qtd,
+              se informada); a Qtd só muda manualmente. Comprimento editável com peso; peso recalcula
+              o comprimento. BLANK exige comprimento informado.
             </p>
           </div>
           <button className="btn btn-primary" type="button" onClick={addItem}>
@@ -280,6 +317,7 @@ export default function SlitterItemsTable({
                 const acabOpts = item.tipo ? rowOpts.acabamento : globalOpts.acabamento;
                 const espOpts = item.tipo && item.acabamento ? rowOpts.espessura : globalOpts.espessura;
                 const pvcOpts = globalOpts.pvc;
+                const lengthEditable = !slitter || item.minKg > 0;
 
                 return (
                   <tr key={item.id}>
@@ -298,10 +336,14 @@ export default function SlitterItemsTable({
                     <td>
                       <select
                         className="cell-control item-kind-select"
-                        value={kind}
-                        onChange={(e) => updateItemKind(item.id, e.target.value as ItemKind)}
+                        value={kind ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          updateItemKind(item.id, v ? (v as ItemKind) : undefined);
+                        }}
                         aria-label="Material do item"
                       >
+                        <option value="">—</option>
                         {ITEM_KIND_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
                             {opt.label}
@@ -371,10 +413,15 @@ export default function SlitterItemsTable({
                     <td>
                       <select
                         className="cell-control"
-                        value={item.pvc ?? "sem"}
-                        onChange={(e) => updateItem(item.id, { pvc: e.target.value as PvcOption })}
+                        value={item.pvc ?? ""}
+                        onChange={(e) =>
+                          updateItem(item.id, {
+                            pvc: (e.target.value || undefined) as PvcOption | undefined,
+                          })
+                        }
                         aria-label="PVC"
                       >
+                        <option value="">—</option>
                         {pvcOpts.map((opt) => (
                           <option key={opt.value} value={opt.value}>
                             {opt.label}
@@ -409,7 +456,6 @@ export default function SlitterItemsTable({
                         type="number"
                         min={1}
                         step={1}
-                        placeholder="1250"
                         value={item.coilWidth || ""}
                         onChange={(e) =>
                           updateItem(item.id, { coilWidth: Number(e.target.value) || undefined })
@@ -433,28 +479,42 @@ export default function SlitterItemsTable({
                         min={1}
                         step={1}
                         value={item.length || ""}
-                        placeholder={slitter ? "opcional" : undefined}
-                        onChange={(e) => updateItem(item.id, { length: Number(e.target.value) })}
-                        title={slitter ? "Opcional para SLITTER" : undefined}
+                        disabled={slitter && !lengthEditable}
+                        title={
+                          slitter
+                            ? lengthEditable
+                              ? "Altera o peso mantendo a Qtd"
+                              : "Informe o peso (Kg) para calcular/editar o comprimento"
+                            : undefined
+                        }
+                        onChange={(e) =>
+                          updateItem(item.id, { length: Number(e.target.value) || 0 })
+                        }
                       />
                     </td>
                     <td>
                       <input
-                        className={`cell-control ${mode === "weight" ? "linked-active" : "linked"}`}
+                        className={`cell-control ${!slitter && mode === "weight" ? "linked-active" : ""}`}
                         type="number"
                         min={0}
                         step={0.1}
                         value={item.minKg || ""}
+                        title={
+                          slitter
+                            ? "Calcula o comprimento automaticamente (Qtd só muda se você editar)"
+                            : undefined
+                        }
                         onChange={(e) => updateWeight(item.id, e.target.value)}
                       />
                     </td>
                     <td>
                       <input
-                        className={`cell-control ${mode === "qty" ? "linked-active" : "linked"}`}
+                        className={`cell-control ${!slitter && mode === "qty" ? "linked-active" : ""}`}
                         type="number"
                         min={0}
                         step={1}
                         value={item.minQty || ""}
+                        title={slitter ? "Somente manual no SLITTER" : undefined}
                         onChange={(e) => updateQty(item.id, e.target.value)}
                       />
                     </td>
@@ -497,7 +557,6 @@ export default function SlitterItemsTable({
                       <input
                         className="cell-control"
                         inputMode="decimal"
-                        placeholder="170"
                         value={item.usedFactor != null ? String(item.usedFactor).replace(".", ",") : ""}
                         onChange={(e) => {
                           const v = parseDecimalBr(e.target.value);
@@ -514,8 +573,9 @@ export default function SlitterItemsTable({
                       <input
                         className="cell-control"
                         inputMode="decimal"
-                        placeholder="1,24"
-                        value={item.servicePrice != null ? String(item.servicePrice).replace(".", ",") : ""}
+                        value={
+                          item.servicePrice != null ? String(item.servicePrice).replace(".", ",") : ""
+                        }
                         onChange={(e) => {
                           const v = parseDecimalBr(e.target.value);
                           updateItem(item.id, { servicePrice: v ?? undefined });
@@ -526,7 +586,6 @@ export default function SlitterItemsTable({
                       <input
                         className="cell-control"
                         type="text"
-                        placeholder="Corte + PVC"
                         value={item.serviceDescription ?? ""}
                         onChange={(e) =>
                           updateItem(item.id, { serviceDescription: e.target.value || undefined })
