@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import BlankItemsTable from "../components/BlankItemsTable";
 import { resyncBlankDemand } from "../lib/blankSync";
-import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseDecimalBr, parseDecimalBr2, fmtDecimal2 } from "../lib/format";
+import { fmtCurrency, fmtDecimal2, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseDecimalBr, parseDecimalBr2, parseThickness } from "../lib/format";
 import { lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
 import { downloadPlanPdf } from "../lib/pdfReport";
 import {
