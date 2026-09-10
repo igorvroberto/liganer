@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import BlankItemsTable from "../components/BlankItemsTable";
 import { resyncBlankDemand } from "../lib/blankSync";
-import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseDecimalBr, parseThickness } from "../lib/format";
+import { fmtCurrency, fmtDecimal2, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtThickness, parseDecimalBr, parseDecimalBr2, parseThickness } from "../lib/format";
 import { lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
 import { downloadPlanPdf } from "../lib/pdfReport";
 import {
@@ -268,10 +268,14 @@ export default function BlankCalculator() {
               placeholder="Ex.: 45,00"
               value={priceFactor100Text}
               onChange={(e) => {
-                const raw = e.target.value;
+                const raw = e.target.value.replace(".", ",");
+                if (!/^\d*(,\d{0,2})?$/.test(raw) && raw !== "") return;
                 setPriceFactor100Text(raw);
-                const v = parseDecimalBr(raw);
+                const v = parseDecimalBr2(raw);
                 updateCoil({ priceFactor100: v ?? undefined });
+              }}
+              onBlur={() => {
+                if (coil.priceFactor100 != null) setPriceFactor100Text(fmtDecimal2(coil.priceFactor100));
               }}
             />
           </label>
