@@ -112,7 +112,7 @@ function ProgramLossNote({ program, coil }: { program: ProgramResult; coil: Coil
   const loss = programLoss(program, coil);
   return (
     <p className="program-loss">
-      Perda (longitudinal): <strong>{fmtPct(loss.lossPercent)}</strong>
+      Sobra (longitudinal): <strong>{fmtPct(loss.lossPercent)}</strong>
       <span>
         {" "}
         · sucata {fmtKg(loss.scrapKg)} · sobra {fmtMm(loss.widthWasteMm)} ({fmtPct(loss.widthLossPercent)})
@@ -359,9 +359,9 @@ export default function SlitterCalculator() {
                       <strong>Aproveitamento na largura total da bobina, desconsiderando o refile.</strong>
                       {" "}Refile: <strong>{fmtMm(coil.edgeTrim * 2)}</strong> (2×{fmtMm(coil.edgeTrim)})
                       {" "}· {fmtKg(breakdown.refileKg)} ({fmtPct(breakdown.refilePct)})
-                      {" "}· Perda transversal: <strong>{fmtPct(breakdown.transversalPct)}</strong>
+                      {" "}· Sobra transversal: <strong>{fmtPct(breakdown.transversalPct)}</strong>
                       {" "}({fmtKg(breakdown.transversalKg)})
-                      {" "}· Perda total: <strong>{fmtPct(100 - breakdown.yieldPercent)}</strong>
+                      {" "}· Sobra total: <strong>{fmtPct(100 - breakdown.yieldPercent)}</strong>
                       {" "}— refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.
                     </p>
                     <div className="kpis">

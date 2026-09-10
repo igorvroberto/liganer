@@ -259,9 +259,9 @@ function appendItemsTable(
     "Comissão",
     "Preço serviço",
     "Desc. serviço",
-    "Perda mm",
-    "Perda %",
-    "Acréscimo perda",
+    "Sobra mm",
+    "Sobra %",
+    "Acréscimo sobra",
     "Preço total",
     ...MTO_FIELDS.map((f) => f.label.replace(/\n/g, " ")),
   ];
@@ -555,7 +555,7 @@ function appendCuttingResult(
       bodyStyles: { font: fontName },
       body: [
         [
-          `Perda (longitudinal): ${fmtPct(loss.lossPercent)}`,
+          `Sobra (longitudinal): ${fmtPct(loss.lossPercent)}`,
           `Sucata: ${fmtKg(loss.scrapKg)}`,
           `Sobra: ${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})`,
         ],
@@ -575,7 +575,7 @@ function appendCuttingResult(
         [
           `Aproveitamento: ${fmtPct(progBreakdown.yieldPercent)}`,
           `Refile: ${fmtMm(coil.edgeTrim * 2)}`,
-          `Perda transversal: ${fmtPct(progBreakdown.transversalPct)}`,
+          `Sobra transversal: ${fmtPct(progBreakdown.transversalPct)}`,
         ],
       ],
     });

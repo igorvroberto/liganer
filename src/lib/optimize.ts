@@ -706,7 +706,7 @@ function validateInput(input: CalcInput): string | null {
   if (!(coil.width > 0)) return "Informe a largura original da bobina.";
   if (!(coil.thickness > 0)) return "Informe a espessura da chapa.";
   if (!(coil.density > 0)) return "Informe a densidade do aço.";
-  if (coil.kerf < 0 || coil.edgeTrim < 0) return "Perda de corte e refile não podem ser negativos.";
+  if (coil.kerf < 0 || coil.edgeTrim < 0) return "Sobra de corte e refile não podem ser negativos.";
   const usable = usableWidth(coil);
   if (usable <= 0) return "O refile de borda deixa a largura útil zerada.";
   const active = blanks.filter((b) => b.minKg > 0 || b.minQty > 0);

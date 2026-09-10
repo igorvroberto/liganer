@@ -392,9 +392,9 @@ export default function SlitterItemsTable({
                 <th>Comissão</th>
                 <th>{"Preço\nserviço"}</th>
                 <th>{"Descrição\nserviço"}</th>
-                <th>{"Perda\nmm"}</th>
-                <th>{"Perda\n%"}</th>
-                <th>{"Acréscimo\nperda"}</th>
+                <th>{"Sobra\nmm"}</th>
+                <th>{"Sobra\n%"}</th>
+                <th>{"Acréscimo\nsobra"}</th>
                 <th>{"Preço\ntotal"}</th>
                 {MTO_FIELDS.map((field) => (
                   <th key={field.key} className="boolean-column">
@@ -782,19 +782,19 @@ export default function SlitterItemsTable({
                       />
                     </td>
                     <td className="formula-cell">
-                      <span className="calculated-cell" title="Perda longitudinal (sobra de largura)">
+                      <span className="calculated-cell" title="Sobra longitudinal (largura)">
                         {commercial.perdaMm != null ? fmtMm(commercial.perdaMm) : "—"}
                       </span>
                     </td>
                     <td className="formula-cell">
-                      <span className="calculated-cell" title="Perda longitudinal %">
+                      <span className="calculated-cell" title="Sobra longitudinal %">
                         {commercial.perdaPct != null ? fmtPct(commercial.perdaPct) : "—"}
                       </span>
                     </td>
                     <td className="formula-cell">
                       <span
                         className="calculated-cell"
-                        title="<100 mm: perda % · <300 mm: perda % × 0,20 · ≥300 mm: perda % × 0,15"
+                        title="<100 mm: sobra % · <300 mm: sobra % × 0,20 · ≥300 mm: sobra % × 0,15"
                       >
                         {commercial.acrescimoPerda != null ? fmtPct(commercial.acrescimoPerda) : "—"}
                       </span>
@@ -802,7 +802,7 @@ export default function SlitterItemsTable({
                     <td className="formula-cell">
                       <span
                         className="calculated-cell"
-                        title="(Preço fator utilizado + serviço) com acréscimo de perda"
+                        title="(Preço fator utilizado + serviço) com acréscimo de sobra"
                       >
                         {commercial.totalPrice != null ? fmtCurrency(commercial.totalPrice) : "—"}
                       </span>

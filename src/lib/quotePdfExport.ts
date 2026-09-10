@@ -212,19 +212,19 @@ function allColumns(): PdfColumn[] {
     },
     {
       key: "perdaMm",
-      label: "Perda\nmm",
+      label: "Sobra\nmm",
       value: ({ commercial }) =>
         commercial.perdaMm != null ? fmtInt(commercial.perdaMm) : "—",
     },
     {
       key: "perdaPct",
-      label: "Perda\n%",
+      label: "Sobra\n%",
       value: ({ commercial }) =>
         commercial.perdaPct != null ? fmtPct(commercial.perdaPct) : "—",
     },
     {
       key: "acrescimoPerda",
-      label: "Acréscimo\nperda",
+      label: "Acréscimo\nsobra",
       value: ({ commercial }) =>
         commercial.acrescimoPerda != null ? fmtPct(commercial.acrescimoPerda) : "—",
     },
@@ -327,7 +327,7 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
             <tbody>${stripRows}</tbody>
           </table>
           <div class="kv">
-            <div><strong>Perda longitudinal</strong><span>${escapeHtml(fmtPct(loss.lossPercent))}</span></div>
+            <div><strong>Sobra longitudinal</strong><span>${escapeHtml(fmtPct(loss.lossPercent))}</span></div>
             <div><strong>Sucata</strong><span>${escapeHtml(fmtKg(loss.scrapKg))}</span></div>
             <div><strong>Sobra</strong><span>${escapeHtml(`${fmtMm(loss.widthWasteMm)} (${fmtPct(loss.widthLossPercent)})`)}</span></div>
             <div><strong>Aproveitamento</strong><span>${escapeHtml(fmtPct(breakdown.yieldPercent))}</span></div>

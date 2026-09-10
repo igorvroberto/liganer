@@ -53,7 +53,7 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).not.toContain("Fator\nutilizado");
     expect(html).not.toContain("Material");
     expect(html).not.toContain("Peso\ntotal");
-    expect(html).not.toContain("Perda\nmm");
+    expect(html).not.toContain("Sobra\nmm");
     // Colunas do PDF cliente na ordem pedida (Item + campos).
     const headMatch = html.match(/<table class="items">[\s\S]*?<thead>[\s\S]*?<tr>([\s\S]*?)<\/tr>[\s\S]*?<\/thead>/);
     expect(headMatch).toBeTruthy();
