@@ -20,6 +20,8 @@ import {
   priceTableOptions,
 } from "../lib/priceTable";
 import {
+  COIL_WIDTH_OPTIONS_MM,
+  COIL_WIDTH_OTHER_LABEL,
   COMMISSION_OPTIONS,
   ITEM_KIND_OPTIONS,
   MTO_FIELDS,
@@ -77,6 +79,73 @@ function dimLabel(item: BlankInput): string {
   }
   if (item.width > 0 && item.length > 0) return `${item.width}×${item.length}`;
   return "item";
+}
+
+function CoilWidthControl({
+  value,
+  onChange,
+}: {
+  value: number | undefined;
+  onChange: (next: number | undefined) => void;
+}) {
+  const preset =
+    value != null && value > 0 && (COIL_WIDTH_OPTIONS_MM as readonly number[]).includes(value);
+  /** 0 = modo OUTRA sem valor digitado ainda (como chapas). */
+  const otherEmpty = value === 0;
+  const otherCustom = value != null && value > 0 && !preset;
+  const showOtherInput = otherEmpty || otherCustom;
+  const selectValue = showOtherInput ? COIL_WIDTH_OTHER_LABEL : preset ? String(value) : "";
+
+  return (
+    <div className="cell-control-stack">
+      <select
+        className="cell-control"
+        value={selectValue}
+        onChange={(e) => {
+          const raw = e.target.value;
+          if (!raw) {
+            onChange(undefined);
+            return;
+          }
+          if (raw === COIL_WIDTH_OTHER_LABEL) {
+            onChange(otherCustom ? value : 0);
+            return;
+          }
+          onChange(Number(raw) || undefined);
+        }}
+        aria-label="Largura original bobina"
+      >
+        <option value="">—</option>
+        {COIL_WIDTH_OPTIONS_MM.map((opt) => (
+          <option key={opt} value={String(opt)}>
+            {opt}
+          </option>
+        ))}
+        <option value={COIL_WIDTH_OTHER_LABEL}>{COIL_WIDTH_OTHER_LABEL}</option>
+      </select>
+      {showOtherInput ? (
+        <input
+          className="cell-control"
+          type="number"
+          min={1}
+          step={1}
+          inputMode="numeric"
+          placeholder={COIL_WIDTH_OTHER_LABEL}
+          value={otherCustom ? value : ""}
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (raw === "") {
+              onChange(0);
+              return;
+            }
+            const n = Number(raw);
+            onChange(Number.isFinite(n) && n > 0 ? Math.round(n) : 0);
+          }}
+          aria-label="Largura original bobina personalizada"
+        />
+      ) : null}
+    </div>
+  );
 }
 
 function withPriceFromTable(item: BlankInput, patch: Partial<BlankInput>): BlankInput {
@@ -355,16 +424,9 @@ export default function SlitterItemsTable({
                     </td>
                     <td className="item-number-cell">{index + 1}</td>
                     <td>
-                      <input
-                        className="cell-control"
-                        type="number"
-                        min={1}
-                        step={1}
-                        value={item.coilWidth || ""}
-                        onChange={(e) =>
-                          updateItem(item.id, { coilWidth: Number(e.target.value) || undefined })
-                        }
-                        aria-label="Largura original bobina"
+                      <CoilWidthControl
+                        value={item.coilWidth}
+                        onChange={(coilWidth) => updateItem(item.id, { coilWidth })}
                       />
                     </td>
                     <td>

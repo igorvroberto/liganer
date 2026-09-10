@@ -83,6 +83,10 @@ export const MTO_FIELDS: { key: MtoFieldKey; label: string }[] = [
   { key: "tettoMto", label: "TETTO\nMTO" },
 ];
 
+/** Larguras padrão de bobina (mm), como em chapas-bobinas. */
+export const COIL_WIDTH_OPTIONS_MM = [1250, 1500, 1219] as const;
+export const COIL_WIDTH_OTHER_LABEL = "OUTRA";
+
 export function itemKindOf(blank: Pick<BlankInput, "itemKind">): ItemKind | undefined {
   if (blank.itemKind === "slitter") return "slitter";
   if (blank.itemKind === "blank") return "blank";
