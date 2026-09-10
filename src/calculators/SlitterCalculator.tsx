@@ -72,6 +72,7 @@ function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult;
         )}
         {program.pattern.strips.map((strip, idx) => {
           const color = stripColor(idx);
+          const displayLen = strip.cutLength <= 1 + 1e-9 ? program.coilLengthMm : strip.cutLength;
           return (
             <div
               key={`${strip.productIndex}-${idx}`}
@@ -79,7 +80,7 @@ function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult;
               style={{ flex: `${strip.stripWidth} 1 0` }}
             >
               <div className="blank-rect" style={{ background: color }}>
-                {fmtDim(strip.stripWidth, strip.cutLength)}
+                {fmtDim(strip.stripWidth, displayLen)}
               </div>
             </div>
           );
@@ -214,132 +215,147 @@ export default function SlitterCalculator() {
         }}
       />
 
-      {pricing && plan && (
-        <section className="card" style={{ marginTop: 16 }}>
-          <div className="section-head">
-            <h2>Preço do plano</h2>
-          </div>
-          <div className="pricing-results">
-            <div className="pricing-result highlight">
-              <span>Preço considerando perda longitudinal (R$/Kg)</span>
-              <b>{pricing.priceWithLongLoss != null ? fmtCurrency(pricing.priceWithLongLoss) : "—"}</b>
-            </div>
-            <div className="pricing-result">
-              <span>Preço desconsiderando perda (R$/Kg)</span>
-              <b>{pricing.priceWithoutLoss != null ? fmtCurrency(pricing.priceWithoutLoss) : "—"}</b>
-            </div>
-            <div className="pricing-result">
-              <span>Perda longitudinal</span>
-              <b>{fmtPct(pricing.breakdown.longitudinalPct)}</b>
-            </div>
-          </div>
-          <p className="note">
-            Valores com base no 1º item com preço/fator preenchidos · bobina {fmtMm(coil.width)} ·{" "}
-            {fmtNumber(coil.thickness, 2)} mm
-            {coil.line ? ` · ${coil.line}` : ""}
-          </p>
-        </section>
-      )}
-
       <div className="grid results-grid">
         <section className="card span-all">
           <div className="section-head">
-            <h2>Melhor aproveitamento</h2>
+            <h2>Resultado do corte</h2>
           </div>
           {!result.ok && <div className="error">{result.message}</div>}
           {result.ok && plan && (
             <>
-              {(() => {
-                const breakdown = lossBreakdown(plan.programs, plan.usefulWeightKg, coil);
-                return (
-                  <p className="note loss-info-note">
-                    <strong>Aproveitamento na largura total da bobina, desconsiderando o refile.</strong>
-                    {" "}Refile: <strong>{fmtMm(coil.edgeTrim * 2)}</strong> (2×{fmtMm(coil.edgeTrim)})
-                    {" "}· {fmtKg(breakdown.refileKg)} ({fmtPct(breakdown.refilePct)})
-                    {" "}· Perda transversal: <strong>{fmtPct(breakdown.transversalPct)}</strong>
-                    {" "}({fmtKg(breakdown.transversalKg)})
-                    {" "}· Perda total: <strong>{fmtPct(100 - plan.yieldPercent)}</strong>
-                    {" "}— refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.
-                  </p>
-                );
-              })()}
-              <div className="kpis">
-                <div className="kpi good">
-                  <span>Aproveitamento</span>
-                  <b>{fmtPct(plan.yieldPercent)}</b>
-                </div>
-                <div className="kpi">
-                  <span>Peso da bobina</span>
-                  <b>{fmtKg(plan.coilWeightKg)}</b>
-                </div>
-                <div className="kpi">
-                  <span>Peso útil</span>
-                  <b>{fmtKg(plan.usefulWeightKg)}</b>
-                </div>
-                <div className="kpi">
-                  <span>Sucata (longitudinal)</span>
-                  <b>{fmtKg(plan.scrapKg)}</b>
-                </div>
-              </div>
-
               <p className="note">
                 Comprimento total: <strong>{fmtMeters(plan.totalCoilLengthMm)}</strong> ·{" "}
                 <strong>{plan.setupCount}</strong> programa{plan.setupCount > 1 ? "s" : ""} de corte
               </p>
               <ProgramTimeline programs={plan.programs} totalLengthMm={plan.totalCoilLengthMm} />
 
-              {plan.programs.map((program, idx) => (
-                <div className="program" key={idx}>
-                <div className="program-head">
-                  <h3>
-                    Programa {idx + 1} · {fmtMeters(program.coilLengthMm)} de bobina ·{" "}
-                    {patternSummary(program, plan.products)}
-                  </h3>
-                </div>
-                  <LanePreview program={program} coilWidth={coil.width} edgeTrim={coil.edgeTrim} />
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Tipo</th>
-                        <th>Acabamento</th>
-                        <th>PVC</th>
-                        <th>Espessura</th>
-                        <th>Largura</th>
-                        <th>Comprimento</th>
-                        <th>Peças nesta tira</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {program.pattern.strips.map((strip, sIdx) => {
-                        const n = Math.floor((program.coilLengthMm + 1e-6) / strip.cutLength);
-                        const blank = plan.products[strip.productIndex]?.blank;
-                        const spec = blank ? blankSpecCitation(blank) : null;
-                        return (
-                          <tr key={sIdx}>
-                            <td>{spec?.tipo ?? "—"}</td>
-                            <td>{spec?.acabamento ?? "—"}</td>
-                            <td>{spec?.pvc ?? "—"}</td>
-                            <td>{spec?.espessura ?? "—"}</td>
-                            <td>{fmtMm(strip.stripWidth)}</td>
-                            <td>
-                              {fmtMm(strip.cutLength)}
-                              {strip.rotated ? " (girado)" : ""}
-                            </td>
-                            <td>{fmtInt(n)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                  <ProgramLossNote program={program} coil={coil} />
-                </div>
-              ))}
+              {plan.programs.map((program, idx) => {
+                const usefulKg = program.weightPerProductKg.reduce((s, w) => s + w, 0);
+                const breakdown = lossBreakdown([program], usefulKg, coil);
+                return (
+                  <div className="program" key={idx}>
+                    <div className="program-head">
+                      <h3>
+                        Programa {idx + 1} · {fmtMeters(program.coilLengthMm)} de bobina ·{" "}
+                        {patternSummary(program, plan.products)}
+                      </h3>
+                    </div>
+                    <LanePreview program={program} coilWidth={coil.width} edgeTrim={coil.edgeTrim} />
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Tipo</th>
+                          <th>Acabamento</th>
+                          <th>PVC</th>
+                          <th>Espessura</th>
+                          <th>Largura</th>
+                          <th>Comprimento</th>
+                          <th>Peças nesta tira</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {program.pattern.strips.map((strip, sIdx) => {
+                          const blank = plan.products[strip.productIndex]?.blank;
+                          const continuous =
+                            blank && isSlitterItem(blank) && strip.cutLength <= 1 + 1e-9;
+                          const n = continuous
+                            ? 1
+                            : Math.floor((program.coilLengthMm + 1e-6) / strip.cutLength);
+                          const displayLen = continuous ? program.coilLengthMm : strip.cutLength;
+                          const spec = blank ? blankSpecCitation(blank) : null;
+                          return (
+                            <tr key={sIdx}>
+                              <td>{spec?.tipo ?? "—"}</td>
+                              <td>{spec?.acabamento ?? "—"}</td>
+                              <td>{spec?.pvc ?? "—"}</td>
+                              <td>{spec?.espessura ?? "—"}</td>
+                              <td>{fmtMm(strip.stripWidth)}</td>
+                              <td>
+                                {fmtMm(displayLen)}
+                                {strip.rotated ? " (girado)" : ""}
+                              </td>
+                              <td>{fmtInt(n)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    <ProgramLossNote program={program} coil={coil} />
+
+                    <div className="section-head" style={{ marginTop: 16 }}>
+                      <h3>Melhor aproveitamento</h3>
+                    </div>
+                    <p className="note loss-info-note">
+                      <strong>Aproveitamento na largura total da bobina, desconsiderando o refile.</strong>
+                      {" "}Refile: <strong>{fmtMm(coil.edgeTrim * 2)}</strong> (2×{fmtMm(coil.edgeTrim)})
+                      {" "}· {fmtKg(breakdown.refileKg)} ({fmtPct(breakdown.refilePct)})
+                      {" "}· Perda transversal: <strong>{fmtPct(breakdown.transversalPct)}</strong>
+                      {" "}({fmtKg(breakdown.transversalKg)})
+                      {" "}· Perda total: <strong>{fmtPct(100 - breakdown.yieldPercent)}</strong>
+                      {" "}— refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.
+                    </p>
+                    <div className="kpis">
+                      <div className="kpi good">
+                        <span>Aproveitamento</span>
+                        <b>{fmtPct(breakdown.yieldPercent)}</b>
+                      </div>
+                      <div className="kpi">
+                        <span>Peso da bobina</span>
+                        <b>{fmtKg(breakdown.physicalCoilKg)}</b>
+                      </div>
+                      <div className="kpi">
+                        <span>Peso útil</span>
+                        <b>{fmtKg(usefulKg)}</b>
+                      </div>
+                      <div className="kpi">
+                        <span>Sucata (longitudinal)</span>
+                        <b>{fmtKg(breakdown.scrapKg)}</b>
+                      </div>
+                    </div>
+
+                    {pricing && (
+                      <>
+                        <div className="section-head" style={{ marginTop: 16 }}>
+                          <h3>Preço do plano</h3>
+                        </div>
+                        <div className="pricing-results">
+                          <div className="pricing-result highlight">
+                            <span>Preço considerando perda longitudinal (R$/Kg)</span>
+                            <b>
+                              {pricing.priceWithLongLoss != null
+                                ? fmtCurrency(pricing.priceWithLongLoss)
+                                : "—"}
+                            </b>
+                          </div>
+                          <div className="pricing-result">
+                            <span>Preço desconsiderando perda (R$/Kg)</span>
+                            <b>
+                              {pricing.priceWithoutLoss != null
+                                ? fmtCurrency(pricing.priceWithoutLoss)
+                                : "—"}
+                            </b>
+                          </div>
+                          <div className="pricing-result">
+                            <span>Perda longitudinal</span>
+                            <b>{fmtPct(pricing.breakdown.longitudinalPct)}</b>
+                          </div>
+                        </div>
+                        <p className="note">
+                          Valores com base no 1º item com preço/fator preenchidos · bobina{" "}
+                          {fmtMm(coil.width)} · {fmtNumber(coil.thickness, 2)} mm
+                          {coil.line ? ` · ${coil.line}` : ""}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
 
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Blank</th>
+                      <th>Item</th>
                       <th>Pedido</th>
                       <th>Peso un.</th>
                       <th>Produzido</th>
@@ -352,19 +368,27 @@ export default function SlitterCalculator() {
                         <td>
                           <strong style={{ color: BLANK_COLORS[i % BLANK_COLORS.length] }}>
                             {isSlitterItem(product.blank)
-                              ? product.blank.length > 0
-                                ? fmtDim(product.blank.width, product.blank.length)
-                                : `${fmtInt(product.blank.width)} mm slitter`
+                              ? `${fmtInt(product.blank.width)} mm slitter`
                               : fmtDim(product.blank.width, product.blank.length)}
                           </strong>
                         </td>
                         <td>
-                          {fmtInt(product.blank.minQty)} un · {fmtKg(product.blank.minKg)}
+                          {isSlitterItem(product.blank)
+                            ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
+                            : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`}
                         </td>
-                        <td>{fmtKg(product.unitWeightKg)}</td>
                         <td>
-                          {fmtInt(product.pieces)} un
-                          {(coil.allowOvershoot ?? true) && product.pieces > product.blank.minQty
+                          {isSlitterItem(product.blank)
+                            ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
+                            : fmtKg(product.unitWeightKg)}
+                        </td>
+                        <td>
+                          {isSlitterItem(product.blank)
+                            ? fmtMeters(product.pieces)
+                            : `${fmtInt(product.pieces)} un`}
+                          {!isSlitterItem(product.blank) &&
+                          (coil.allowOvershoot ?? true) &&
+                          product.pieces > product.blank.minQty
                             ? ` (+${product.pieces - product.blank.minQty})`
                             : ""}
                         </td>
