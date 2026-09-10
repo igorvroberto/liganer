@@ -12,7 +12,7 @@ import {
   fmtThickness,
 } from "./format";
 import { blankSpecCitation, blankSpecCitationLine } from "./materialGroups";
-import { groupIdenticalStrips, lossBreakdown } from "./optimize";
+import { groupIdenticalStrips, lossBreakdown, productIndicesInProgram } from "./optimize";
 import {
   itemCommercial,
   parseFretePercent,
@@ -334,9 +334,13 @@ function stripBarHtml(program: ProgramResult, coilWidth: number, edgeTrim: numbe
   </div>`;
 }
 
-function productionRowsHtml(plan: RankedPlan): string {
-  return plan.products
-    .map((product) => {
+function productionRowsHtml(plan: RankedPlan, program: ProgramResult): string {
+  return productIndicesInProgram(program)
+    .map((index) => {
+      const product = plan.products[index];
+      if (!product) return "";
+      const pieces = program.piecesPerProduct[index] ?? 0;
+      const weightKg = program.weightPerProductKg[index] ?? 0;
       const itemLabel = isSlitterItem(product.blank)
         ? `${fmtInt(product.blank.width)} mm slitter`
         : fmtDim(product.blank.width, product.blank.length);
@@ -347,14 +351,14 @@ function productionRowsHtml(plan: RankedPlan): string {
         ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
         : fmtKg(product.unitWeightKg);
       const produced = isSlitterItem(product.blank)
-        ? fmtMeters(product.pieces)
-        : `${fmtInt(product.pieces)} un`;
+        ? fmtMeters(pieces)
+        : `${fmtInt(pieces)} un`;
       return `<tr>
         <td>${escapeHtml(itemLabel)}</td>
         <td>${escapeHtml(pedido)}</td>
         <td>${escapeHtml(unit)}</td>
         <td>${escapeHtml(produced)}</td>
-        <td>${escapeHtml(fmtKg(product.weightKg))}</td>
+        <td>${escapeHtml(fmtKg(weightKg))}</td>
       </tr>`;
     })
     .join("");
@@ -362,16 +366,6 @@ function productionRowsHtml(plan: RankedPlan): string {
 
 /** Resultado do corte no layout antigo (barras coloridas), na mesma ordem da UI. */
 function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
-  const productionTable = `
-      <table class="cut-legacy-table">
-        <thead>
-          <tr>
-            <th>Item</th><th>Pedido</th><th>Peso un.</th><th>Produzido</th><th>Peso produzido</th>
-          </tr>
-        </thead>
-        <tbody>${productionRowsHtml(plan)}</tbody>
-      </table>`;
-
   const programsHtml = plan.programs
     .map((program, idx) => {
       const usefulKg = program.weightPerProductKg.reduce((s, w) => s + w, 0);
@@ -446,7 +440,14 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
               <b>${escapeHtml(fmtKg(usefulKg))}</b>
             </div>
           </div>
-          ${productionTable}
+          <table class="cut-legacy-table">
+            <thead>
+              <tr>
+                <th>Item</th><th>Pedido</th><th>Peso un.</th><th>Produzido</th><th>Peso produzido</th>
+              </tr>
+            </thead>
+            <tbody>${productionRowsHtml(plan, program)}</tbody>
+          </table>
         </section>`;
     })
     .join("");

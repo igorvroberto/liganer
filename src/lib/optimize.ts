@@ -163,6 +163,18 @@ export function groupIdenticalStrips<T extends Strip>(strips: T[]): Array<T & { 
   return groups;
 }
 
+/** Índices dos produtos presentes nas tiras do programa (ordem de aparição). */
+export function productIndicesInProgram(program: ProgramResult): number[] {
+  const seen = new Set<number>();
+  const indices: number[] = [];
+  for (const strip of program.pattern.strips) {
+    if (seen.has(strip.productIndex)) continue;
+    seen.add(strip.productIndex);
+    indices.push(strip.productIndex);
+  }
+  return indices;
+}
+
 export function stripTypesForBlank(blank: BlankInput, productIndex: number): Strip[] {
   if (isSlitterItem(blank)) {
     // SLITTER: planejamento em mm contínuos para maximizar a largura.

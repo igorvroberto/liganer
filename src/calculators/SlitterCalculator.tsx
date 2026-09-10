@@ -5,7 +5,12 @@ import QuoteTotals from "../components/QuoteTotals";
 import SlitterItemsTable from "../components/SlitterItemsTable";
 import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
 import { blankSpecCitation, blankSpecCitationLine } from "../lib/materialGroups";
-import { groupIdenticalStrips, lossBreakdown, optimizeCutting } from "../lib/optimize";
+import {
+  groupIdenticalStrips,
+  lossBreakdown,
+  optimizeCutting,
+  productIndicesInProgram,
+} from "../lib/optimize";
 import { EMPTY_QUOTE_CLIENT, type QuoteClientInfo } from "../lib/quoteClient";
 import { exportQuotePdf } from "../lib/quotePdfExport";
 import { loadPriceTable } from "../lib/priceTable";
@@ -108,12 +113,24 @@ function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult;
 }
 
 function ProgramProductsTable({
+  program,
   products,
   allowOvershoot,
 }: {
+  program: ProgramResult;
   products: RankedPlan["products"];
   allowOvershoot: boolean;
 }) {
+  const rows = productIndicesInProgram(program)
+    .map((index) => {
+      const product = products[index];
+      if (!product) return null;
+      const pieces = program.piecesPerProduct[index] ?? 0;
+      const weightKg = program.weightPerProductKg[index] ?? 0;
+      return { product, index, pieces, weightKg };
+    })
+    .filter((row): row is NonNullable<typeof row> => row != null);
+
   return (
     <div className="table-wrap">
       <table>
@@ -127,10 +144,10 @@ function ProgramProductsTable({
           </tr>
         </thead>
         <tbody>
-          {products.map((product, i) => (
+          {rows.map(({ product, index, pieces, weightKg }) => (
             <tr key={product.blank.id}>
               <td>
-                <strong style={{ color: BLANK_COLORS[i % BLANK_COLORS.length] }}>
+                <strong style={{ color: BLANK_COLORS[index % BLANK_COLORS.length] }}>
                   {isSlitterItem(product.blank)
                     ? `${fmtInt(product.blank.width)} mm slitter`
                     : fmtDim(product.blank.width, product.blank.length)}
@@ -148,18 +165,18 @@ function ProgramProductsTable({
               </td>
               <td>
                 {isSlitterItem(product.blank)
-                  ? fmtMeters(product.pieces)
-                  : `${fmtInt(product.pieces)} un`}
+                  ? fmtMeters(pieces)
+                  : `${fmtInt(pieces)} un`}
                 {!isSlitterItem(product.blank) &&
                 allowOvershoot &&
-                product.pieces > product.blank.minQty
-                  ? ` (+${product.pieces - product.blank.minQty})`
+                pieces > product.blank.minQty
+                  ? ` (+${pieces - product.blank.minQty})`
                   : ""}
               </td>
               <td>
-                {fmtKg(product.weightKg)}
-                {allowOvershoot && product.weightKg > product.blank.minKg
-                  ? ` (+${fmtNumber(product.weightKg - product.blank.minKg, 1)} Kg)`
+                {fmtKg(weightKg)}
+                {allowOvershoot && weightKg > product.blank.minKg
+                  ? ` (+${fmtNumber(weightKg - product.blank.minKg, 1)} Kg)`
                   : ""}
               </td>
             </tr>
@@ -428,6 +445,7 @@ export default function SlitterCalculator() {
                     </div>
 
                     <ProgramProductsTable
+                      program={program}
                       products={plan.products}
                       allowOvershoot={coil.allowOvershoot ?? true}
                     />
