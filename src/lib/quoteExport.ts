@@ -1,0 +1,88 @@
+import * as XLSX from "xlsx";
+import { blankSpecCitationLine } from "./materialGroups";
+import { itemCommercial, type QuoteConditions } from "./quoteSummary";
+import type { BlankInput } from "./types";
+import { itemKindOf, pvcLabel } from "./types";
+
+const STORAGE_KEY = "liganer-blanks-slitters-quote-v1";
+
+export type SavedQuoteDraft = {
+  conditions: QuoteConditions;
+  savedAt: string;
+};
+
+export function loadQuoteConditions(): QuoteConditions | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SavedQuoteDraft;
+    return parsed.conditions ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveQuoteDraft(conditions: QuoteConditions): void {
+  const draft: SavedQuoteDraft = {
+    conditions,
+    savedAt: new Date().toISOString(),
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+}
+
+function itemExportRows(items: BlankInput[]) {
+  return items.map((item, index) => {
+    const commercial = itemCommercial(item);
+    return {
+      Item: index + 1,
+      Material: itemKindOf(item) === "slitter" ? "SLITTER" : itemKindOf(item) === "blank" ? "BLANK" : "",
+      Spec: blankSpecCitationLine(item),
+      Tipo: item.tipo ?? "",
+      Acabamento: item.acabamento ?? "",
+      PVC: item.pvc ? pvcLabel(item.pvc) : "",
+      Espessura: item.thickness ?? "",
+      Largura: item.width || "",
+      Comprimento: item.length || "",
+      Quantidade: item.minQty || "",
+      "Peso total": item.minKg || "",
+      "Preço sem IPI": commercial.priceWithoutIpi ?? "",
+      ICMS: commercial.icms ?? "",
+      Subtotal: commercial.subtotal ?? "",
+      Observação: item.observation ?? "",
+      "Preço fator 100": item.priceFactor100 ?? "",
+      "Fator utilizado": item.usedFactor ?? "",
+      "Preço fator utilizado": commercial.usedPrice ?? "",
+      Comissão: item.commission ?? "",
+      "Preço serviço": item.servicePrice ?? "",
+      "Descrição serviço": item.serviceDescription ?? "",
+      "Preço total": commercial.totalPrice ?? "",
+    };
+  });
+}
+
+export function downloadItemsCsv(items: BlankInput[], conditions: QuoteConditions): void {
+  const rows = itemExportRows(items);
+  const condRows = Object.entries(conditions).map(([k, v]) => ({ Campo: k, Valor: v }));
+  const sheetItems = XLSX.utils.json_to_sheet(rows);
+  const sheetCond = XLSX.utils.json_to_sheet(condRows);
+  const book = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(book, sheetItems, "Itens");
+  XLSX.utils.book_append_sheet(book, sheetCond, "Condicoes");
+  const csv = XLSX.utils.sheet_to_csv(sheetItems);
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `liganer-blanks-slitters-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function downloadItemsExcel(items: BlankInput[], conditions: QuoteConditions): void {
+  const rows = itemExportRows(items);
+  const condRows = Object.entries(conditions).map(([k, v]) => ({ Campo: k, Valor: v }));
+  const book = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(rows), "Itens");
+  XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(condRows), "Condicoes");
+  XLSX.writeFile(book, `liganer-blanks-slitters-${new Date().toISOString().slice(0, 10)}.xlsx`);
+}

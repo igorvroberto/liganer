@@ -1,10 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
+import QuoteConditions from "../components/QuoteConditions";
+import QuoteTotals from "../components/QuoteTotals";
 import SlitterItemsTable from "../components/SlitterItemsTable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
 import { blankSpecCitation, blankSpecCitationLine } from "../lib/materialGroups";
 import { groupIdenticalStrips, lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
 import { downloadPlanPdf } from "../lib/pdfReport";
 import { loadPriceTable } from "../lib/priceTable";
+import {
+  downloadItemsCsv,
+  downloadItemsExcel,
+  loadQuoteConditions,
+  saveQuoteDraft,
+} from "../lib/quoteExport";
+import {
+  EMPTY_QUOTE_CONDITIONS,
+  quoteSummary,
+  type QuoteConditions as QuoteConditionsState,
+} from "../lib/quoteSummary";
 import { coilFromSlitterItems } from "../lib/slitterCoil";
 import {
   BLANK_COLORS,
@@ -158,6 +171,16 @@ export default function SlitterCalculator() {
   const [demandModes, setDemandModes] = useState<Record<string, "qty" | "weight">>(EMPTY_MODES);
   const [selectedAlt, setSelectedAlt] = useState(0);
   const [priceTableRevision, setPriceTableRevision] = useState(0);
+  const [conditions, setConditions] = useState<QuoteConditionsState>(EMPTY_QUOTE_CONDITIONS);
+  const [status, setStatus] = useState<{ text: string; kind: "" | "ok" | "error" }>({
+    text: "",
+    kind: "",
+  });
+
+  useEffect(() => {
+    const saved = loadQuoteConditions();
+    if (saved) setConditions({ ...EMPTY_QUOTE_CONDITIONS, ...saved });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -179,6 +202,8 @@ export default function SlitterCalculator() {
     ? result.alternatives[selectedAlt] ?? result.alternatives[0] ?? null
     : null;
 
+  const summary = useMemo(() => quoteSummary(items), [items]);
+
   const pricing = useMemo(() => {
     if (!plan) return null;
     const usedPrice = calcUsedFactorPrice(coil.priceFactor100, coil.usedFactor);
@@ -192,6 +217,41 @@ export default function SlitterCalculator() {
       priceWithoutLoss: usedPrice != null ? usedPrice + servicePrice : null,
     };
   }, [plan, coil]);
+
+  const updateCondition = (key: keyof QuoteConditionsState, value: string) => {
+    setConditions((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = () => {
+    try {
+      saveQuoteDraft(conditions);
+      setStatus({ text: "Orçamento salvo neste navegador.", kind: "ok" });
+    } catch {
+      setStatus({ text: "Não foi possível salvar.", kind: "error" });
+    }
+  };
+
+  const handlePdf = (variant: "cliente" | "liganer") => {
+    if (!plan) {
+      setStatus({ text: "Calcule um plano de corte antes de gerar o PDF.", kind: "error" });
+      return;
+    }
+    downloadPlanPdf(plan, coil);
+    setStatus({
+      text: variant === "cliente" ? "PDF cliente gerado." : "PDF Liganer gerado.",
+      kind: "ok",
+    });
+  };
+
+  const handleExcel = () => {
+    downloadItemsExcel(items, conditions);
+    setStatus({ text: "Excel exportado.", kind: "ok" });
+  };
+
+  const handleCsv = () => {
+    downloadItemsCsv(items, conditions);
+    setStatus({ text: "CSV exportado.", kind: "ok" });
+  };
 
   return (
     <div className="calculator-model" data-model="slitters">
@@ -213,6 +273,19 @@ export default function SlitterCalculator() {
           setSelectedAlt(0);
           setItems(next);
         }}
+      />
+
+      <QuoteTotals summary={summary} />
+      <QuoteConditions
+        conditions={conditions}
+        onChange={updateCondition}
+        onSave={handleSave}
+        onPdfCliente={() => handlePdf("cliente")}
+        onPdfLiganer={() => handlePdf("liganer")}
+        onExcel={handleExcel}
+        onCsv={handleCsv}
+        statusText={status.text}
+        statusKind={status.kind}
       />
 
       <div className="grid results-grid">
@@ -451,14 +524,6 @@ export default function SlitterCalculator() {
             </button>
           ))}
         </section>
-      )}
-
-      {plan && (
-        <div className="pdf-dock">
-          <button className="btn btn-primary btn-pdf" type="button" onClick={() => downloadPlanPdf(plan, coil)}>
-            Gerar relatório PDF
-          </button>
-        </div>
       )}
     </div>
   );
