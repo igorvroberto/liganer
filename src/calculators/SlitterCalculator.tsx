@@ -5,7 +5,7 @@ import SlitterItemsTable from "../components/SlitterItemsTable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
 import { blankSpecCitation, blankSpecCitationLine } from "../lib/materialGroups";
 import { groupIdenticalStrips, lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
-import { downloadPlanPdf } from "../lib/pdfReport";
+import { downloadQuotePdf } from "../lib/pdfReport";
 import { loadPriceTable } from "../lib/priceTable";
 import {
   downloadItemsCsv,
@@ -214,11 +214,19 @@ export default function SlitterCalculator() {
   };
 
   const handlePdf = (variant: "cliente" | "liganer") => {
-    if (!plan) {
-      setStatus({ text: "Calcule um plano de corte antes de gerar o PDF.", kind: "error" });
+    if (variant === "liganer" && !plan) {
+      setStatus({ text: "Calcule um plano de corte antes de gerar o PDF Liganer.", kind: "error" });
       return;
     }
-    downloadPlanPdf(plan, coil);
+    downloadQuotePdf({
+      variant,
+      items,
+      conditions,
+      summary,
+      lossByItemId: itemLossById,
+      plan,
+      coil,
+    });
     setStatus({
       text: variant === "cliente" ? "PDF cliente gerado." : "PDF Liganer gerado.",
       kind: "ok",
