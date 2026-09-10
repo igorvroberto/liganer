@@ -15,6 +15,7 @@ import {
 } from "../lib/quoteExport";
 import {
   EMPTY_QUOTE_CONDITIONS,
+  itemLossFromPlan,
   quoteSummary,
   type QuoteConditions as QuoteConditionsState,
 } from "../lib/quoteSummary";
@@ -178,7 +179,12 @@ export default function SlitterCalculator() {
     ? result.alternatives[selectedAlt] ?? result.alternatives[0] ?? null
     : null;
 
-  const summary = useMemo(() => quoteSummary(items), [items]);
+  const itemLossById = useMemo(
+    () => itemLossFromPlan(plan, coil),
+    [plan, coil],
+  );
+
+  const summary = useMemo(() => quoteSummary(items, itemLossById), [items, itemLossById]);
 
   const pricing = useMemo(() => {
     if (!plan) return null;
@@ -237,6 +243,7 @@ export default function SlitterCalculator() {
         demandModes={demandModes}
         allowOvershoot={allowOvershoot}
         priceTableRevision={priceTableRevision}
+        itemLossById={itemLossById}
         onAllowOvershootChange={(value) => {
           setSelectedAlt(0);
           setAllowOvershoot(value);
