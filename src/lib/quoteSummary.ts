@@ -5,6 +5,7 @@ import {
   applyLossSurcharge,
   type ItemLongitudinalLoss,
 } from "./lossSurcharge";
+import { parseDecimalBr } from "./format";
 
 export type { ItemLongitudinalLoss };
 
@@ -32,6 +33,7 @@ export type QuoteSummary = {
   subtotal: number;
   ipi: number;
   total: number;
+  /** Fração do frete (ex.: 0,01 = 1%), como no chapas. */
   frete: number;
 };
 
@@ -41,6 +43,27 @@ function calcUsedFactorPrice(
 ): number | null {
   if (!priceFactor100 || !usedFactor || usedFactor <= 0) return null;
   return priceFactor100 / (usedFactor / 100);
+}
+
+/**
+ * Frete (%) → fração, igual ao `pb` do chapas-bobinas.
+ * "1" ou "1,0" → 0,01 (1%); "0,01" → 0,01.
+ * Sem dividir por 100 quando ≥ 1, 1% dobraria o preço (bug clássico).
+ */
+export function parseFretePercent(raw: string | number | null | undefined): number {
+  const t =
+    typeof raw === "number"
+      ? Number.isFinite(raw)
+        ? raw
+        : 0
+      : (parseDecimalBr(String(raw ?? "")) ?? 0);
+  if (!t) return 0;
+  return t >= 1 ? t / 100 : t;
+}
+
+export function applyFretePercent(basePrice: number, freteFraction: number): number {
+  if (!(freteFraction > 0)) return basePrice;
+  return basePrice + basePrice * freteFraction;
 }
 
 /** Perda longitudinal por item a partir do plano de corte selecionado. */
@@ -71,11 +94,12 @@ export function itemLossFromPlan(
 
 /**
  * Valores comerciais do item — preço total inclui acréscimo de perda longitudinal
- * quando houver programa de corte.
+ * e frete (%) das condições (mesma dinâmica do chapas).
  */
 export function itemCommercial(
   item: BlankInput,
   loss?: ItemLongitudinalLoss | null,
+  freteFraction = 0,
 ): ItemCommercial {
   const usedPrice = calcUsedFactorPrice(item.priceFactor100, item.usedFactor);
   const service = item.servicePrice ?? 0;
@@ -84,10 +108,13 @@ export function itemCommercial(
   const perdaPct = loss && loss.perdaPct >= 0 ? loss.perdaPct : null;
   const acrescimoPerda =
     perdaMm != null && perdaPct != null ? acrescimoPerdaPct(perdaMm, perdaPct) : null;
-  const totalPrice =
+  const afterLoss =
     baseTotalPrice != null && perdaMm != null && perdaPct != null
       ? applyLossSurcharge(baseTotalPrice, perdaMm, perdaPct)
       : baseTotalPrice;
+  const totalPrice =
+    afterLoss != null ? applyFretePercent(afterLoss, freteFraction) : null;
+  /** No blanks, preço sem IPI acompanha o preço total (já com frete). */
   const priceWithoutIpi = totalPrice;
   const pesoTotal = item.minKg > 0 ? item.minKg : 0;
   const subtotal =
@@ -111,11 +138,13 @@ export function itemCommercial(
 export function quoteSummary(
   items: BlankInput[],
   lossByItemId: Record<string, ItemLongitudinalLoss> = {},
+  freteRaw: string | number | null | undefined = 0,
 ): QuoteSummary {
+  const freteFraction = parseFretePercent(freteRaw);
   let totalKg = 0;
   let subtotal = 0;
   for (const item of items) {
-    const row = itemCommercial(item, lossByItemId[item.id] ?? null);
+    const row = itemCommercial(item, lossByItemId[item.id] ?? null, freteFraction);
     const price = row.priceWithoutIpi ?? 0;
     totalKg += price === 0 ? 0 : row.pesoTotal;
     subtotal += row.subtotal ?? 0;
@@ -126,7 +155,7 @@ export function quoteSummary(
     subtotal,
     ipi,
     total: subtotal + ipi,
-    frete: 0,
+    frete: freteFraction,
   };
 }
 
@@ -165,5 +194,5 @@ export const QUOTE_CONDITION_FIELDS: Array<{
   { key: "cidade_cliente", label: "Cidade do cliente", kind: "text" },
   { key: "tipo_frete", label: "Tipo de frete", kind: "select", options: TIPO_FRETE_OPTIONS },
   { key: "observacoes_gerais", label: "Observações gerais", kind: "text" },
-  { key: "frete", label: "Frete", kind: "text" },
+  { key: "frete", label: "Frete (%)", kind: "text" },
 ];

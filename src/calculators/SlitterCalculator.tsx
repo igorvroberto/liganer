@@ -194,7 +194,10 @@ export default function SlitterCalculator() {
     [plan, coil],
   );
 
-  const summary = useMemo(() => quoteSummary(items, itemLossById), [items, itemLossById]);
+  const summary = useMemo(
+    () => quoteSummary(items, itemLossById, conditions.frete),
+    [items, itemLossById, conditions.frete],
+  );
 
   const updateCondition = (key: keyof QuoteConditionsState, value: string) => {
     setConditions((prev) => ({ ...prev, [key]: value }));
@@ -251,6 +254,7 @@ export default function SlitterCalculator() {
         allowOvershoot={allowOvershoot}
         priceTableRevision={priceTableRevision}
         itemLossById={itemLossById}
+        fretePercent={conditions.frete}
         onAllowOvershootChange={(value) => {
           setSelectedAlt(0);
           setAllowOvershoot(value);

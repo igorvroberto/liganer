@@ -16,7 +16,7 @@ const sample: DraftState = {
       itemKind: "blank",
     },
   ],
-  conditions: { ...EMPTY_QUOTE_CONDITIONS, pagamento: "30 dias", frete: "CIF incluso" },
+  conditions: { ...EMPTY_QUOTE_CONDITIONS, pagamento: "30 dias", frete: "1" },
   demandModes: { "item-1": "weight" },
   allowOvershoot: false,
 };
@@ -31,7 +31,7 @@ describe("storage draft", () => {
     expect(loaded?.items).toHaveLength(1);
     expect(loaded?.items[0]?.width).toBe(100);
     expect(loaded?.conditions.pagamento).toBe("30 dias");
-    expect(loaded?.conditions.frete).toBe("CIF incluso");
+    expect(loaded?.conditions.frete).toBe("1");
     expect(loaded?.demandModes["item-1"]).toBe("weight");
     expect(loaded?.allowOvershoot).toBe(false);
   });

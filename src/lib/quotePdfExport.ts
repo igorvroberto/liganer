@@ -15,6 +15,7 @@ import { blankSpecCitation, blankSpecCitationLine } from "./materialGroups";
 import { groupIdenticalStrips, lossBreakdown, programLoss } from "./optimize";
 import {
   itemCommercial,
+  parseFretePercent,
   QUOTE_CONDITION_FIELDS,
   type ItemLongitudinalLoss,
   type QuoteConditions,
@@ -402,7 +403,13 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
   if (!items.length) return "";
 
   const fields = exportableColumns(kind);
-  const footer = QUOTE_CONDITION_FIELDS.filter((f) => String(conditions[f.key] ?? "").trim());
+  const freteFraction = parseFretePercent(conditions.frete);
+  const footer = QUOTE_CONDITION_FIELDS.filter((f) => {
+    if (!String(conditions[f.key] ?? "").trim()) return false;
+    // Frete (%) interno — oculto no PDF cliente (como chapas).
+    if (kind === "cliente" && f.key === "frete") return false;
+    return true;
+  });
   const number = localPrintNumber();
   const now = new Date().toLocaleString("pt-BR");
   const pdfClass = kind === "liganer" ? "pdf-liganer" : "pdf-cliente";
@@ -411,7 +418,7 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
 
   const itemRows = items
     .map((item, index) => {
-      const commercial = itemCommercial(item, lossByItemId[item.id] ?? null);
+      const commercial = itemCommercial(item, lossByItemId[item.id] ?? null, freteFraction);
       const unitKg = blankUnitKg(item, coilForItem(item, coil));
       const cells = fields
         .map((field) => {

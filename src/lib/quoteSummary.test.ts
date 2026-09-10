@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { IPI_RATE, itemCommercial, quoteSummary } from "./quoteSummary";
+import {
+  IPI_RATE,
+  applyFretePercent,
+  itemCommercial,
+  parseFretePercent,
+  quoteSummary,
+} from "./quoteSummary";
 import type { BlankInput } from "./types";
 
 const base = (partial: Partial<BlankInput>): BlankInput => ({
@@ -10,6 +16,21 @@ const base = (partial: Partial<BlankInput>): BlankInput => ({
   minKg: 0,
   minQty: 0,
   ...partial,
+});
+
+describe("parseFretePercent (paridade chapas)", () => {
+  it("interpreta 1 como 1% (não 100%) — evita dobrar o preço", () => {
+    expect(parseFretePercent("1")).toBeCloseTo(0.01, 10);
+    expect(parseFretePercent(1)).toBeCloseTo(0.01, 10);
+    expect(parseFretePercent("1,5")).toBeCloseTo(0.015, 10);
+    expect(parseFretePercent("0,01")).toBeCloseTo(0.01, 10);
+    expect(parseFretePercent("")).toBe(0);
+  });
+
+  it("1% aumenta 1%, não dobra", () => {
+    expect(applyFretePercent(100, parseFretePercent("1"))).toBeCloseTo(101, 10);
+    expect(applyFretePercent(100, 1)).toBeCloseTo(200, 10); // fração errada = bug
+  });
 });
 
 describe("quoteSummary (paridade chapas-bobinas)", () => {
@@ -59,5 +80,22 @@ describe("quoteSummary (paridade chapas-bobinas)", () => {
 
     const summary = quoteSummary([priced], { p: { perdaMm: 40, perdaPct: 5 } });
     expect(summary.subtotal).toBeCloseTo(1050, 6);
+  });
+
+  it("aplica Frete (%) no preço total e no preço sem IPI", () => {
+    const priced = base({
+      id: "p",
+      minKg: 100,
+      priceFactor100: 10,
+      usedFactor: 100,
+    });
+    const withFrete = itemCommercial(priced, null, parseFretePercent("1"));
+    expect(withFrete.totalPrice).toBeCloseTo(10.1, 6);
+    expect(withFrete.priceWithoutIpi).toBeCloseTo(10.1, 6);
+    expect(withFrete.subtotal).toBeCloseTo(1010, 6);
+
+    const summary = quoteSummary([priced], {}, "1");
+    expect(summary.frete).toBeCloseTo(0.01, 10);
+    expect(summary.subtotal).toBeCloseTo(1010, 6);
   });
 });

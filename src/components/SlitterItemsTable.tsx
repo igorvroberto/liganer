@@ -18,7 +18,7 @@ import {
   parseDecimalBr,
   round2,
 } from "../lib/format";
-import { itemCommercial, type ItemLongitudinalLoss } from "../lib/quoteSummary";
+import { itemCommercial, parseFretePercent, type ItemLongitudinalLoss } from "../lib/quoteSummary";
 import {
   lineLabelFromSpecs,
   lookupPriceFator100,
@@ -61,6 +61,8 @@ type Props = {
   priceTableRevision?: number;
   /** Perda longitudinal por item (do programa de corte). */
   itemLossById?: Record<string, ItemLongitudinalLoss>;
+  /** Frete (%) das condições — mesma regra do chapas (1 → 1%). */
+  fretePercent?: string;
   onAllowOvershootChange: (value: boolean) => void;
   onDemandModesChange: (next: DemandModeMap) => void;
   onItemsChange: (next: BlankInput[]) => void;
@@ -192,11 +194,13 @@ export default function SlitterItemsTable({
   allowOvershoot,
   priceTableRevision = 0,
   itemLossById = {},
+  fretePercent = "",
   onAllowOvershootChange,
   onDemandModesChange,
   onItemsChange,
 }: Props) {
   void priceTableRevision;
+  const freteFraction = parseFretePercent(fretePercent);
   const globalOpts = priceTableOptions();
   const [servicePriceDraft, setServicePriceDraft] = useState<Record<string, string>>({});
 
@@ -408,7 +412,11 @@ export default function SlitterItemsTable({
                 const kind = index === 0 ? itemKindOf(item) : (lockedKind ?? itemKindOf(item));
                 const slitter = kind === "slitter";
                 const materialLocked = index > 0;
-                const commercial = itemCommercial(item, itemLossById[item.id] ?? null);
+                const commercial = itemCommercial(
+                  item,
+                  itemLossById[item.id] ?? null,
+                  freteFraction,
+                );
                 const rowOpts = priceTableOptions({
                   tipo: item.tipo,
                   acabamento: item.acabamento,

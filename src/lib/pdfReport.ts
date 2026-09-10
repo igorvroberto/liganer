@@ -16,6 +16,7 @@ import { blankSpecCitation, blankSpecCitationLine } from "./materialGroups";
 import { blankUnitKg } from "./blankSync";
 import {
   itemCommercial,
+  parseFretePercent,
   QUOTE_CONDITION_FIELDS,
   type ItemLongitudinalLoss,
   type QuoteConditions,
@@ -214,6 +215,7 @@ function appendItemsTable(
   coil: CoilInput | undefined,
   margin: number,
   y: number,
+  freteFraction = 0,
 ): number {
   const liganer = variant === "liganer";
 
@@ -266,7 +268,7 @@ function appendItemsTable(
 
   const body = items.map((item, index) => {
     const loss = lossByItemId[item.id] ?? null;
-    const commercial = itemCommercial(item, loss);
+    const commercial = itemCommercial(item, loss, freteFraction);
     const kind = itemKindOf(item);
     const unitKg = coil ? blankUnitKg(item, {
       ...coil,
@@ -355,6 +357,7 @@ function appendTotalsAndConditions(
   margin: number,
   contentW: number,
   y: number,
+  variant: PdfVariant = "liganer",
 ): number {
   const pageH = doc.internal.pageSize.getHeight();
   if (y + 50 > pageH - 14) {
@@ -393,7 +396,11 @@ function appendTotalsAndConditions(
   doc.text("Condições", margin, y);
   y += 2;
 
-  const filled = QUOTE_CONDITION_FIELDS.filter((f) => String(conditions[f.key] ?? "").trim());
+  const filled = QUOTE_CONDITION_FIELDS.filter((f) => {
+    if (!String(conditions[f.key] ?? "").trim()) return false;
+    if (variant === "cliente" && f.key === "frete") return false;
+    return true;
+  });
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
@@ -633,8 +640,9 @@ export function buildQuotePdf(input: QuotePdfInput): jsPDF {
   const contentW = pageW - margin * 2;
 
   let y = appendBanner(doc, fontName, variant, items.length, pageW, margin);
-  y = appendItemsTable(doc, fontName, variant, items, lossByItemId, coil, margin, y);
-  y = appendTotalsAndConditions(doc, fontName, summary, conditions, margin, contentW, y);
+  const freteFraction = parseFretePercent(conditions.frete);
+  y = appendItemsTable(doc, fontName, variant, items, lossByItemId, coil, margin, y, freteFraction);
+  y = appendTotalsAndConditions(doc, fontName, summary, conditions, margin, contentW, y, variant);
 
   if (variant === "liganer" && plan && coil) {
     appendCuttingResult(doc, fontName, plan, coil, margin, contentW, y);

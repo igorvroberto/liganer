@@ -1,12 +1,13 @@
 import * as XLSX from "xlsx";
 import { blankSpecCitationLine } from "./materialGroups";
-import { itemCommercial, type QuoteConditions } from "./quoteSummary";
+import { itemCommercial, parseFretePercent, type QuoteConditions } from "./quoteSummary";
 import type { BlankInput } from "./types";
 import { itemKindOf, pvcLabel } from "./types";
 
-function itemExportRows(items: BlankInput[]) {
+function itemExportRows(items: BlankInput[], freteRaw: string) {
+  const freteFraction = parseFretePercent(freteRaw);
   return items.map((item, index) => {
-    const commercial = itemCommercial(item);
+    const commercial = itemCommercial(item, null, freteFraction);
     return {
       Item: index + 1,
       Material: itemKindOf(item) === "slitter" ? "SLITTER" : itemKindOf(item) === "blank" ? "BLANK" : "",
@@ -35,7 +36,7 @@ function itemExportRows(items: BlankInput[]) {
 }
 
 export function downloadItemsCsv(items: BlankInput[], conditions: QuoteConditions): void {
-  const rows = itemExportRows(items);
+  const rows = itemExportRows(items, conditions.frete);
   const condRows = Object.entries(conditions).map(([k, v]) => ({ Campo: k, Valor: v }));
   const sheetItems = XLSX.utils.json_to_sheet(rows);
   const sheetCond = XLSX.utils.json_to_sheet(condRows);
@@ -53,7 +54,7 @@ export function downloadItemsCsv(items: BlankInput[], conditions: QuoteCondition
 }
 
 export function downloadItemsExcel(items: BlankInput[], conditions: QuoteConditions): void {
-  const rows = itemExportRows(items);
+  const rows = itemExportRows(items, conditions.frete);
   const condRows = Object.entries(conditions).map(([k, v]) => ({ Campo: k, Valor: v }));
   const book = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(rows), "Itens");
