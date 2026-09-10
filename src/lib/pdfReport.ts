@@ -33,6 +33,7 @@ import {
 } from "./types";
 import { groupIdenticalStrips, lossBreakdown, programLoss } from "./optimize";
 import { registerPdfFonts } from "./pdfFonts";
+import { localPrintNumber } from "./storage";
 
 export type PdfVariant = "cliente" | "liganer";
 
@@ -66,16 +67,8 @@ function dash(value: string | number | null | undefined): string {
   return String(value);
 }
 
-export function reportFileName(variant: PdfVariant, plan?: RankedPlan | null): string {
-  const date = new Date();
-  const stamp = [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    String(date.getDate()).padStart(2, "0"),
-  ].join("-");
-  if (variant === "cliente") return `liganer-orcamento-cliente-${stamp}.pdf`;
-  const prog = plan ? `${plan.setupCount}prog-` : "";
-  return `liganer-orcamento-liganer-${prog}${stamp}.pdf`;
+export function reportFileName(_variant?: PdfVariant, _plan?: RankedPlan | null): string {
+  return `${localPrintNumber()}.pdf`;
 }
 
 function drawStripBar(

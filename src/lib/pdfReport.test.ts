@@ -59,7 +59,7 @@ describe("pdfReport", () => {
     expect(text).toContain("30 dias");
     expect(text).not.toContain("Resultado do corte");
     expect(text).not.toContain("Produ\u00e7\u00e3o por item");
-    expect(reportFileName("cliente")).toMatch(/^liganer-orcamento-cliente-\d{4}-\d{2}-\d{2}\.pdf$/);
+    expect(reportFileName("cliente")).toMatch(/^\d{8}\.pdf$/);
   });
 
   it("PDF Liganer inclui Resultado do corte", () => {
@@ -102,9 +102,7 @@ describe("pdfReport", () => {
     expect(text).toContain("PVC");
     expect(text).toContain("Produ\u00e7\u00e3o por item");
     expect(text).toContain("P\u00e1gina");
-    expect(reportFileName("liganer", plan)).toMatch(
-      /^liganer-orcamento-liganer-\d+prog-\d{4}-\d{2}-\d{2}\.pdf$/,
-    );
+    expect(reportFileName("liganer", plan)).toMatch(/^\d{8}\.pdf$/);
   });
 
   it("mostra a sucata em mm na barra do programa (Liganer)", () => {
