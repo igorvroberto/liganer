@@ -9,32 +9,32 @@ export default function App() {
   return (
     <div className="app">
       <header className="hero">
-        <div>
-          <div className="brand-mark">
-            <div className="logo">LG</div>
-            <div>
-              <div className="eyebrow">Liganer · Aço inoxidável</div>
-              <h1>Calculadora de aproveitamento de blanks e slitters</h1>
-            </div>
+        <div className="brand-row">
+          <div className="brand-mark" aria-hidden="true">
+            LG
           </div>
-          <p>
-            Escolha o modelo de cálculo. Slitters usa a mecânica atual de tiras na bobina.
-            Blanks parte da mesma base e terá regras próprias em seguida.
-          </p>
-          <div className="model-picker" role="group" aria-label="Modelo de cálculo">
-            <span className="model-picker-label">Modelo</span>
-            <div className="chips">
-              {CALCULATOR_MODELS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={`chip ${model === option.value ? "active" : ""}`}
-                  onClick={() => setModel(option.value)}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+          <div>
+            <p className="eyebrow">Liganer · Aço inoxidável</p>
+            <h1>Calculadora de aproveitamento de blanks e slitters</h1>
+          </div>
+        </div>
+        <p className="lede">
+          Escolha o modelo de cálculo. Slitters usa a mecânica atual de tiras na bobina. Blanks parte
+          da mesma base e terá regras próprias em seguida.
+        </p>
+        <div className="model-picker" role="group" aria-label="Modelo de cálculo">
+          <span className="model-picker-label">Modelo</span>
+          <div className="chips">
+            {CALCULATOR_MODELS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`chip ${model === option.value ? "active" : ""}`}
+                onClick={() => setModel(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
       </header>
