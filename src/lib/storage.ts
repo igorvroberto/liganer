@@ -100,3 +100,19 @@ export function saveDraft(state: DraftState): void {
     } satisfies DraftState),
   );
 }
+
+/**
+ * Número do orçamento no padrão chapas: AAMMDD + seq do dia (2 dígitos).
+ * Ex.: 1º de 10/09/2026 → 26091001; 2º → 26091002; 99º → 26091099.
+ */
+export function localPrintNumber(now = new Date()): string {
+  const ymd = [
+    String(now.getFullYear()).slice(2),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("");
+  const key = `liganer-blanks-slitters-print-${ymd}`;
+  const next = Number(getItem(key, "0")) + 1;
+  setItem(key, String(next));
+  return `${ymd}${String(next).padStart(2, "0")}`;
+}

@@ -46,7 +46,8 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).toContain("Condições");
     expect(html).toContain("30 dias");
     expect(html).toContain("Cliente Teste");
-    expect(html).toContain("@page { size: A4 landscape");
+    expect(html).toMatch(/<title>\d{8}<\/title>/);
+    expect(html).toMatch(/Nº \d{8}/);
     expect(html).toContain("#c60000");
     expect(html).not.toContain("Resultado do corte");
     expect(html).not.toContain("Fator\nutilizado");

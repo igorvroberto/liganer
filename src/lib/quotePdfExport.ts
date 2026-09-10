@@ -19,6 +19,7 @@ import {
   type QuoteConditions,
   type QuoteSummary,
 } from "./quoteSummary";
+import { localPrintNumber } from "./storage";
 import {
   COMMISSION_OPTIONS,
   isSlitterItem,
@@ -90,17 +91,6 @@ function itemHeaderLabel(label: string): string {
 function logoUrl(): string {
   const base = import.meta.env.BASE_URL || "/";
   return `${window.location.origin}${base}liganer-favicon.webp`;
-}
-
-function localPrintNumber(): string {
-  const key = "liganer-blanks-slitters-print-number";
-  try {
-    const next = Number(localStorage.getItem(key) || "0") + 1;
-    localStorage.setItem(key, String(next));
-    return String(next);
-  } catch {
-    return String(Date.now() % 100000);
-  }
 }
 
 function allColumns(): PdfColumn[] {
@@ -400,7 +390,7 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
 
   const fields = exportableColumns(kind);
   const footer = QUOTE_CONDITION_FIELDS.filter((f) => String(conditions[f.key] ?? "").trim());
-  const number = typeof window !== "undefined" ? localPrintNumber() : "1";
+  const number = localPrintNumber();
   const now = new Date().toLocaleString("pt-BR");
   const pdfClass = kind === "liganer" ? "pdf-liganer" : "pdf-cliente";
   const logo =
@@ -470,7 +460,7 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Liganer · Orçamento ${escapeHtml(number)}</title>
+  <title>${escapeHtml(number)}</title>
   <style>
     @page { size: A4 landscape; margin: 8mm; }
     * { box-sizing: border-box; }
