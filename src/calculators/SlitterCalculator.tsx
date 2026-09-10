@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
+import QuoteClientFields from "../components/QuoteClientFields";
 import QuoteConditions from "../components/QuoteConditions";
 import QuoteTotals from "../components/QuoteTotals";
 import SlitterItemsTable from "../components/SlitterItemsTable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
 import { blankSpecCitation, blankSpecCitationLine } from "../lib/materialGroups";
 import { groupIdenticalStrips, lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
+import { EMPTY_QUOTE_CLIENT, type QuoteClientInfo } from "../lib/quoteClient";
 import { exportQuotePdf } from "../lib/quotePdfExport";
 import { loadPriceTable } from "../lib/priceTable";
 import {
   downloadItemsCsv,
   downloadItemsExcel,
+  loadQuoteClient,
   loadQuoteConditions,
   saveQuoteDraft,
 } from "../lib/quoteExport";
@@ -149,6 +152,7 @@ export default function SlitterCalculator() {
   const [selectedAlt, setSelectedAlt] = useState(0);
   const [priceTableRevision, setPriceTableRevision] = useState(0);
   const [conditions, setConditions] = useState<QuoteConditionsState>(EMPTY_QUOTE_CONDITIONS);
+  const [client, setClient] = useState<QuoteClientInfo>(EMPTY_QUOTE_CLIENT);
   const [status, setStatus] = useState<{ text: string; kind: "" | "ok" | "error" }>({
     text: "",
     kind: "",
@@ -157,6 +161,8 @@ export default function SlitterCalculator() {
   useEffect(() => {
     const saved = loadQuoteConditions();
     if (saved) setConditions({ ...EMPTY_QUOTE_CONDITIONS, ...saved });
+    const savedClient = loadQuoteClient();
+    if (savedClient) setClient(savedClient);
   }, []);
 
   useEffect(() => {
@@ -206,7 +212,7 @@ export default function SlitterCalculator() {
 
   const handleSave = () => {
     try {
-      saveQuoteDraft(conditions);
+      saveQuoteDraft(conditions, client);
       setStatus({ text: "Orçamento salvo neste navegador.", kind: "ok" });
     } catch {
       setStatus({ text: "Não foi possível salvar.", kind: "error" });
@@ -226,6 +232,7 @@ export default function SlitterCalculator() {
       lossByItemId: itemLossById,
       plan,
       coil,
+      client,
     });
     setStatus({
       text: variant === "cliente" ? "PDF cliente gerado." : "PDF Liganer gerado.",
@@ -245,6 +252,8 @@ export default function SlitterCalculator() {
 
   return (
     <div className="calculator-model" data-model="slitters">
+      <QuoteClientFields client={client} onChange={setClient} />
+
       <SlitterItemsTable
         items={items}
         coil={coil}
