@@ -7,6 +7,7 @@ import {
   syncBlankFromQty,
   syncBlankFromWeight,
   syncSlitterFromQty,
+  syncSlitterFromUnitWeight,
   syncSlitterFromWeight,
 } from "./blankSync";
 import type { BlankInput, CoilInput } from "./types";
@@ -86,6 +87,40 @@ describe("blankSync", () => {
     expect(withQty.minKg).toBe(1000);
     expect(withQty.length).toBe(slitterLengthFromWeight({ ...item, minQty: 4 }, coil));
     expect(withQty.length).toBeLessThan(slitterLengthFromWeight(item, coil));
+  });
+
+  it("no SLITTER, peso unitário define comprimento e peso total pela Qtd", () => {
+    const item: BlankInput = {
+      id: "s",
+      name: "",
+      itemKind: "slitter",
+      width: 600,
+      length: 0,
+      minKg: 0,
+      minQty: 4,
+    };
+    const unitKg = 1.92; // 600×1000×0,4×8 / 1e6
+    const next = syncSlitterFromUnitWeight(item, coil, unitKg);
+    expect(next.minQty).toBe(4);
+    expect(next.length).toBe(1000);
+    expect(next.minKg).toBeCloseTo(4 * unitKg, 6);
+    expect(blankUnitKg(next, coil)).toBeCloseTo(unitKg, 3);
+  });
+
+  it("no SLITTER, limpar peso unitário zera comprimento e peso total", () => {
+    const item: BlankInput = {
+      id: "s",
+      name: "",
+      itemKind: "slitter",
+      width: 600,
+      length: 1000,
+      minKg: 500,
+      minQty: 2,
+    };
+    const next = syncSlitterFromUnitWeight(item, coil, 0);
+    expect(next.length).toBe(0);
+    expect(next.minKg).toBe(0);
+    expect(next.minQty).toBe(2);
   });
 
   it("resyncBlankDemand não altera Qtd de SLITTER", () => {

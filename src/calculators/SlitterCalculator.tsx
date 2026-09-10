@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import SlitterItemsTable from "../components/SlitterItemsTable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
 import { blankSpecCitation, blankSpecCitationLine } from "../lib/materialGroups";
-import { lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
+import { groupIdenticalStrips, lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
 import { downloadPlanPdf } from "../lib/pdfReport";
 import { loadPriceTable } from "../lib/priceTable";
 import { coilFromSlitterItems } from "../lib/slitterCoil";
@@ -253,10 +253,11 @@ export default function SlitterCalculator() {
                           <th>Largura</th>
                           <th>Comprimento</th>
                           <th>Peças nesta tira</th>
+                          <th>Cortes</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {program.pattern.strips.map((strip, sIdx) => {
+                        {groupIdenticalStrips(program.pattern.strips).map((strip, sIdx) => {
                           const blank = plan.products[strip.productIndex]?.blank;
                           const continuous =
                             blank && isSlitterItem(blank) && strip.cutLength <= 1 + 1e-9;
@@ -277,6 +278,7 @@ export default function SlitterCalculator() {
                                 {strip.rotated ? " (girado)" : ""}
                               </td>
                               <td>{fmtInt(n)}</td>
+                              <td>{fmtInt(strip.stripCount)}</td>
                             </tr>
                           );
                         })}

@@ -5,6 +5,7 @@ import {
   syncBlankFromWeight,
   syncSlitterFromLength,
   syncSlitterFromQty,
+  syncSlitterFromUnitWeight,
   syncSlitterFromWeight,
 } from "../lib/blankSync";
 import {
@@ -306,6 +307,17 @@ export default function SlitterItemsTable({
     );
   };
 
+  const updateUnitWeight = (id: string, raw: string) => {
+    const unitKg = raw === "" ? 0 : Number(raw);
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id || !isSlitterItem(item)) return item;
+        const kg = Number.isFinite(unitKg) ? Math.max(0, unitKg) : 0;
+        return syncSlitterFromUnitWeight(item, coilForItem(item), kg);
+      }),
+    );
+  };
+
   const addItem = () => {
     const id = `item-${Date.now()}`;
     const lockedKind = itemKindOf(items[0]);
@@ -594,12 +606,23 @@ export default function SlitterItemsTable({
                         aria-label="Quantidade"
                       />
                     </td>
-                    <td className="formula-cell">
-                      <span className="calculated-cell">
-                        {unitKg > 0
-                          ? `${fmtNumber(unitKg, 3)} Kg${slitter && !(item.length > 0) ? " /mm" : ""}`
-                          : "—"}
-                      </span>
+                    <td className={slitter ? undefined : "formula-cell"}>
+                      {slitter ? (
+                        <input
+                          className="cell-control"
+                          type="number"
+                          min={0}
+                          step={0.001}
+                          value={unitKg > 0 ? Number(unitKg.toFixed(3)) : ""}
+                          title="Altera comprimento e peso total (quantidade × peso unitário)"
+                          onChange={(e) => updateUnitWeight(item.id, e.target.value)}
+                          aria-label="Peso unitário"
+                        />
+                      ) : (
+                        <span className="calculated-cell">
+                          {unitKg > 0 ? `${fmtNumber(unitKg, 3)} Kg` : "—"}
+                        </span>
+                      )}
                     </td>
                     <td>
                       <input

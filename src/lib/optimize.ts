@@ -146,6 +146,23 @@ export function usableWidth(coil: CoilInput): number {
   return coil.width - 2 * coil.edgeTrim;
 }
 
+/** Agrupa tiras idênticas (mesmo produto, rotação, largura e passo) e conta as ocorrências. */
+export function groupIdenticalStrips<T extends Strip>(strips: T[]): Array<T & { stripCount: number }> {
+  const groups: Array<T & { stripCount: number }> = [];
+  const indexByKey = new Map<string, number>();
+  for (const strip of strips) {
+    const key = `${strip.productIndex}|${strip.rotated ? 1 : 0}|${strip.stripWidth}|${strip.cutLength}`;
+    const existing = indexByKey.get(key);
+    if (existing !== undefined) {
+      groups[existing].stripCount += 1;
+      continue;
+    }
+    indexByKey.set(key, groups.length);
+    groups.push({ ...strip, stripCount: 1 });
+  }
+  return groups;
+}
+
 export function stripTypesForBlank(blank: BlankInput, productIndex: number): Strip[] {
   if (isSlitterItem(blank)) {
     // SLITTER: planejamento em mm contínuos para maximizar a largura.

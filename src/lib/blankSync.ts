@@ -96,6 +96,26 @@ export function syncSlitterFromLength(blank: BlankInput, coil: CoilInput): Blank
 }
 
 /**
+ * Após mudar peso unitário no SLITTER:
+ * - comprimento a partir do peso unitário (densidade × largura × espessura)
+ * - peso total = quantidade × peso unitário (Qtd 0 trata como 1)
+ */
+export function syncSlitterFromUnitWeight(
+  blank: BlankInput,
+  coil: CoilInput,
+  unitKg: number,
+): BlankInput {
+  const kg = Number.isFinite(unitKg) ? Math.max(0, unitKg) : 0;
+  if (!(kg > 0)) {
+    return { ...blank, length: 0, minKg: 0 };
+  }
+  const perMm = slitterKgPerMm(blank.width, coil);
+  const length = perMm > 0 ? Math.max(0, Math.round(kg / perMm)) : 0;
+  const qty = blank.minQty > 0 ? blank.minQty : 1;
+  return { ...blank, length, minKg: qty * kg };
+}
+
+/**
  * Após mudar Qtd no SLITTER (manual):
  * - com comprimento → recalcula peso
  * - sem comprimento, com peso → recalcula comprimento
