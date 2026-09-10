@@ -315,7 +315,7 @@ export function priceTableOptions(filter?: {
   espessuras.sort((a, b) => a - b);
 
   const pvc = [
-    { value: "sem" as const, label: "Sem PVC" },
+    { value: "sem" as const, label: "Não" },
     ...current.pvcColumns
       .map((key) => {
         const value = PVC_VALUE_BY_KEY[key as keyof typeof PVC_VALUE_BY_KEY];
