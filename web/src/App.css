@@ -1,22 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* Tokens alinhados a vendas.liganer.com.br/orcamento/chapas-bobinas */
+/* Tokens alinhados a vendas.liganer.com.br/orcamento/blanks-slitters */
 :root {
   --bg: #f2f2f2;
-  --bg-accent: #f2f2f2;
+  --bg-accent: #ebebeb;
   --paper: #fff;
   --panel: #fff;
-  --panel-warm: #fbfbf7;
+  --panel-warm: #f7f7f7;
   --ink: #17211d;
-  --muted: #56635d;
-  --line: #d8dfd9;
+  --muted: #5c5c5c;
+  --line: #e0e0e0;
   --brand: #c60000;
   --brand-2: #c60000;
   --accent: #c60000;
   --accent-light: #fce8e8;
   --accent-dark: #c60000;
   --good: #2d6a4f;
-  --good-bg: #e7f4ec;
+  --good-bg: #ebebeb;
   --ok: #2d6a4f;
   --warn: #4f3b00;
   --warn-bg: #fff8db;
@@ -181,7 +181,7 @@ button {
 .detail,
 .banner {
   background: var(--paper);
-  border: 1px solid #d8dfd9e6;
+  border: 1px solid #e0e0e0e6;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
