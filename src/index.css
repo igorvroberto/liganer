@@ -82,17 +82,14 @@ p {
   margin-bottom: 10px;
 }
 
-.brand-mark {
-  background: var(--accent);
-  color: #fff;
-  letter-spacing: 0.02em;
-  border-radius: 8px;
+.brand-logo {
   flex: none;
-  place-items: center;
   width: 42px;
   height: 42px;
-  font-weight: 800;
-  display: grid;
+  border-radius: 8px;
+  object-fit: contain;
+  display: block;
+  background: #fff;
 }
 
 .eyebrow {
