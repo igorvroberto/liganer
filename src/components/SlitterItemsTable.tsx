@@ -10,12 +10,14 @@ import {
 } from "../lib/blankSync";
 import {
   fmtCurrency,
+  fmtMm,
   fmtNumber,
+  fmtPct,
   fmtThickness,
   parseDecimalBr,
   round2,
 } from "../lib/format";
-import { itemCommercial } from "../lib/quoteSummary";
+import { itemCommercial, type ItemLongitudinalLoss } from "../lib/quoteSummary";
 import {
   lineLabelFromSpecs,
   lookupPriceFator100,
@@ -46,6 +48,8 @@ type Props = {
   allowOvershoot: boolean;
   /** Força re-render quando a tabela de preços carrega. */
   priceTableRevision?: number;
+  /** Perda longitudinal por item (do programa de corte). */
+  itemLossById?: Record<string, ItemLongitudinalLoss>;
   onAllowOvershootChange: (value: boolean) => void;
   onDemandModesChange: (next: DemandModeMap) => void;
   onItemsChange: (next: BlankInput[]) => void;
@@ -176,6 +180,7 @@ export default function SlitterItemsTable({
   demandModes,
   allowOvershoot,
   priceTableRevision = 0,
+  itemLossById = {},
   onAllowOvershootChange,
   onDemandModesChange,
   onItemsChange,
@@ -371,6 +376,9 @@ export default function SlitterItemsTable({
                 <th>Comissão</th>
                 <th>{"Preço\nserviço"}</th>
                 <th>{"Descrição\nserviço"}</th>
+                <th>{"Perda\nmm"}</th>
+                <th>{"Perda\n%"}</th>
+                <th>{"Acréscimo\nperda"}</th>
                 <th>{"Preço\ntotal"}</th>
                 {MTO_FIELDS.map((field) => (
                   <th key={field.key} className="boolean-column">
@@ -388,7 +396,7 @@ export default function SlitterItemsTable({
                 const kind = index === 0 ? itemKindOf(item) : (lockedKind ?? itemKindOf(item));
                 const slitter = kind === "slitter";
                 const materialLocked = index > 0;
-                const commercial = itemCommercial(item);
+                const commercial = itemCommercial(item, itemLossById[item.id] ?? null);
                 const rowOpts = priceTableOptions({
                   tipo: item.tipo,
                   acabamento: item.acabamento,
@@ -727,7 +735,28 @@ export default function SlitterItemsTable({
                       />
                     </td>
                     <td className="formula-cell">
-                      <span className="calculated-cell" title="Preço fator utilizado + preço serviço">
+                      <span className="calculated-cell" title="Perda longitudinal (sobra de largura)">
+                        {commercial.perdaMm != null ? fmtMm(commercial.perdaMm) : "—"}
+                      </span>
+                    </td>
+                    <td className="formula-cell">
+                      <span className="calculated-cell" title="Perda longitudinal %">
+                        {commercial.perdaPct != null ? fmtPct(commercial.perdaPct) : "—"}
+                      </span>
+                    </td>
+                    <td className="formula-cell">
+                      <span
+                        className="calculated-cell"
+                        title="<100 mm: perda % · <300 mm: perda % × 0,20 · ≥300 mm: perda % × 0,15"
+                      >
+                        {commercial.acrescimoPerda != null ? fmtPct(commercial.acrescimoPerda) : "—"}
+                      </span>
+                    </td>
+                    <td className="formula-cell">
+                      <span
+                        className="calculated-cell"
+                        title="(Preço fator utilizado + serviço) com acréscimo de perda"
+                      >
                         {commercial.totalPrice != null ? fmtCurrency(commercial.totalPrice) : "—"}
                       </span>
                     </td>

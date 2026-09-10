@@ -1,4 +1,12 @@
-import type { BlankInput } from "./types";
+import type { BlankInput, CoilInput, RankedPlan } from "./types";
+import { programLoss } from "./optimize";
+import {
+  acrescimoPerdaPct,
+  applyLossSurcharge,
+  type ItemLongitudinalLoss,
+} from "./lossSurcharge";
+
+export type { ItemLongitudinalLoss };
 
 /** Mesma alíquota do orçamento chapas-bobinas. */
 export const IPI_RATE = 0.0325;
@@ -7,11 +15,16 @@ export type ItemCommercial = {
   priceFactor100: number | undefined;
   icms: number | undefined;
   usedPrice: number | null;
+  /** Preço base (fator utilizado + serviço), antes do acréscimo de perda. */
+  baseTotalPrice: number | null;
   totalPrice: number | null;
   /** Preço sem IPI (R$/Kg). null quando não calculável. */
   priceWithoutIpi: number | null;
   subtotal: number | null;
   pesoTotal: number;
+  perdaMm: number | null;
+  perdaPct: number | null;
+  acrescimoPerda: number | null;
 };
 
 export type QuoteSummary = {
@@ -30,14 +43,51 @@ function calcUsedFactorPrice(
   return priceFactor100 / (usedFactor / 100);
 }
 
+/** Perda longitudinal por item a partir do plano de corte selecionado. */
+export function itemLossFromPlan(
+  plan: RankedPlan | null,
+  coil: CoilInput,
+): Record<string, ItemLongitudinalLoss> {
+  if (!plan) return {};
+  const map: Record<string, ItemLongitudinalLoss> = {};
+  for (const program of plan.programs) {
+    const loss = programLoss(program, coil);
+    const seen = new Set<number>();
+    for (const strip of program.pattern.strips) {
+      if (seen.has(strip.productIndex)) continue;
+      seen.add(strip.productIndex);
+      const blank = plan.products[strip.productIndex]?.blank;
+      if (!blank) continue;
+      const next: ItemLongitudinalLoss = {
+        perdaMm: loss.widthWasteMm,
+        perdaPct: loss.lossPercent,
+      };
+      const prev = map[blank.id];
+      if (!prev || next.perdaMm > prev.perdaMm) map[blank.id] = next;
+    }
+  }
+  return map;
+}
+
 /**
- * Valores comerciais do item — mesma lógica base do chapas-bobinas
- * (frete % ainda não entra no preço sem IPI).
+ * Valores comerciais do item — preço total inclui acréscimo de perda longitudinal
+ * quando houver programa de corte.
  */
-export function itemCommercial(item: BlankInput): ItemCommercial {
+export function itemCommercial(
+  item: BlankInput,
+  loss?: ItemLongitudinalLoss | null,
+): ItemCommercial {
   const usedPrice = calcUsedFactorPrice(item.priceFactor100, item.usedFactor);
   const service = item.servicePrice ?? 0;
-  const totalPrice = usedPrice != null ? usedPrice + service : null;
+  const baseTotalPrice = usedPrice != null ? usedPrice + service : null;
+  const perdaMm = loss && loss.perdaMm >= 0 ? loss.perdaMm : null;
+  const perdaPct = loss && loss.perdaPct >= 0 ? loss.perdaPct : null;
+  const acrescimoPerda =
+    perdaMm != null && perdaPct != null ? acrescimoPerdaPct(perdaMm, perdaPct) : null;
+  const totalPrice =
+    baseTotalPrice != null && perdaMm != null && perdaPct != null
+      ? applyLossSurcharge(baseTotalPrice, perdaMm, perdaPct)
+      : baseTotalPrice;
   const priceWithoutIpi = totalPrice;
   const pesoTotal = item.minKg > 0 ? item.minKg : 0;
   const subtotal =
@@ -46,19 +96,26 @@ export function itemCommercial(item: BlankInput): ItemCommercial {
     priceFactor100: item.priceFactor100,
     icms: item.icms,
     usedPrice,
+    baseTotalPrice,
     totalPrice,
     priceWithoutIpi,
     subtotal,
     pesoTotal,
+    perdaMm,
+    perdaPct,
+    acrescimoPerda,
   };
 }
 
 /** Totais do orçamento — idêntico ao `xb` de chapas-bobinas. */
-export function quoteSummary(items: BlankInput[]): QuoteSummary {
+export function quoteSummary(
+  items: BlankInput[],
+  lossByItemId: Record<string, ItemLongitudinalLoss> = {},
+): QuoteSummary {
   let totalKg = 0;
   let subtotal = 0;
   for (const item of items) {
-    const row = itemCommercial(item);
+    const row = itemCommercial(item, lossByItemId[item.id] ?? null);
     const price = row.priceWithoutIpi ?? 0;
     totalKg += price === 0 ? 0 : row.pesoTotal;
     subtotal += row.subtotal ?? 0;
