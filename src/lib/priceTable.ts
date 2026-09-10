@@ -70,10 +70,10 @@ const HEADER_ALIASES: Record<PriceKey, string[]> = {
 };
 
 const PVC_LABELS: Record<Exclude<PvcOption, "sem">, string> = {
-  azul: "Azul",
-  "preto-branco": "Preto e branco",
-  preto: "Preto",
-  nitto: "Nitto Fiber",
+  azul: "AZUL",
+  "preto-branco": "PRETO E BRANCO",
+  preto: "PRETO",
+  nitto: "NITTO FIBER",
 };
 
 const PVC_VALUE_BY_KEY: Record<Exclude<PriceKey, "bobina_inteira" | "bobina_reduzida_ou_chapa_sem_pvc">, PvcOption> =
@@ -315,7 +315,7 @@ export function priceTableOptions(filter?: {
   espessuras.sort((a, b) => a - b);
 
   const pvc = [
-    { value: "sem" as const, label: "Não" },
+    { value: "sem" as const, label: "NÃO" },
     ...current.pvcColumns
       .map((key) => {
         const value = PVC_VALUE_BY_KEY[key as keyof typeof PVC_VALUE_BY_KEY];
