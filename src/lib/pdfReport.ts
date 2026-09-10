@@ -437,11 +437,6 @@ function appendCuttingResult(
     }
   };
 
-  const overshootNote =
-    coil.allowOvershoot === false
-      ? "O peso de cada item não passa do valor digitado. Tiras do mesmo programa são ajustadas para baixo quando necessário."
-      : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina.";
-
   const productionBody = plan.products.map((product) => [
     isSlitterItem(product.blank)
       ? `${fmtInt(product.blank.width)} mm slitter`
@@ -581,13 +576,7 @@ function appendCuttingResult(
       styles: { font: fontName, fontSize: 8, cellPadding: 1.8 },
       columnStyles: { 3: { halign: "right" }, 4: { halign: "right" } },
     });
-    y = lastTableY(doc) + 4;
-
-    doc.setFont(fontName, "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(91, 103, 115);
-    doc.text(overshootNote, margin, y, { maxWidth: contentW });
-    y += 10;
+    y = lastTableY(doc) + 8;
   });
 }
 
