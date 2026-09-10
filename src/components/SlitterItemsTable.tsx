@@ -249,11 +249,6 @@ export default function SlitterItemsTable({
         <div className="items-panel-head">
           <div>
             <h2>Itens</h2>
-            <p className="note">
-              Nenhum campo vem pré-preenchido. O material do item 1 vale para todos os itens (não
-              misture BLANK e SLITTER). No SLITTER, o comprimento é calculado pelo peso (e Qtd, se
-              informada); a Qtd só muda manualmente. BLANK exige comprimento informado.
-            </p>
           </div>
           <button className="btn btn-primary" type="button" onClick={addItem}>
             + Adicionar item
