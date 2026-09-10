@@ -362,11 +362,6 @@ function productionRowsHtml(plan: RankedPlan): string {
 
 /** Resultado do corte no layout antigo (barras coloridas), na mesma ordem da UI. */
 function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
-  const overshootNote =
-    coil.allowOvershoot === false
-      ? "O peso de cada item não passa do valor digitado. Tiras do mesmo programa são ajustadas para baixo quando necessário."
-      : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina.";
-
   const productionTable = `
       <table class="cut-legacy-table">
         <thead>
@@ -375,8 +370,7 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
           </tr>
         </thead>
         <tbody>${productionRowsHtml(plan)}</tbody>
-      </table>
-      <p class="cut-legacy-note">${escapeHtml(overshootNote)}</p>`;
+      </table>`;
 
   const programsHtml = plan.programs
     .map((program, idx) => {

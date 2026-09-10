@@ -431,11 +431,6 @@ export default function SlitterCalculator() {
                       products={plan.products}
                       allowOvershoot={coil.allowOvershoot ?? true}
                     />
-                    <p className="note">
-                      {coil.allowOvershoot === false
-                        ? "O peso de cada item não passa do valor digitado. Tiras do mesmo programa são ajustadas para baixo quando necessário."
-                        : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina."}
-                    </p>
                   </div>
                 );
               })}
