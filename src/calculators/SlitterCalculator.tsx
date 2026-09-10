@@ -109,30 +109,6 @@ function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult;
   );
 }
 
-function ProgramTimeline({
-  programs,
-  totalLengthMm,
-}: {
-  programs: ProgramResult[];
-  totalLengthMm: number;
-}) {
-  if (programs.length <= 1) return null;
-  return (
-    <div className="timeline" aria-label="Sequência de programas na bobina">
-      {programs.map((program, idx) => (
-        <div
-          key={idx}
-          className="timeline-seg"
-          style={{ flex: program.coilLengthMm / totalLengthMm }}
-          title={`Programa ${idx + 1}: ${fmtMeters(program.coilLengthMm)}`}
-        >
-          P{idx + 1}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function ProgramLossNote({ program, coil }: { program: ProgramResult; coil: CoilInput }) {
   const loss = programLoss(program, coil);
   return (
@@ -299,7 +275,6 @@ export default function SlitterCalculator() {
               <p className="note">
                 <strong>{plan.setupCount}</strong> programa{plan.setupCount > 1 ? "s" : ""} de corte
               </p>
-              <ProgramTimeline programs={plan.programs} totalLengthMm={plan.totalCoilLengthMm} />
 
               {plan.programs.map((program, idx) => {
                 const usefulKg = program.weightPerProductKg.reduce((s, w) => s + w, 0);
