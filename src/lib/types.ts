@@ -9,15 +9,15 @@ export type PvcOption = "sem" | "azul" | "preto-branco" | "preto" | "nitto";
 
 /** Fallback estático; no modelo Slitters as opções vêm da tabela de preços. */
 export const PVC_OPTIONS: { value: PvcOption; label: string }[] = [
-  { value: "sem", label: "Não" },
-  { value: "azul", label: "Azul" },
-  { value: "preto-branco", label: "Preto e branco" },
-  { value: "preto", label: "Preto" },
-  { value: "nitto", label: "Nitto Fiber" },
+  { value: "sem", label: "NÃO" },
+  { value: "azul", label: "AZUL" },
+  { value: "preto-branco", label: "PRETO E BRANCO" },
+  { value: "preto", label: "PRETO" },
+  { value: "nitto", label: "NITTO FIBER" },
 ];
 
 export function pvcLabel(pvc: PvcOption | undefined): string {
-  return PVC_OPTIONS.find((o) => o.value === pvc)?.label ?? "Não";
+  return PVC_OPTIONS.find((o) => o.value === pvc)?.label ?? "NÃO";
 }
 
 export type CommissionOption = "bonificada" | "normal" | "reduzida";
