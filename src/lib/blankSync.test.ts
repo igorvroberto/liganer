@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { blankUnitKg, resyncBlankDemand, syncBlankFromQty, syncBlankFromWeight } from "./blankSync";
+import {
+  blankUnitKg,
+  resyncBlankDemand,
+  slitterLengthFromWeight,
+  slitterWeightFromLength,
+  syncBlankFromQty,
+  syncBlankFromWeight,
+  syncSlitterFromQty,
+  syncSlitterFromWeight,
+} from "./blankSync";
 import type { BlankInput, CoilInput } from "./types";
 
 const coil: CoilInput = {
@@ -42,5 +51,55 @@ describe("blankSync", () => {
     const next = resyncBlankDemand({ ...start, width: 650 }, coil, "qty");
     expect(next.minQty).toBe(100);
     expect(next.minKg).toBeGreaterThan(start.minKg);
+  });
+
+  it("no SLITTER, peso determina comprimento sem alterar Qtd", () => {
+    const item: BlankInput = {
+      id: "s",
+      name: "",
+      itemKind: "slitter",
+      width: 600,
+      length: 0,
+      minKg: 1000,
+      minQty: 2,
+    };
+    const next = syncSlitterFromWeight(item, coil);
+    expect(next.minQty).toBe(2);
+    expect(next.length).toBe(slitterLengthFromWeight(item, coil));
+    expect(next.length).toBeGreaterThan(0);
+    // peso ≈ qtd * unit(length)
+    expect(slitterWeightFromLength(next, coil)).toBeCloseTo(1000, 0);
+  });
+
+  it("no SLITTER, Qtd manual recalcula comprimento quando não há length", () => {
+    const item: BlankInput = {
+      id: "s",
+      name: "",
+      itemKind: "slitter",
+      width: 600,
+      length: 0,
+      minKg: 1000,
+      minQty: 1,
+    };
+    const withQty = syncSlitterFromQty({ ...item, minQty: 4 }, coil);
+    expect(withQty.minQty).toBe(4);
+    expect(withQty.minKg).toBe(1000);
+    expect(withQty.length).toBe(slitterLengthFromWeight({ ...item, minQty: 4 }, coil));
+    expect(withQty.length).toBeLessThan(slitterLengthFromWeight(item, coil));
+  });
+
+  it("resyncBlankDemand não altera Qtd de SLITTER", () => {
+    const item: BlankInput = {
+      id: "s",
+      name: "",
+      itemKind: "slitter",
+      width: 600,
+      length: 1000,
+      minKg: 500,
+      minQty: 3,
+    };
+    const next = resyncBlankDemand(item, coil, "weight");
+    expect(next.minQty).toBe(3);
+    expect(next.minKg).toBe(500);
   });
 });

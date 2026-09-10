@@ -178,10 +178,11 @@ export default function BlankItemsTable({
                     <td>
                       <select
                         className="item-kind-select"
-                        value={kind}
+                        value={kind ?? ""}
                         onChange={(e) => updateItemKind(blank.id, e.target.value as ItemKind)}
                         aria-label="Tipo do item"
                       >
+                        <option value="">—</option>
                         {ITEM_KIND_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
                             {opt.label}
