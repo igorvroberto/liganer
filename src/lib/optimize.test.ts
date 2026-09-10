@@ -286,4 +286,32 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
       expect(product.weightKg).toBeLessThanOrEqual(1000 + 1e-6);
     }
   });
+
+  it("empacota 10 tiras de 122 mm em bobina 1250 com refile 5+5 (útil 1240)", () => {
+    const coil = { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 5 };
+    expect(usableWidth(coil)).toBe(1240);
+    const result = optimizeCutting({
+      coil,
+      blanks: [
+        {
+          id: "s122",
+          name: "",
+          itemKind: "slitter",
+          width: 122,
+          length: 0,
+          minKg: 1000,
+          minQty: 0,
+        },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const best = result.alternatives[0].programs
+      .map((p) => p.pattern)
+      .sort((a, b) => a.waste - b.waste)[0];
+    expect(best.strips).toHaveLength(10);
+    expect(best.strips.every((s) => s.stripWidth === 122)).toBe(true);
+    expect(best.usedWidth).toBe(1220);
+    expect(best.waste).toBe(20);
+  });
 });

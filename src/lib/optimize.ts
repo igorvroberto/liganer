@@ -194,10 +194,11 @@ export function generatePatterns(
   stripTypes: Strip[],
   usable: number,
   kerf: number,
-  maxStrips = 6,
+  maxStrips: number,
 ): Pattern[] {
   const results = new Map<string, Pattern>();
   const current: Strip[] = [];
+  const stripCap = Math.max(1, Math.floor(maxStrips));
 
   const fit = (remaining: number, type: Strip, hasStrip: boolean) => {
     const extra = hasStrip ? kerf : 0;
@@ -224,7 +225,7 @@ export function generatePatterns(
 
   const dfs = (remaining: number) => {
     save(remaining);
-    if (current.length >= maxStrips) return;
+    if (current.length >= stripCap) return;
     for (const type of stripTypes) {
       if (!fit(remaining, type, current.length > 0)) continue;
       current.push(type);
@@ -234,6 +235,32 @@ export function generatePatterns(
   };
 
   dfs(usable);
+  return [...results.values()].sort((a, b) => a.waste - b.waste || a.strips.length - b.strips.length);
+}
+
+/** Quantidade máxima de tiras de uma largura que cabem na largura útil (com kerf). */
+export function maxStripsForWidth(stripWidth: number, usable: number, kerf: number): number {
+  if (!(stripWidth > 0) || !(usable > 0)) return 0;
+  return Math.max(0, Math.floor((usable + kerf) / (stripWidth + kerf)));
+}
+
+/** Empacota o máximo de tiras iguais de um tipo na largura útil. */
+export function maximalMonoPattern(type: Strip, usable: number, kerf: number): Pattern | null {
+  const n = maxStripsForWidth(type.stripWidth, usable, kerf);
+  if (n <= 0) return null;
+  const strips = Array.from({ length: n }, () => ({ ...type }));
+  const usedWidth = n * type.stripWidth + Math.max(0, n - 1) * kerf;
+  return { strips, usedWidth, waste: Math.max(0, usable - usedWidth) };
+}
+
+function mergePatterns(patterns: Pattern[]): Pattern[] {
+  const results = new Map<string, Pattern>();
+  for (const pattern of patterns) {
+    const key = patternKey(pattern.strips);
+    const existing = results.get(key);
+    if (existing && existing.waste <= pattern.waste + 1e-9) continue;
+    results.set(key, pattern);
+  }
   return [...results.values()].sort((a, b) => a.waste - b.waste || a.strips.length - b.strips.length);
 }
 
@@ -833,8 +860,14 @@ function optimizeCuttingSingle(input: CalcInput): CalcResult | CalcError {
 
   const usable = usableWidth(coil);
   const minStrip = Math.min(...types.map((t) => t.stripWidth));
-  const maxStrips = Math.min(6, Math.max(1, Math.floor((usable + coil.kerf) / (minStrip + coil.kerf))));
-  const allPatterns = generatePatterns(types, usable, coil.kerf, maxStrips);
+  const physicalMax = Math.max(1, maxStripsForWidth(minStrip, usable, coil.kerf));
+  // DFS misto limitado para não explodir com muitos tipos; mono-produto usa o máximo físico.
+  const dfsMax = Math.min(physicalMax, types.length <= 2 ? physicalMax : 8);
+  const mixed = generatePatterns(types, usable, coil.kerf, dfsMax);
+  const mono = types
+    .map((type) => maximalMonoPattern(type, usable, coil.kerf))
+    .filter((p): p is Pattern => p != null);
+  const allPatterns = mergePatterns([...mixed, ...mono]);
   if (allPatterns.length === 0) {
     return { ok: false, message: "Não foi possível montar um plano de corte com essas medidas." };
   }
