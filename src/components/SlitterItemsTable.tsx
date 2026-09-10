@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   blankUnitKg,
   resyncBlankDemand,
@@ -7,7 +8,15 @@ import {
   syncSlitterFromQty,
   syncSlitterFromWeight,
 } from "../lib/blankSync";
-import { fmtCurrency, fmtNumber, fmtThickness, parseDecimalBr } from "../lib/format";
+import {
+  fmtCurrency,
+  fmtDecimal2,
+  fmtNumber,
+  fmtThickness,
+  parseDecimalBr,
+  parseDecimalBr2,
+  round2,
+} from "../lib/format";
 import {
   lineLabelFromSpecs,
   lookupPriceFator100,
@@ -72,7 +81,7 @@ function withPriceFromTable(item: BlankInput, patch: Partial<BlankInput>): Blank
       espessura: next.thickness,
       pvc: next.pvc,
     });
-    next.priceFactor100 = lookup.matched ? lookup.precoFator100 : undefined;
+    next.priceFactor100 = lookup.matched ? round2(lookup.precoFator100) : undefined;
   } else {
     next.priceFactor100 = undefined;
   }
@@ -102,6 +111,7 @@ export default function SlitterItemsTable({
 }: Props) {
   void priceTableRevision;
   const globalOpts = priceTableOptions();
+  const [priceFactorDrafts, setPriceFactorDrafts] = useState<Record<string, string>>({});
 
   const setItems = (updater: (prev: BlankInput[]) => BlankInput[]) => {
     onItemsChange(updater(items));
@@ -118,6 +128,19 @@ export default function SlitterItemsTable({
   });
 
   const updateItem = (id: string, patch: Partial<BlankInput>, mode?: "qty" | "weight") => {
+    if (
+      patch.tipo !== undefined ||
+      patch.acabamento !== undefined ||
+      patch.thickness !== undefined ||
+      patch.pvc !== undefined
+    ) {
+      setPriceFactorDrafts((prev) => {
+        if (!(id in prev)) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
@@ -506,16 +529,28 @@ export default function SlitterItemsTable({
                       <input
                         className="cell-control"
                         inputMode="decimal"
+                        placeholder="0,00"
                         value={
-                          item.priceFactor100 != null
-                            ? String(item.priceFactor100).replace(".", ",")
-                            : ""
+                          priceFactorDrafts[item.id] ??
+                          (item.priceFactor100 != null ? fmtDecimal2(item.priceFactor100) : "")
                         }
                         onChange={(e) => {
-                          const v = parseDecimalBr(e.target.value);
-                          updateItem(item.id, { priceFactor100: v ?? undefined });
+                          const raw = e.target.value.replace(".", ",");
+                          if (!/^\d*(,\d{0,2})?$/.test(raw) && raw !== "") return;
+                          setPriceFactorDrafts((prev) => ({ ...prev, [item.id]: raw }));
+                          updateItem(item.id, {
+                            priceFactor100: raw === "" ? undefined : (parseDecimalBr2(raw) ?? undefined),
+                          });
                         }}
-                        title="Preenchido pela tabela; pode editar manualmente"
+                        onBlur={() => {
+                          setPriceFactorDrafts((prev) => {
+                            if (!(item.id in prev)) return prev;
+                            const next = { ...prev };
+                            delete next[item.id];
+                            return next;
+                          });
+                        }}
+                        title="Preenchido pela tabela; pode editar manualmente (2 casas)"
                       />
                     </td>
                     <td>

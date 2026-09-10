@@ -68,6 +68,25 @@ export function parseDecimalBr(raw: string): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
+/** Arredonda para 2 casas (preço fator 100 e similares). */
+export function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/** Texto pt-BR com exatamente 2 casas após a vírgula. */
+export function fmtDecimal2(value: number): string {
+  return value.toFixed(2).replace(".", ",");
+}
+
+/** Aceita só até 2 casas após vírgula/ponto; retorna arredondado ou null. */
+export function parseDecimalBr2(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (trimmed === "") return null;
+  if (!/^\d*([.,]\d{0,2})?$/.test(trimmed)) return null;
+  const n = parseDecimalBr(trimmed);
+  return n == null ? null : round2(n);
+}
+
 export function parseThickness(raw: string): number | null {
   const normalized = raw.trim().replace(",", ".");
   if (normalized === "") return null;

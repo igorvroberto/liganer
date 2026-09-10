@@ -214,7 +214,7 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       1: { cellWidth: contentW - 52 },
     },
     body: [
-      ["Preço bobina reduzida fator 100", coil.priceFactor100 != null ? fmtCurrency(coil.priceFactor100, 4) : "-"],
+      ["Preço bobina reduzida fator 100", coil.priceFactor100 != null ? fmtCurrency(coil.priceFactor100) : "-"],
       ["PVC", pvcLabel(coil.pvc)],
       ["Fator utilizado", coil.usedFactor != null ? fmtNumber(coil.usedFactor, 2) : "-"],
       ["Preço fator utilizado", usedFactorPrice != null ? fmtCurrency(usedFactorPrice) : "-"],
