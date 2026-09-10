@@ -85,8 +85,13 @@ describe("pdfReport", () => {
     expect(text).toContain("Relat\u00f3rio de corte de blanks");
     expect(text).toContain("N\u00e3o");
     expect(text).toContain("Peso \u00fatil");
-    expect(text).toContain("Orienta\u00e7\u00e3o");
-    expect(text).toContain("Pe\u00e7as nesta tira");
+    expect(text).toContain("Tipo");
+    expect(text).toContain("Acabamento");
+    expect(text).toContain("PVC");
+    expect(text).toContain("Espessura");
+    expect(text).toContain("Largura");
+    expect(text).toContain("Comprimento");
+    expect(text).toContain("Pe\u00e7as");
     expect(text).toContain("Sobra");
     expect(text).toContain("Produ\u00e7\u00e3o por item");
     expect(text).toContain("P\u00e1gina");
