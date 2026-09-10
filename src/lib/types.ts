@@ -20,6 +20,14 @@ export function pvcLabel(pvc: PvcOption | undefined): string {
   return PVC_OPTIONS.find((o) => o.value === pvc)?.label ?? "Sem PVC";
 }
 
+export type CommissionOption = "bonificada" | "normal" | "reduzida";
+
+export const COMMISSION_OPTIONS: { value: CommissionOption; label: string }[] = [
+  { value: "bonificada", label: "Bonificada" },
+  { value: "normal", label: "Normal" },
+  { value: "reduzida", label: "Reduzida" },
+];
+
 export type BlankInput = {
   id: string;
   name: string;
@@ -39,10 +47,22 @@ export type BlankInput = {
   /** Largura da bobina-mãe usada no plano de corte. */
   coilWidth?: number;
   pvc?: PvcOption;
+  /** Preço sem IPI (R$). */
+  priceWithoutIpi?: number;
+  /** ICMS em percentual (ex.: 4 = 4%). */
+  icms?: number;
+  subtotal?: number;
+  observation?: string;
   priceFactor100?: number;
+  /** Fator máximo permitido. */
+  maxFactor?: number;
   usedFactor?: number;
+  /** Comissão comercial do item. */
+  commission?: CommissionOption;
   servicePrice?: number;
   serviceDescription?: string;
+  /** Preço total do item. */
+  totalPrice?: number;
 };
 
 export function itemKindOf(blank: Pick<BlankInput, "itemKind">): ItemKind | undefined {
