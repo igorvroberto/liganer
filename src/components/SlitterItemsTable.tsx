@@ -23,11 +23,13 @@ import {
   priceTableOptions,
 } from "../lib/priceTable";
 import {
+  COMMISSION_OPTIONS,
   ITEM_KIND_OPTIONS,
   isSlitterItem,
   itemKindOf,
   type BlankInput,
   type CoilInput,
+  type CommissionOption,
   type ItemKind,
   type PvcOption,
 } from "../lib/types";
@@ -82,8 +84,12 @@ function withPriceFromTable(item: BlankInput, patch: Partial<BlankInput>): Blank
       pvc: next.pvc,
     });
     next.priceFactor100 = lookup.matched ? round2(lookup.precoFator100) : undefined;
+    next.icms = lookup.matched
+      ? round2(lookup.icms > 0 && lookup.icms <= 1 ? lookup.icms * 100 : lookup.icms)
+      : undefined;
   } else {
     next.priceFactor100 = undefined;
+    next.icms = undefined;
   }
   return next;
 }
@@ -292,11 +298,18 @@ export default function SlitterItemsTable({
                 <th>Quantidade</th>
                 <th>{"Peso\nunitário"}</th>
                 <th>{"Peso\ntotal"}</th>
+                <th>{"Preço\nsem IPI"}</th>
+                <th>ICMS</th>
+                <th>Subtotal</th>
+                <th>Observação</th>
                 <th>{"Preço\nfator 100"}</th>
+                <th>{"Fator\nmáximo"}</th>
                 <th>{"Fator\nutilizado"}</th>
                 <th>{"Preço\nfator utilizado"}</th>
+                <th>Comissão</th>
                 <th>{"Preço\nserviço"}</th>
                 <th>{"Descrição\nserviço"}</th>
+                <th>{"Preço\ntotal"}</th>
               </tr>
             </thead>
             <tbody>
@@ -538,6 +551,58 @@ export default function SlitterItemsTable({
                       <input
                         className="cell-control"
                         inputMode="decimal"
+                        value={
+                          item.priceWithoutIpi != null
+                            ? String(item.priceWithoutIpi).replace(".", ",")
+                            : ""
+                        }
+                        onChange={(e) => {
+                          const v = parseDecimalBr(e.target.value);
+                          updateItem(item.id, { priceWithoutIpi: v ?? undefined });
+                        }}
+                        aria-label="Preço sem IPI"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="cell-control"
+                        inputMode="decimal"
+                        value={item.icms != null ? String(item.icms).replace(".", ",") : ""}
+                        onChange={(e) => {
+                          const v = parseDecimalBr(e.target.value);
+                          updateItem(item.id, { icms: v ?? undefined });
+                        }}
+                        aria-label="ICMS"
+                        title="Percentual (ex.: 4 = 4%). Preenchido pela tabela quando possível."
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="cell-control"
+                        inputMode="decimal"
+                        value={item.subtotal != null ? String(item.subtotal).replace(".", ",") : ""}
+                        onChange={(e) => {
+                          const v = parseDecimalBr(e.target.value);
+                          updateItem(item.id, { subtotal: v ?? undefined });
+                        }}
+                        aria-label="Subtotal"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="cell-control"
+                        type="text"
+                        value={item.observation ?? ""}
+                        onChange={(e) =>
+                          updateItem(item.id, { observation: e.target.value || undefined })
+                        }
+                        aria-label="Observação"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="cell-control"
+                        inputMode="decimal"
                         placeholder="0,00"
                         value={
                           priceFactorDrafts[item.id] ??
@@ -566,17 +631,49 @@ export default function SlitterItemsTable({
                       <input
                         className="cell-control"
                         inputMode="decimal"
+                        value={item.maxFactor != null ? String(item.maxFactor).replace(".", ",") : ""}
+                        onChange={(e) => {
+                          const v = parseDecimalBr(e.target.value);
+                          updateItem(item.id, { maxFactor: v ?? undefined });
+                        }}
+                        aria-label="Fator máximo"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="cell-control"
+                        inputMode="decimal"
                         value={item.usedFactor != null ? String(item.usedFactor).replace(".", ",") : ""}
                         onChange={(e) => {
                           const v = parseDecimalBr(e.target.value);
                           updateItem(item.id, { usedFactor: v ?? undefined });
                         }}
+                        aria-label="Fator utilizado"
                       />
                     </td>
                     <td className="formula-cell">
                       <span className="calculated-cell">
                         {usedPrice != null ? fmtCurrency(usedPrice) : "—"}
                       </span>
+                    </td>
+                    <td>
+                      <select
+                        className="cell-control"
+                        value={item.commission ?? ""}
+                        onChange={(e) =>
+                          updateItem(item.id, {
+                            commission: (e.target.value || undefined) as CommissionOption | undefined,
+                          })
+                        }
+                        aria-label="Comissão"
+                      >
+                        <option value="">—</option>
+                        {COMMISSION_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td>
                       <input
@@ -589,6 +686,7 @@ export default function SlitterItemsTable({
                           const v = parseDecimalBr(e.target.value);
                           updateItem(item.id, { servicePrice: v ?? undefined });
                         }}
+                        aria-label="Preço serviço"
                       />
                     </td>
                     <td>
@@ -599,6 +697,21 @@ export default function SlitterItemsTable({
                         onChange={(e) =>
                           updateItem(item.id, { serviceDescription: e.target.value || undefined })
                         }
+                        aria-label="Descrição serviço"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        className="cell-control"
+                        inputMode="decimal"
+                        value={
+                          item.totalPrice != null ? String(item.totalPrice).replace(".", ",") : ""
+                        }
+                        onChange={(e) => {
+                          const v = parseDecimalBr(e.target.value);
+                          updateItem(item.id, { totalPrice: v ?? undefined });
+                        }}
+                        aria-label="Preço total"
                       />
                     </td>
                   </tr>
