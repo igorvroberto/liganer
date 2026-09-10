@@ -292,7 +292,11 @@ export function buildPlanPdf(plan: RankedPlan, coil: CoilInput): jsPDF {
       if (blank) specs.push(blankSpecCitationLine(blank));
     }
     const titleExtra = specs.length ? specs.join(" + ") : program.pattern.strips.map((s) => `${fmtInt(s.stripWidth)} mm`).join(" + ");
-    doc.text(`Programa ${idx + 1}  ·  ${fmtMeters(program.coilLengthMm)}  ·  ${titleExtra}`, margin, y);
+    doc.text(
+      `Programa ${idx + 1}  ·  Comprimento total: ${fmtMeters(program.coilLengthMm)}  ·  ${titleExtra}`,
+      margin,
+      y,
+    );
     y += 3;
     drawStripBar(doc, plan, coil.width, coil.edgeTrim, idx, margin, y, contentW, 8, fontName);
     y += 20;

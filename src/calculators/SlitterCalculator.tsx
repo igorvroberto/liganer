@@ -224,7 +224,6 @@ export default function SlitterCalculator() {
           {result.ok && plan && (
             <>
               <p className="note">
-                Comprimento total: <strong>{fmtMeters(plan.totalCoilLengthMm)}</strong> ·{" "}
                 <strong>{plan.setupCount}</strong> programa{plan.setupCount > 1 ? "s" : ""} de corte
               </p>
               <ProgramTimeline programs={plan.programs} totalLengthMm={plan.totalCoilLengthMm} />
@@ -236,10 +235,13 @@ export default function SlitterCalculator() {
                   <div className="program" key={idx}>
                     <div className="program-head">
                       <h3>
-                        Programa {idx + 1} · {fmtMeters(program.coilLengthMm)} de bobina ·{" "}
+                        Programa {idx + 1} ·{" "}
                         {patternSummary(program, plan.products)}
                       </h3>
                     </div>
+                    <p className="note" style={{ marginTop: 0 }}>
+                      Comprimento total: <strong>{fmtMeters(program.coilLengthMm)}</strong>
+                    </p>
                     <LanePreview program={program} coilWidth={coil.width} edgeTrim={coil.edgeTrim} />
                     <table>
                       <thead>
