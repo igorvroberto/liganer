@@ -95,12 +95,13 @@ describe("pdfReport", () => {
     expect(text).toContain("Resultado do corte");
     expect(text).toContain("Totais");
     expect(text).toContain("Condi\u00e7\u00f5es");
-    expect(text).toContain("N\u00e3o");
+    expect(text).toContain("Melhor aproveitamento");
+    expect(text).toContain("Peso necess\u00e1rio");
     expect(text).toContain("Peso \u00fatil");
     expect(text).toContain("Tipo");
     expect(text).toContain("Acabamento");
     expect(text).toContain("PVC");
-    expect(text).toContain("Produ\u00e7\u00e3o por item");
+    expect(text).toContain("Peso produzido");
     expect(text).toContain("P\u00e1gina");
     expect(reportFileName("liganer", plan)).toMatch(/^\d{8}\.pdf$/);
   });

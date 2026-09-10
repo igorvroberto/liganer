@@ -12,7 +12,7 @@ import {
   fmtThickness,
 } from "./format";
 import { blankSpecCitation, blankSpecCitationLine } from "./materialGroups";
-import { groupIdenticalStrips, lossBreakdown, programLoss } from "./optimize";
+import { groupIdenticalStrips, lossBreakdown } from "./optimize";
 import {
   itemCommercial,
   parseFretePercent,
@@ -334,13 +334,54 @@ function stripBarHtml(program: ProgramResult, coilWidth: number, edgeTrim: numbe
   </div>`;
 }
 
-/** Resultado do corte no layout antigo (barras coloridas), não no painel chapas. */
+function productionRowsHtml(plan: RankedPlan): string {
+  return plan.products
+    .map((product) => {
+      const itemLabel = isSlitterItem(product.blank)
+        ? `${fmtInt(product.blank.width)} mm slitter`
+        : fmtDim(product.blank.width, product.blank.length);
+      const pedido = isSlitterItem(product.blank)
+        ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
+        : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`;
+      const unit = isSlitterItem(product.blank)
+        ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
+        : fmtKg(product.unitWeightKg);
+      const produced = isSlitterItem(product.blank)
+        ? fmtMeters(product.pieces)
+        : `${fmtInt(product.pieces)} un`;
+      return `<tr>
+        <td>${escapeHtml(itemLabel)}</td>
+        <td>${escapeHtml(pedido)}</td>
+        <td>${escapeHtml(unit)}</td>
+        <td>${escapeHtml(produced)}</td>
+        <td>${escapeHtml(fmtKg(product.weightKg))}</td>
+      </tr>`;
+    })
+    .join("");
+}
+
+/** Resultado do corte no layout antigo (barras coloridas), na mesma ordem da UI. */
 function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
+  const overshootNote =
+    coil.allowOvershoot === false
+      ? "O peso de cada item não passa do valor digitado. Tiras do mesmo programa são ajustadas para baixo quando necessário."
+      : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina.";
+
+  const productionTable = `
+      <table class="cut-legacy-table">
+        <thead>
+          <tr>
+            <th>Item</th><th>Pedido</th><th>Peso un.</th><th>Produzido</th><th>Peso produzido</th>
+          </tr>
+        </thead>
+        <tbody>${productionRowsHtml(plan)}</tbody>
+      </table>
+      <p class="cut-legacy-note">${escapeHtml(overshootNote)}</p>`;
+
   const programsHtml = plan.programs
     .map((program, idx) => {
       const usefulKg = program.weightPerProductKg.reduce((s, w) => s + w, 0);
       const breakdown = lossBreakdown([program], usefulKg, coil);
-      const loss = programLoss(program, coil);
       const seen = new Set<number>();
       const specs: string[] = [];
       for (const strip of program.pattern.strips) {
@@ -375,98 +416,52 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
 
       return `
         <section class="cut-legacy-program">
-          <h3>Programa ${idx + 1} · Comprimento total: ${escapeHtml(fmtMeters(program.coilLengthMm))} · ${escapeHtml(titleExtra)}</h3>
+          <h3>Programa ${idx + 1} · ${escapeHtml(titleExtra)}</h3>
+          <p class="cut-legacy-note">Comprimento total: <strong>${escapeHtml(fmtMeters(program.coilLengthMm))}</strong></p>
           ${stripBarHtml(program, coil.width, coil.edgeTrim)}
           <table class="cut-legacy-table">
             <thead>
               <tr>
                 <th>Tipo</th><th>Acabamento</th><th>PVC</th><th>Espessura</th>
-                <th>Largura</th><th>Comprimento</th><th>Peças</th><th>Cortes</th>
+                <th>Largura</th><th>Comprimento</th><th>Peças nesta tira</th><th>Cortes</th>
               </tr>
             </thead>
             <tbody>${stripRows}</tbody>
           </table>
-          <p class="cut-legacy-note">Sobra ${escapeHtml(fmtInt(loss.widthWasteMm))}mm (${escapeHtml(fmtPct(loss.widthLossPercent))})</p>
-          <p class="cut-legacy-note">Aproveitamento: ${escapeHtml(fmtPct(breakdown.yieldPercent))} · Refile: ${escapeHtml(fmtMm(coil.edgeTrim * 2))} · Sobra transversal: ${escapeHtml(fmtPct(breakdown.transversalPct))}</p>
+          <h3>Melhor aproveitamento</h3>
+          <p class="cut-legacy-loss-note">
+            <strong>Aproveitamento na largura total da bobina, desconsiderando o refile.</strong>
+            Refile: <strong>${escapeHtml(fmtMm(coil.edgeTrim * 2))}</strong> (2×${escapeHtml(fmtMm(coil.edgeTrim))})
+            · ${escapeHtml(fmtKg(breakdown.refileKg))} (${escapeHtml(fmtPct(breakdown.refilePct))})
+            · Sobra transversal: <strong>${escapeHtml(fmtPct(breakdown.transversalPct))}</strong>
+            (${escapeHtml(fmtKg(breakdown.transversalKg))})
+            · Sobra total: <strong>${escapeHtml(fmtPct(100 - breakdown.yieldPercent))}</strong>
+            — refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.
+          </p>
+          <div class="cut-legacy-kpis">
+            <div class="cut-legacy-kpi good">
+              <span>Aproveitamento</span>
+              <b>${escapeHtml(fmtPct(breakdown.yieldPercent))}</b>
+            </div>
+            <div class="cut-legacy-kpi">
+              <span>Peso necessário</span>
+              <b>${escapeHtml(fmtKg(breakdown.physicalCoilKg))}</b>
+            </div>
+            <div class="cut-legacy-kpi">
+              <span>Peso útil</span>
+              <b>${escapeHtml(fmtKg(usefulKg))}</b>
+            </div>
+          </div>
+          ${productionTable}
         </section>`;
     })
     .join("");
 
-  const productionRows = plan.products
-    .map((product) => {
-      const itemLabel = isSlitterItem(product.blank)
-        ? `${fmtInt(product.blank.width)} mm slitter`
-        : fmtDim(product.blank.width, product.blank.length);
-      const pedido = isSlitterItem(product.blank)
-        ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
-        : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`;
-      const unit = isSlitterItem(product.blank)
-        ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
-        : fmtKg(product.unitWeightKg);
-      const produced = isSlitterItem(product.blank)
-        ? fmtMeters(product.pieces)
-        : `${fmtInt(product.pieces)} un`;
-      return `<tr>
-        <td>${escapeHtml(itemLabel)}</td>
-        <td>${escapeHtml(pedido)}</td>
-        <td>${escapeHtml(unit)}</td>
-        <td>${escapeHtml(produced)}</td>
-        <td>${escapeHtml(fmtKg(product.weightKg))}</td>
-      </tr>`;
-    })
-    .join("");
-
-  const overshootNote =
-    coil.allowOvershoot === false
-      ? "O peso de cada item não ultrapassa o valor digitado. Tiras do mesmo programa são reduzidas quando necessário."
-      : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina.";
-
   return `
     <section class="cut-legacy">
       <h2>Resultado do corte</h2>
-      <p class="cut-legacy-lead">${escapeHtml(String(plan.setupCount))} programa${plan.setupCount > 1 ? "s" : ""} de corte</p>
-
-      <h3>Bobina</h3>
-      <table class="cut-legacy-meta">
-        <tbody>
-          <tr><th>Linha</th><td>${escapeHtml(coil.line?.trim() ? coil.line.trim() : "-")}</td></tr>
-          <tr><th>Espessura</th><td>${escapeHtml(`${fmtThickness(coil.thickness)} mm`)}</td></tr>
-          <tr><th>Largura</th><td>${escapeHtml(fmtMm(coil.width))}</td></tr>
-          <tr><th>Refile (cada lado)</th><td>${escapeHtml(fmtMm(coil.edgeTrim))}</td></tr>
-          <tr><th>Peso pode ultrapassar</th><td>${coil.allowOvershoot === false ? "Não" : "Sim"}</td></tr>
-        </tbody>
-      </table>
-
-      <h3>Resumo do plano</h3>
-      <table class="cut-legacy-summary">
-        <thead>
-          <tr>
-            <th>Aproveitamento</th>
-            <th>Peso necessário</th>
-            <th>Peso útil</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>${escapeHtml(fmtPct(plan.yieldPercent))}</td>
-            <td>${escapeHtml(fmtKg(plan.coilWeightKg))}</td>
-            <td>${escapeHtml(fmtKg(plan.usefulWeightKg))}</td>
-          </tr>
-        </tbody>
-      </table>
-
+      <p class="cut-legacy-lead"><strong>${escapeHtml(String(plan.setupCount))}</strong> programa${plan.setupCount > 1 ? "s" : ""} de corte</p>
       ${programsHtml}
-
-      <h3>Produção por item</h3>
-      <table class="cut-legacy-table">
-        <thead>
-          <tr>
-            <th>Item</th><th>Pedido</th><th>Peso un.</th><th>Produzido</th><th>Peso produzido</th>
-          </tr>
-        </thead>
-        <tbody>${productionRows}</tbody>
-      </table>
-      <p class="cut-legacy-note">${escapeHtml(overshootNote)}</p>
     </section>`;
 }
 
@@ -829,6 +824,41 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       margin: 2px 0 6px;
       color: #5b6773;
       font-size: 8px;
+    }
+    .cut-legacy-loss-note {
+      margin: 2px 0 8px;
+      padding: 6px 8px;
+      border-left: 3px solid #1d4ed8;
+      background: #eff6ff;
+      color: #1e3a5f;
+      font-size: 8px;
+      line-height: 1.35;
+    }
+    .cut-legacy-kpis {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 8px;
+    }
+    .cut-legacy-kpi {
+      flex: 1;
+      border: 1px solid #d5dde4;
+      background: #f3f5f7;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .cut-legacy-kpi span {
+      display: block;
+      color: #5b6773;
+      font-size: 7px;
+      margin-bottom: 2px;
+    }
+    .cut-legacy-kpi b {
+      font-size: 11px;
+      font-weight: 800;
+      color: #1b242c;
+    }
+    .cut-legacy-kpi.good b {
+      color: #15803d;
     }
     .cut-preview { margin: 4px 0 8px; }
     .pattern-bar {
