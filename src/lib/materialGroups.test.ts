@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { groupBlanksByMaterialSpec, materialSpecKey } from "./materialGroups";
-import { optimizeCutting } from "./optimize";
+import { optimizeCutting, productIndicesInProgram } from "./optimize";
 import type { BlankInput, CoilInput } from "./types";
 
 const coil: CoilInput = {
@@ -86,5 +86,29 @@ describe("optimizeCutting — programas por especificação", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.programs.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("resumo de itens por programa só inclui produtos daquele plano", () => {
+    const result = optimizeCutting({
+      coil,
+      blanks: [
+        blank({ id: "a", width: 400, length: 400, tipo: "410S", acabamento: "BA", pvc: "sem", thickness: 0.5, minKg: 6000, minQty: 0 }),
+        blank({ id: "b", width: 300, length: 800, tipo: "410S", acabamento: "BA", pvc: "sem", thickness: 0.6, minKg: 6000, minQty: 0 }),
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.programs.length).toBeGreaterThanOrEqual(2);
+    for (const program of result.programs) {
+      const indices = productIndicesInProgram(program);
+      expect(indices.length).toBeGreaterThan(0);
+      const keys = new Set(indices.map((i) => materialSpecKey(result.products[i].blank)));
+      expect(keys.size).toBe(1);
+      expect(indices).toEqual([...new Set(program.pattern.strips.map((s) => s.productIndex))]);
+    }
+    const allSummaries = result.programs.map((p) =>
+      productIndicesInProgram(p).map((i) => result.products[i].blank.id).sort().join(","),
+    );
+    expect(new Set(allSummaries).size).toBe(allSummaries.length);
   });
 });

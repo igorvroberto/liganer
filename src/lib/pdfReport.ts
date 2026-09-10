@@ -33,7 +33,7 @@ import {
   type CoilInput,
   type RankedPlan,
 } from "./types";
-import { groupIdenticalStrips, lossBreakdown } from "./optimize";
+import { groupIdenticalStrips, lossBreakdown, productIndicesInProgram } from "./optimize";
 import { registerPdfFonts } from "./pdfFonts";
 import { localPrintNumber } from "./storage";
 
@@ -437,20 +437,6 @@ function appendCuttingResult(
     }
   };
 
-  const productionBody = plan.products.map((product) => [
-    isSlitterItem(product.blank)
-      ? `${fmtInt(product.blank.width)} mm slitter`
-      : fmtDim(product.blank.width, product.blank.length),
-    isSlitterItem(product.blank)
-      ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
-      : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`,
-    isSlitterItem(product.blank)
-      ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
-      : fmtKg(product.unitWeightKg),
-    isSlitterItem(product.blank) ? fmtMeters(product.pieces) : `${fmtInt(product.pieces)} un`,
-    fmtKg(product.weightKg),
-  ]);
-
   ensure(20);
   doc.setFont(fontName, "bold");
   doc.setFontSize(11);
@@ -570,7 +556,25 @@ function appendCuttingResult(
       startY: y,
       margin: { left: margin, right: margin },
       head: [["Item", "Pedido", "Peso un.", "Produzido", "Peso produzido"]],
-      body: productionBody,
+      body: productIndicesInProgram(program).flatMap((index) => {
+        const product = plan.products[index];
+        if (!product) return [];
+        const pieces = program.piecesPerProduct[index] ?? 0;
+        const weightKg = program.weightPerProductKg[index] ?? 0;
+        return [[
+          isSlitterItem(product.blank)
+            ? `${fmtInt(product.blank.width)} mm slitter`
+            : fmtDim(product.blank.width, product.blank.length),
+          isSlitterItem(product.blank)
+            ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
+            : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`,
+          isSlitterItem(product.blank)
+            ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
+            : fmtKg(product.unitWeightKg),
+          isSlitterItem(product.blank) ? fmtMeters(pieces) : `${fmtInt(pieces)} un`,
+          fmtKg(weightKg),
+        ]];
+      }),
       headStyles: { font: fontName, fontStyle: "bold", fillColor: BRAND, textColor: 255, fontSize: 7.5 },
       bodyStyles: { font: fontName },
       styles: { font: fontName, fontSize: 8, cellPadding: 1.8 },
