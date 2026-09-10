@@ -170,7 +170,13 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <span className="brand-mark">Liganer</span>
+          <img
+            className="brand-logo"
+            src={`${import.meta.env.BASE_URL}liganer_favicon.webp`}
+            alt="Liganer"
+            width={48}
+            height={48}
+          />
           <div>
             <h1>Prospecção</h1>
             <p>Radar comercial · aço e metalurgia · Araçatuba</p>
