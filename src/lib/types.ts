@@ -23,7 +23,7 @@ export function pvcLabel(pvc: PvcOption | undefined): string {
 export type BlankInput = {
   id: string;
   name: string;
-  /** Material do item no modelo Slitters (BLANK/SLITTER). Default: blank. */
+  /** Material do item (BLANK/SLITTER). Definido no item 1 e replicado nos demais. */
   itemKind?: ItemKind;
   width: number;
   length: number;
@@ -58,14 +58,6 @@ export function isSlitterItem(blank: Pick<BlankInput, "itemKind">): boolean {
 export function isBlankItem(blank: Pick<BlankInput, "itemKind">): boolean {
   return blank.itemKind === "blank";
 }
-
-/** Modelo de cálculo selecionado na calculadora. */
-export type CalculatorModel = "slitters" | "blanks";
-
-export const CALCULATOR_MODELS: { value: CalculatorModel; label: string }[] = [
-  { value: "slitters", label: "Slitters" },
-  { value: "blanks", label: "Blanks" },
-];
 
 export type CoilInput = {
   width: number;

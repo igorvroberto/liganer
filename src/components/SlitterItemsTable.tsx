@@ -174,22 +174,24 @@ export default function SlitterItemsTable({
     );
   };
 
+  const applyKind = (item: BlankInput, kind: ItemKind | undefined): BlankInput => {
+    const next: BlankInput = { ...item, itemKind: kind };
+    const localCoil = coilForItem(next);
+    const mode = demandModes[item.id] ?? "weight";
+    if (kind === "slitter") {
+      if (next.minKg > 0) return syncSlitterFromWeight(next, localCoil);
+      return next;
+    }
+    if (kind === "blank") {
+      return resyncBlankDemand(next, localCoil, mode);
+    }
+    return next;
+  };
+
   const updateItemKind = (id: string, kind: ItemKind | undefined) => {
-    const mode = demandModes[id] ?? "weight";
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item;
-        const next: BlankInput = { ...item, itemKind: kind };
-        if (kind === "slitter") {
-          if (next.minKg > 0) return syncSlitterFromWeight(next, coilForItem(next));
-          return next;
-        }
-        if (kind === "blank") {
-          return resyncBlankDemand(next, coilForItem(next), mode);
-        }
-        return next;
-      }),
-    );
+    // Só o 1º item define o material; aplica a todos (sem misturar BLANK/SLITTER).
+    if (items[0]?.id !== id) return;
+    setItems((prev) => prev.map((item) => applyKind(item, kind)));
   };
 
   const updateQty = (id: string, raw: string) => {
@@ -228,8 +230,9 @@ export default function SlitterItemsTable({
 
   const addItem = () => {
     const id = `item-${Date.now()}`;
+    const lockedKind = itemKindOf(items[0]);
     onDemandModesChange({ ...demandModes, [id]: "weight" });
-    setItems((prev) => [...prev, emptyItem(id)]);
+    setItems((prev) => [...prev, { ...emptyItem(id), itemKind: lockedKind }]);
   };
 
   const removeItem = (id: string) => {
@@ -247,9 +250,9 @@ export default function SlitterItemsTable({
           <div>
             <h2>Itens</h2>
             <p className="note">
-              Nenhum campo vem pré-preenchido. No SLITTER, o comprimento é calculado pelo peso (e Qtd,
-              se informada); a Qtd só muda manualmente. Comprimento editável com peso; peso recalcula
-              o comprimento. BLANK exige comprimento informado.
+              Nenhum campo vem pré-preenchido. O material do item 1 vale para todos os itens (não
+              misture BLANK e SLITTER). No SLITTER, o comprimento é calculado pelo peso (e Qtd, se
+              informada); a Qtd só muda manualmente. BLANK exige comprimento informado.
             </p>
           </div>
           <button className="btn btn-primary" type="button" onClick={addItem}>
@@ -306,8 +309,10 @@ export default function SlitterItemsTable({
                 const localCoil = coilForItem(item);
                 const unitKg = blankUnitKg(item, localCoil);
                 const mode = demandModes[item.id] ?? "weight";
-                const kind = itemKindOf(item);
+                const lockedKind = itemKindOf(items[0]);
+                const kind = index === 0 ? itemKindOf(item) : (lockedKind ?? itemKindOf(item));
                 const slitter = kind === "slitter";
+                const materialLocked = index > 0;
                 const usedPrice = calcUsedFactorPrice(item.priceFactor100, item.usedFactor);
                 const rowOpts = priceTableOptions({
                   tipo: item.tipo,
@@ -337,11 +342,17 @@ export default function SlitterItemsTable({
                       <select
                         className="cell-control item-kind-select"
                         value={kind ?? ""}
+                        disabled={materialLocked}
                         onChange={(e) => {
                           const v = e.target.value;
                           updateItemKind(item.id, v ? (v as ItemKind) : undefined);
                         }}
                         aria-label="Material do item"
+                        title={
+                          materialLocked
+                            ? "Definido pelo item 1 — não é possível misturar materiais"
+                            : undefined
+                        }
                       >
                         <option value="">—</option>
                         {ITEM_KIND_OPTIONS.map((opt) => (
