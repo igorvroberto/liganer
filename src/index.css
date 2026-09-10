@@ -687,30 +687,6 @@ select:focus {
   color: var(--ink);
 }
 
-.timeline {
-  display: flex;
-  width: 100%;
-  height: 28px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  margin: 10px 0 16px;
-}
-
-.timeline-seg {
-  display: grid;
-  place-items: center;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: white;
-  background: linear-gradient(180deg, var(--brand-2), var(--brand));
-  border-right: 1px solid rgba(255, 255, 255, 0.35);
-}
-
-.timeline-seg:last-child {
-  border-right: 0;
-}
-
 .program .cut-preview {
   margin-bottom: 10px;
 }
