@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import SlitterItemsTable from "../components/SlitterItemsTable";
 import { fmtCurrency, fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
+import { blankSpecCitation, blankSpecCitationLine } from "../lib/materialGroups";
 import { lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
 import { downloadPlanPdf } from "../lib/pdfReport";
 import { loadPriceTable } from "../lib/priceTable";
@@ -132,17 +133,16 @@ function ProgramLossNote({ program, coil }: { program: ProgramResult; coil: Coil
 }
 
 function patternSummary(program: ProgramResult, products: RankedPlan["products"]): string {
-  return program.pattern.strips
-    .map((strip) => {
-      const blank = products[strip.productIndex].blank;
-      const label = isSlitterItem(blank)
-        ? blank.length > 0
-          ? `${blank.width}×${blank.length} slitter`
-          : `${blank.width} mm slitter`
-        : `${blank.width}×${blank.length}`;
-      return `${label} ${fmtInt(strip.stripWidth)} mm`;
-    })
-    .join(" + ");
+  const seen = new Set<number>();
+  const parts: string[] = [];
+  for (const strip of program.pattern.strips) {
+    if (seen.has(strip.productIndex)) continue;
+    seen.add(strip.productIndex);
+    const blank = products[strip.productIndex]?.blank;
+    if (!blank) continue;
+    parts.push(blankSpecCitationLine(blank));
+  }
+  return parts.join(" + ");
 }
 
 function calcUsedFactorPrice(priceFactor100: number | undefined, usedFactor: number | undefined): number | null {
@@ -300,19 +300,29 @@ export default function SlitterCalculator() {
                   <table>
                     <thead>
                       <tr>
-                        <th>Tira</th>
-                        <th>Orientação</th>
+                        <th>Tipo</th>
+                        <th>Acabamento</th>
+                        <th>PVC</th>
+                        <th>Espessura</th>
+                        <th>Largura</th>
+                        <th>Comprimento</th>
                         <th>Peças nesta tira</th>
                       </tr>
                     </thead>
                     <tbody>
                       {program.pattern.strips.map((strip, sIdx) => {
                         const n = Math.floor((program.coilLengthMm + 1e-6) / strip.cutLength);
+                        const blank = plan.products[strip.productIndex]?.blank;
+                        const spec = blank ? blankSpecCitation(blank) : null;
                         return (
                           <tr key={sIdx}>
+                            <td>{spec?.tipo ?? "—"}</td>
+                            <td>{spec?.acabamento ?? "—"}</td>
+                            <td>{spec?.pvc ?? "—"}</td>
+                            <td>{spec?.espessura ?? "—"}</td>
                             <td>{fmtMm(strip.stripWidth)}</td>
                             <td>
-                              {fmtDim(strip.stripWidth, strip.cutLength)}
+                              {fmtMm(strip.cutLength)}
                               {strip.rotated ? " (girado)" : ""}
                             </td>
                             <td>{fmtInt(n)}</td>
