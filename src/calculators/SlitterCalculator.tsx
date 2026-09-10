@@ -5,7 +5,7 @@ import QuoteTotals from "../components/QuoteTotals";
 import SlitterItemsTable from "../components/SlitterItemsTable";
 import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
 import { blankSpecCitation, blankSpecCitationLine } from "../lib/materialGroups";
-import { groupIdenticalStrips, lossBreakdown, optimizeCutting, programLoss } from "../lib/optimize";
+import { groupIdenticalStrips, lossBreakdown, optimizeCutting } from "../lib/optimize";
 import { EMPTY_QUOTE_CLIENT, type QuoteClientInfo } from "../lib/quoteClient";
 import { exportQuotePdf } from "../lib/quotePdfExport";
 import { loadPriceTable } from "../lib/priceTable";
@@ -22,7 +22,6 @@ import {
   BLANK_COLORS,
   isSlitterItem,
   type BlankInput,
-  type CoilInput,
   type ProgramResult,
   type RankedPlan,
 } from "../lib/types";
@@ -108,12 +107,66 @@ function LanePreview({ program, coilWidth, edgeTrim }: { program: ProgramResult;
   );
 }
 
-function ProgramLossNote({ program, coil }: { program: ProgramResult; coil: CoilInput }) {
-  const loss = programLoss(program, coil);
+function ProgramProductsTable({
+  products,
+  allowOvershoot,
+}: {
+  products: RankedPlan["products"];
+  allowOvershoot: boolean;
+}) {
   return (
-    <p className="program-loss">
-      Sobra <strong>{fmtInt(loss.widthWasteMm)}mm</strong> ({fmtPct(loss.widthLossPercent)})
-    </p>
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Pedido</th>
+            <th>Peso un.</th>
+            <th>Produzido</th>
+            <th>Peso produzido</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((product, i) => (
+            <tr key={product.blank.id}>
+              <td>
+                <strong style={{ color: BLANK_COLORS[i % BLANK_COLORS.length] }}>
+                  {isSlitterItem(product.blank)
+                    ? `${fmtInt(product.blank.width)} mm slitter`
+                    : fmtDim(product.blank.width, product.blank.length)}
+                </strong>
+              </td>
+              <td>
+                {isSlitterItem(product.blank)
+                  ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
+                  : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`}
+              </td>
+              <td>
+                {isSlitterItem(product.blank)
+                  ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
+                  : fmtKg(product.unitWeightKg)}
+              </td>
+              <td>
+                {isSlitterItem(product.blank)
+                  ? fmtMeters(product.pieces)
+                  : `${fmtInt(product.pieces)} un`}
+                {!isSlitterItem(product.blank) &&
+                allowOvershoot &&
+                product.pieces > product.blank.minQty
+                  ? ` (+${product.pieces - product.blank.minQty})`
+                  : ""}
+              </td>
+              <td>
+                {fmtKg(product.weightKg)}
+                {allowOvershoot && product.weightKg > product.blank.minKg
+                  ? ` (+${fmtNumber(product.weightKg - product.blank.minKg, 1)} Kg)`
+                  : ""}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -346,7 +399,6 @@ export default function SlitterCalculator() {
                         })}
                       </tbody>
                     </table>
-                    <ProgramLossNote program={program} coil={coil} />
 
                     <div className="section-head" style={{ marginTop: 16 }}>
                       <h3>Melhor aproveitamento</h3>
@@ -374,67 +426,19 @@ export default function SlitterCalculator() {
                         <b>{fmtKg(usefulKg)}</b>
                       </div>
                     </div>
+
+                    <ProgramProductsTable
+                      products={plan.products}
+                      allowOvershoot={coil.allowOvershoot ?? true}
+                    />
+                    <p className="note">
+                      {coil.allowOvershoot === false
+                        ? "O peso de cada item não passa do valor digitado. Tiras do mesmo programa são ajustadas para baixo quando necessário."
+                        : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina."}
+                    </p>
                   </div>
                 );
               })}
-
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Item</th>
-                      <th>Pedido</th>
-                      <th>Peso un.</th>
-                      <th>Produzido</th>
-                      <th>Peso produzido</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {plan.products.map((product, i) => (
-                      <tr key={product.blank.id}>
-                        <td>
-                          <strong style={{ color: BLANK_COLORS[i % BLANK_COLORS.length] }}>
-                            {isSlitterItem(product.blank)
-                              ? `${fmtInt(product.blank.width)} mm slitter`
-                              : fmtDim(product.blank.width, product.blank.length)}
-                          </strong>
-                        </td>
-                        <td>
-                          {isSlitterItem(product.blank)
-                            ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
-                            : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`}
-                        </td>
-                        <td>
-                          {isSlitterItem(product.blank)
-                            ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
-                            : fmtKg(product.unitWeightKg)}
-                        </td>
-                        <td>
-                          {isSlitterItem(product.blank)
-                            ? fmtMeters(product.pieces)
-                            : `${fmtInt(product.pieces)} un`}
-                          {!isSlitterItem(product.blank) &&
-                          (coil.allowOvershoot ?? true) &&
-                          product.pieces > product.blank.minQty
-                            ? ` (+${product.pieces - product.blank.minQty})`
-                            : ""}
-                        </td>
-                        <td>
-                          {fmtKg(product.weightKg)}
-                          {(coil.allowOvershoot ?? true) && product.weightKg > product.blank.minKg
-                            ? ` (+${fmtNumber(product.weightKg - product.blank.minKg, 1)} Kg)`
-                            : ""}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="note">
-                {coil.allowOvershoot === false
-                  ? "O peso de cada item não passa do valor digitado. Tiras do mesmo programa são ajustadas para baixo quando necessário."
-                  : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina."}
-              </p>
             </>
           )}
         </section>

@@ -33,7 +33,7 @@ import {
   type CoilInput,
   type RankedPlan,
 } from "./types";
-import { groupIdenticalStrips, lossBreakdown, programLoss } from "./optimize";
+import { groupIdenticalStrips, lossBreakdown } from "./optimize";
 import { registerPdfFonts } from "./pdfFonts";
 import { localPrintNumber } from "./storage";
 
@@ -437,6 +437,25 @@ function appendCuttingResult(
     }
   };
 
+  const overshootNote =
+    coil.allowOvershoot === false
+      ? "O peso de cada item não passa do valor digitado. Tiras do mesmo programa são ajustadas para baixo quando necessário."
+      : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina.";
+
+  const productionBody = plan.products.map((product) => [
+    isSlitterItem(product.blank)
+      ? `${fmtInt(product.blank.width)} mm slitter`
+      : fmtDim(product.blank.width, product.blank.length),
+    isSlitterItem(product.blank)
+      ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
+      : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`,
+    isSlitterItem(product.blank)
+      ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
+      : fmtKg(product.unitWeightKg),
+    isSlitterItem(product.blank) ? fmtMeters(product.pieces) : `${fmtInt(product.pieces)} un`,
+    fmtKg(product.weightKg),
+  ]);
+
   ensure(20);
   doc.setFont(fontName, "bold");
   doc.setFontSize(11);
@@ -454,48 +473,8 @@ function appendCuttingResult(
   );
   y += 6;
 
-  doc.setFont(fontName, "bold");
-  doc.setFontSize(10);
-  doc.text("Bobina", margin, y);
-  y += 2;
-
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    theme: "plain",
-    styles: { font: fontName, fontSize: 8, cellPadding: 1.2 },
-    bodyStyles: { font: fontName },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 42 }, 1: { cellWidth: contentW - 42 } },
-    body: [
-      ["Linha", coil.line?.trim() ? coil.line.trim() : "-"],
-      ["Espessura", `${fmtThickness(coil.thickness)} mm`],
-      ["Largura", fmtMm(coil.width)],
-      ["Refile (cada lado)", fmtMm(coil.edgeTrim)],
-      ["Peso pode ultrapassar", coil.allowOvershoot === false ? "Não" : "Sim"],
-    ],
-  });
-  y = lastTableY(doc) + 6;
-
-  const breakdown = lossBreakdown(plan.programs, plan.usefulWeightKg, coil);
-  doc.setFont(fontName, "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(27, 36, 44);
-  doc.text("Resumo do plano", margin, y);
-  y += 2;
-
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    head: [["Aproveitamento", "Peso necessário", "Peso útil"]],
-    body: [[fmtPct(plan.yieldPercent), fmtKg(plan.coilWeightKg), fmtKg(plan.usefulWeightKg)]],
-    headStyles: { font: fontName, fontStyle: "bold", fillColor: BRAND, textColor: 255, fontSize: 7.5, halign: "center" },
-    bodyStyles: { font: fontName, fontStyle: "bold", fontSize: 9, halign: "center" },
-    styles: { font: fontName, cellPadding: 2 },
-  });
-  y = lastTableY(doc) + 8;
-
   plan.programs.forEach((program, idx) => {
-    ensure(58);
+    ensure(70);
     doc.setFont(fontName, "bold");
     doc.setFontSize(10);
     doc.setTextColor(27, 36, 44);
@@ -510,11 +489,12 @@ function appendCuttingResult(
     const titleExtra = specs.length
       ? specs.join(" + ")
       : program.pattern.strips.map((s) => `${fmtInt(s.stripWidth)} mm`).join(" + ");
-    doc.text(
-      `Programa ${idx + 1}  ·  Comprimento total: ${fmtMeters(program.coilLengthMm)}  ·  ${titleExtra}`,
-      margin,
-      y,
-    );
+    doc.text(`Programa ${idx + 1}  ·  ${titleExtra}`, margin, y);
+    y += 5;
+    doc.setFont(fontName, "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(91, 103, 115);
+    doc.text(`Comprimento total: ${fmtMeters(program.coilLengthMm)}`, margin, y);
     y += 3;
     drawStripBar(doc, plan, coil.width, coil.edgeTrim, idx, margin, y, contentW, 8, fontName);
     y += 20;
@@ -522,7 +502,9 @@ function appendCuttingResult(
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [["Tipo", "Acabamento", "PVC", "Espessura", "Largura", "Comprimento", "Peças", "Cortes"]],
+      head: [
+        ["Tipo", "Acabamento", "PVC", "Espessura", "Largura", "Comprimento", "Peças nesta tira", "Cortes"],
+      ],
       body: groupIdenticalStrips(program.pattern.strips).map((strip) => {
         const blank = plan.products[strip.productIndex]?.blank;
         const continuous = blank && isSlitterItem(blank) && strip.cutLength <= 1 + 1e-9;
@@ -545,81 +527,68 @@ function appendCuttingResult(
       styles: { font: fontName, fontSize: 7, cellPadding: 1.2 },
       columnStyles: { 6: { halign: "right" }, 7: { halign: "right" } },
     });
-    y = lastTableY(doc) + 4;
-    const loss = programLoss(program, coil);
-    autoTable(doc, {
-      startY: y,
-      margin: { left: margin, right: margin },
-      theme: "plain",
-      styles: { font: fontName, fontSize: 8, cellPadding: 1, textColor: [91, 103, 115] },
-      bodyStyles: { font: fontName },
-      body: [[`Sobra ${fmtInt(loss.widthWasteMm)}mm (${fmtPct(loss.widthLossPercent)})`]],
-    });
-    y = lastTableY(doc) + 7;
+    y = lastTableY(doc) + 6;
 
-    // Melhor aproveitamento por programa (como na UI)
     const usefulKg = program.weightPerProductKg.reduce((s, w) => s + w, 0);
     const progBreakdown = lossBreakdown([program], usefulKg, coil);
+
+    doc.setFont(fontName, "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(27, 36, 44);
+    doc.text("Melhor aproveitamento", margin, y);
+    y += 4;
+    doc.setFont(fontName, "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(91, 103, 115);
+    const lossLines = doc.splitTextToSize(
+      `Aproveitamento na largura total da bobina, desconsiderando o refile. Refile: ${fmtMm(coil.edgeTrim * 2)} (2×${fmtMm(coil.edgeTrim)}) · ${fmtKg(progBreakdown.refileKg)} (${fmtPct(progBreakdown.refilePct)}) · Sobra transversal: ${fmtPct(progBreakdown.transversalPct)} (${fmtKg(progBreakdown.transversalKg)}) · Sobra total: ${fmtPct(100 - progBreakdown.yieldPercent)} — refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.`,
+      contentW,
+    );
+    doc.text(lossLines, margin, y);
+    y += lossLines.length * 3.2 + 3;
+
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      theme: "plain",
-      styles: { font: fontName, fontSize: 7.5, cellPadding: 1, textColor: [91, 103, 115] },
+      head: [["Aproveitamento", "Peso necessário", "Peso útil"]],
       body: [
         [
-          `Aproveitamento: ${fmtPct(progBreakdown.yieldPercent)}`,
-          `Refile: ${fmtMm(coil.edgeTrim * 2)}`,
-          `Sobra transversal: ${fmtPct(progBreakdown.transversalPct)}`,
+          fmtPct(progBreakdown.yieldPercent),
+          fmtKg(progBreakdown.physicalCoilKg),
+          fmtKg(usefulKg),
         ],
       ],
+      headStyles: {
+        font: fontName,
+        fontStyle: "bold",
+        fillColor: BRAND,
+        textColor: 255,
+        fontSize: 7.5,
+        halign: "center",
+      },
+      bodyStyles: { font: fontName, fontStyle: "bold", fontSize: 9, halign: "center" },
+      styles: { font: fontName, cellPadding: 2 },
     });
-    y = lastTableY(doc) + 6;
+    y = lastTableY(doc) + 4;
+
+    autoTable(doc, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [["Item", "Pedido", "Peso un.", "Produzido", "Peso produzido"]],
+      body: productionBody,
+      headStyles: { font: fontName, fontStyle: "bold", fillColor: BRAND, textColor: 255, fontSize: 7.5 },
+      bodyStyles: { font: fontName },
+      styles: { font: fontName, fontSize: 8, cellPadding: 1.8 },
+      columnStyles: { 3: { halign: "right" }, 4: { halign: "right" } },
+    });
+    y = lastTableY(doc) + 4;
+
+    doc.setFont(fontName, "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(91, 103, 115);
+    doc.text(overshootNote, margin, y, { maxWidth: contentW });
+    y += 10;
   });
-
-  ensure(40);
-  doc.setFont(fontName, "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(27, 36, 44);
-  doc.text("Produção por item", margin, y);
-  y += 2;
-
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    head: [["Item", "Pedido", "Peso un.", "Produzido", "Peso produzido"]],
-    body: plan.products.map((product) => [
-      isSlitterItem(product.blank)
-        ? `${fmtInt(product.blank.width)} mm slitter`
-        : fmtDim(product.blank.width, product.blank.length),
-      isSlitterItem(product.blank)
-        ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
-        : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`,
-      isSlitterItem(product.blank)
-        ? `${fmtNumber(product.unitWeightKg, 4)} Kg/mm`
-        : fmtKg(product.unitWeightKg),
-      isSlitterItem(product.blank) ? fmtMeters(product.pieces) : `${fmtInt(product.pieces)} un`,
-      fmtKg(product.weightKg),
-    ]),
-    headStyles: { font: fontName, fontStyle: "bold", fillColor: BRAND, textColor: 255, fontSize: 7.5 },
-    bodyStyles: { font: fontName },
-    styles: { font: fontName, fontSize: 8, cellPadding: 1.8 },
-    columnStyles: { 3: { halign: "right" }, 4: { halign: "right" } },
-  });
-  y = lastTableY(doc) + 4;
-
-  doc.setFont(fontName, "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(91, 103, 115);
-  doc.text(
-    coil.allowOvershoot === false
-      ? "O peso de cada item não ultrapassa o valor digitado. Tiras do mesmo programa são reduzidas quando necessário."
-      : "O corte pode ultrapassar um pouco o pedido quando os blanks compartilham o mesmo programa na bobina.",
-    margin,
-    y,
-    { maxWidth: contentW },
-  );
-
-  void breakdown;
 }
 
 /** PDF no padrão chapas-bobinas: cliente = itens+totais+condições; liganer = tudo + resultado do corte. */
