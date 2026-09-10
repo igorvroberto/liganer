@@ -315,6 +315,11 @@ h1 {
   accent-color: var(--accent);
 }
 
+.cell-control-stack {
+  display: grid;
+  gap: 6px;
+}
+
 .cell-control {
   border: 1px solid var(--line);
   width: 100%;
