@@ -47,12 +47,14 @@ export type BlankInput = {
   /** Largura da bobina-mãe usada no plano de corte. */
   coilWidth?: number;
   pvc?: PvcOption;
-  /** Preço sem IPI (R$). */
+  /** Preço sem IPI (R$). Calculado — não editável. */
   priceWithoutIpi?: number;
-  /** ICMS em percentual (ex.: 4 = 4%). */
+  /** ICMS em percentual (ex.: 4 = 4%). Da tabela — não editável. */
   icms?: number;
+  /** Subtotal (R$). Calculado — não editável. */
   subtotal?: number;
   observation?: string;
+  /** Preço fator 100 (R$/Kg). Da tabela — não editável. */
   priceFactor100?: number;
   /** Fator máximo permitido. */
   maxFactor?: number;
@@ -61,9 +63,25 @@ export type BlankInput = {
   commission?: CommissionOption;
   servicePrice?: number;
   serviceDescription?: string;
-  /** Preço total do item. */
+  /** Preço total do item. Calculado — não editável. */
   totalPrice?: number;
+  /** Marcadores MTO (como em chapas-bobinas). */
+  filIndMto?: boolean;
+  acosPrimeMto?: boolean;
+  imgMto?: boolean;
+  csaMto?: boolean;
+  tettoMto?: boolean;
 };
+
+export type MtoFieldKey = "filIndMto" | "acosPrimeMto" | "imgMto" | "csaMto" | "tettoMto";
+
+export const MTO_FIELDS: { key: MtoFieldKey; label: string }[] = [
+  { key: "filIndMto", label: "FIL IND\nMTO" },
+  { key: "acosPrimeMto", label: "AÇOS PRIME\nMTO" },
+  { key: "imgMto", label: "IMG\nMTO" },
+  { key: "csaMto", label: "CSA\nMTO" },
+  { key: "tettoMto", label: "TETTO\nMTO" },
+];
 
 export function itemKindOf(blank: Pick<BlankInput, "itemKind">): ItemKind | undefined {
   if (blank.itemKind === "slitter") return "slitter";

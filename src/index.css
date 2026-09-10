@@ -255,7 +255,7 @@ h1 {
   border-collapse: collapse;
   background: #fff;
   width: 100%;
-  min-width: 2280px;
+  min-width: 2680px;
   font-size: 0.88rem;
 }
 
@@ -300,6 +300,19 @@ h1 {
 
 .items-table td.formula-cell {
   background: #fce8e8;
+}
+
+.items-table th.boolean-column,
+.items-table td.boolean-column {
+  text-align: center;
+  width: 74px;
+  min-width: 74px;
+}
+
+.cell-check {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
 }
 
 .cell-control {
