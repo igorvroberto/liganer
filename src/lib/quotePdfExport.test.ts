@@ -225,4 +225,41 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).not.toContain("Sem condições preenchidas");
   });
 
+  it("omite Cliente e/ou CNPJ vazios; some o bloco se ambos estiverem vazios", () => {
+    const bothEmpty = buildQuotePdfHtml({
+      kind: "cliente",
+      items: blanks,
+      conditions: EMPTY_QUOTE_CONDITIONS,
+      summary: { totalKg: 2000, subtotal: 1000, ipi: 32.5, total: 1032.5, frete: 0 },
+      client: { name: "", cnpj: "  " },
+    });
+    expect(bothEmpty).not.toContain('class="client-card');
+    expect(bothEmpty).not.toContain(">Cliente<");
+    expect(bothEmpty).not.toContain(">CNPJ<");
+
+    const onlyName = buildQuotePdfHtml({
+      kind: "cliente",
+      items: blanks,
+      conditions: EMPTY_QUOTE_CONDITIONS,
+      summary: { totalKg: 2000, subtotal: 1000, ipi: 32.5, total: 1032.5, frete: 0 },
+      client: { name: "ACME", cnpj: "" },
+    });
+    expect(onlyName).toContain("ACME");
+    expect(onlyName).toContain(">Cliente<");
+    expect(onlyName).not.toContain(">CNPJ<");
+    expect(onlyName).toContain("client-card--single");
+
+    const onlyCnpj = buildQuotePdfHtml({
+      kind: "cliente",
+      items: blanks,
+      conditions: EMPTY_QUOTE_CONDITIONS,
+      summary: { totalKg: 2000, subtotal: 1000, ipi: 32.5, total: 1032.5, frete: 0 },
+      client: { name: "", cnpj: "12.345.678/0001-99" },
+    });
+    expect(onlyCnpj).toContain("12.345.678/0001-99");
+    expect(onlyCnpj).toContain(">CNPJ<");
+    expect(onlyCnpj).not.toContain(">Cliente<");
+    expect(onlyCnpj).toContain("client-card--single");
+  });
+
 });
