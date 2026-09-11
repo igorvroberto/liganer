@@ -540,6 +540,32 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       </div>
     </section>`;
 
+  const clientName = String(client.name ?? "").trim();
+  const clientCnpj = String(client.cnpj ?? "").trim();
+  const clientArticles: string[] = [];
+  if (clientName) {
+    clientArticles.push(`
+    <article>
+      <span>Cliente</span>
+      <strong>${escapeHtml(clientName)}</strong>
+    </article>`);
+  }
+  if (clientCnpj) {
+    clientArticles.push(`
+    <article>
+      <span>CNPJ</span>
+      <strong>${escapeHtml(clientCnpj)}</strong>
+    </article>`);
+  }
+  const clientCardClass =
+    clientArticles.length === 1 ? "client-card client-card--single" : "client-card";
+  const clientCardHtml = clientArticles.length
+    ? `
+  <section class="${clientCardClass}">
+    ${clientArticles.join("")}
+  </section>`
+    : "";
+
   const conditionsHtml = footer.length
     ? `
     <section class="panel">
@@ -651,6 +677,9 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       grid-template-columns: 1.4fr 1fr;
       gap: 10px;
       margin-bottom: 12px;
+    }
+    .client-card--single {
+      grid-template-columns: 1fr;
     }
     .client-card article {
       border: 1px solid #d8dfd9;
@@ -951,16 +980,7 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
     </div>
   </header>
 
-  <section class="client-card">
-    <article>
-      <span>Cliente</span>
-      <strong>${escapeHtml(client.name || "—")}</strong>
-    </article>
-    <article>
-      <span>CNPJ</span>
-      <strong>${escapeHtml(client.cnpj || "—")}</strong>
-    </article>
-  </section>
+  ${clientCardHtml}
 
   <table class="items">
     <thead>
