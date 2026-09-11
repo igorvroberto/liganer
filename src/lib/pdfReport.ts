@@ -37,7 +37,7 @@ import { groupIdenticalStrips, lossBreakdown, productIndicesInProgram } from "./
 import { registerPdfFonts } from "./pdfFonts";
 import { localPrintNumber } from "./storage";
 
-export type PdfVariant = "cliente" | "liganer";
+export type PdfVariant = "cliente" | "liganer" | "gestao";
 
 export type QuotePdfInput = {
   variant: PdfVariant;
@@ -187,9 +187,11 @@ function appendBanner(
   margin: number,
 ): number {
   const subtitle =
-    variant === "liganer"
-      ? "Orçamento de blanks e slitters · Uso interno Liganer"
-      : "Orçamento de blanks e slitters · Proposta comercial";
+    variant === "cliente"
+      ? "Orçamento de blanks e slitters · Proposta comercial"
+      : variant === "gestao"
+        ? "Orçamento de blanks e slitters · Gestão"
+        : "Orçamento de blanks e slitters · Uso interno Liganer";
   doc.setFillColor(...BRAND);
   doc.rect(0, 0, pageW, 22, "F");
   doc.setTextColor(255, 255, 255);
@@ -217,7 +219,8 @@ function appendItemsTable(
   y: number,
   freteFraction = 0,
 ): number {
-  const liganer = variant === "liganer";
+  const internal = variant === "liganer" || variant === "gestao";
+  const gestao = variant === "gestao";
 
   const headCliente = [
     "Item",
@@ -279,7 +282,7 @@ function appendItemsTable(
     const commission =
       COMMISSION_OPTIONS.find((o) => o.value === item.commission)?.label ?? "—";
 
-    if (!liganer) {
+    if (!internal) {
       return [
         String(index + 1),
         dash(item.tipo),
@@ -329,21 +332,35 @@ function appendItemsTable(
     ];
   });
 
+  const gestaoExcluded = new Set([
+    "Observação",
+    "Fator 100",
+    "Fator máx.",
+    "Comissão",
+    ...MTO_FIELDS.map((f) => f.label.replace(/\n/g, " ")),
+  ]);
+  const headInternal = gestao
+    ? headLiganer.filter((label) => !gestaoExcluded.has(label))
+    : headLiganer;
+  const bodyInternal = gestao
+    ? body.map((row) => row.filter((_, idx) => !gestaoExcluded.has(headLiganer[idx])))
+    : body;
+
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
-    head: [liganer ? headLiganer : headCliente],
-    body,
+    head: [internal ? headInternal : headCliente],
+    body: internal ? bodyInternal : body,
     headStyles: {
       font: fontName,
       fontStyle: "bold",
       fillColor: BRAND,
       textColor: 255,
-      fontSize: liganer ? 4.5 : 6.5,
+      fontSize: internal ? 4.5 : 6.5,
       halign: "center",
     },
-    bodyStyles: { font: fontName, fontSize: liganer ? 4.8 : 7, halign: "center" },
-    styles: { font: fontName, cellPadding: liganer ? 0.8 : 1.2, overflow: "linebreak" },
+    bodyStyles: { font: fontName, fontSize: internal ? 4.8 : 7, halign: "center" },
+    styles: { font: fontName, cellPadding: internal ? 0.8 : 1.2, overflow: "linebreak" },
   });
 
   return lastTableY(doc) + 6;
@@ -398,7 +415,7 @@ function appendTotalsAndConditions(
 
   const filled = QUOTE_CONDITION_FIELDS.filter((f) => {
     if (!String(conditions[f.key] ?? "").trim()) return false;
-    if (variant === "cliente" && f.key === "frete") return false;
+    if (variant === "cliente" && f.key === "frete") return false; // gestão/liganer mantêm frete
     return true;
   });
   autoTable(doc, {
@@ -600,15 +617,17 @@ export function buildQuotePdf(input: QuotePdfInput): jsPDF {
   y = appendItemsTable(doc, fontName, variant, items, lossByItemId, coil, margin, y, freteFraction);
   y = appendTotalsAndConditions(doc, fontName, summary, conditions, margin, contentW, y, variant);
 
-  if (variant === "liganer" && plan && coil) {
+  if ((variant === "liganer" || variant === "gestao") && plan && coil) {
     appendCuttingResult(doc, fontName, plan, coil, margin, contentW, y);
   }
 
   const pageCount = doc.getNumberOfPages();
   const footer =
-    variant === "liganer"
-      ? "Liganer · Uso interno Liganer"
-      : "Liganer · Proposta comercial";
+    variant === "cliente"
+      ? "Liganer · Proposta comercial"
+      : variant === "gestao"
+        ? "Liganer · Gestão"
+        : "Liganer · Uso interno Liganer";
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFont(fontName, "normal");

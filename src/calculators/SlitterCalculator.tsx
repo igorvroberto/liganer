@@ -278,9 +278,15 @@ export default function SlitterCalculator() {
     }
   };
 
-  const handlePdf = (variant: "cliente" | "liganer") => {
-    if (variant === "liganer" && !plan) {
-      setStatus({ text: "Calcule um plano de corte antes de gerar o PDF Liganer.", kind: "error" });
+  const handlePdf = (variant: "cliente" | "liganer" | "gestao") => {
+    if ((variant === "liganer" || variant === "gestao") && !plan) {
+      setStatus({
+        text:
+          variant === "gestao"
+            ? "Calcule um plano de corte antes de gerar o PDF gestão."
+            : "Calcule um plano de corte antes de gerar o PDF Liganer.",
+        kind: "error",
+      });
       return;
     }
     exportQuotePdf({
@@ -294,7 +300,12 @@ export default function SlitterCalculator() {
       client,
     });
     setStatus({
-      text: variant === "cliente" ? "PDF cliente gerado." : "PDF Liganer gerado.",
+      text:
+        variant === "cliente"
+          ? "PDF cliente gerado."
+          : variant === "gestao"
+            ? "PDF gestão gerado."
+            : "PDF Liganer gerado.",
       kind: "ok",
     });
   };
@@ -342,6 +353,7 @@ export default function SlitterCalculator() {
         onSave={handleSave}
         onPdfCliente={() => handlePdf("cliente")}
         onPdfLiganer={() => handlePdf("liganer")}
+        onPdfGestao={() => handlePdf("gestao")}
         onExcel={handleExcel}
         onCsv={handleCsv}
         statusText={status.text}

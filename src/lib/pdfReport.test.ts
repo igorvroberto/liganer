@@ -129,4 +129,37 @@ describe("pdfReport", () => {
     const text = decodePdfText(pdfLatin1(buildPlanPdf(plan, coil)));
     expect(text).toContain(`sobra ${fmtInt(wasteProgram.pattern.waste)}`);
   });
+
+  it("PDF gestão inclui Resultado do corte sem Observação/Comissão/MTO", () => {
+    const coil = {
+      width: 1250,
+      thickness: 0.4,
+      density: DEFAULT_DENSITY,
+      kerf: 0,
+      edgeTrim: 0,
+      allowOvershoot: false,
+      line: "430 2B",
+    };
+    const result = optimizeCutting({ coil, blanks });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const plan = result.alternatives[0];
+    const pdf = buildQuotePdf({
+      variant: "gestao",
+      items: blanks,
+      conditions: EMPTY_QUOTE_CONDITIONS,
+      summary: { totalKg: 0, subtotal: 0, ipi: 0, total: 0, frete: 0 },
+      plan,
+      coil,
+    });
+    const text = decodePdfText(pdfLatin1(pdf));
+    expect(text).toContain("Gestão");
+    expect(text).toContain("Resultado do corte");
+    expect(text).toContain("Melhor aproveitamento");
+    expect(text).not.toContain("Observa");
+    expect(text).not.toContain("Comiss");
+    expect(reportFileName("gestao", plan)).toMatch(/^\d{8}\.pdf$/);
+  });
+
 });

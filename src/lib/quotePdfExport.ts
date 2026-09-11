@@ -35,7 +35,20 @@ import {
   type RankedPlan,
 } from "./types";
 
-export type PdfKind = "cliente" | "liganer";
+export type PdfKind = "cliente" | "liganer" | "gestao";
+
+/** Liganer e Gestão: layout interno + resultado do corte. */
+function isInternalPdf(kind: PdfKind): boolean {
+  return kind === "liganer" || kind === "gestao";
+}
+
+const GESTAO_EXCLUDED_COLUMNS = new Set([
+  "observation",
+  "priceFactor100",
+  "maxFactor",
+  "commission",
+  ...MTO_FIELDS.map((f) => f.key),
+]);
 
 export type QuotePdfExportInput = {
   kind: PdfKind;
@@ -249,6 +262,9 @@ function allColumns(): PdfColumn[] {
 function exportableColumns(kind: PdfKind): PdfColumn[] {
   const cols = allColumns();
   if (kind === "liganer") return cols;
+  if (kind === "gestao") {
+    return cols.filter((col) => !GESTAO_EXCLUDED_COLUMNS.has(col.key));
+  }
   const byKey = new Map(cols.map((c) => [c.key, c]));
   return CLIENT_PDF_COLUMN_KEYS.map((key) => {
     const col = byKey.get(key);
@@ -479,12 +495,12 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
   const footer = QUOTE_CONDITION_FIELDS.filter((f) => {
     if (!String(conditions[f.key] ?? "").trim()) return false;
     // Frete (%) interno — oculto no PDF cliente (como chapas).
-    if (kind === "cliente" && f.key === "frete") return false;
+    if (!isInternalPdf(kind) && f.key === "frete") return false;
     return true;
   });
   const number = localPrintNumber();
   const now = new Date().toLocaleString("pt-BR");
-  const pdfClass = kind === "liganer" ? "pdf-liganer" : "pdf-cliente";
+  const pdfClass = isInternalPdf(kind) ? "pdf-liganer" : "pdf-cliente";
   const logo =
     typeof window !== "undefined" ? logoUrl() : "liganer-favicon.webp";
 
@@ -546,7 +562,7 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
     </section>`;
 
   const cutting =
-    kind === "liganer" && plan && coil ? cuttingHtml(plan, coil) : "";
+    isInternalPdf(kind) && plan && coil ? cuttingHtml(plan, coil) : "";
 
   return `<!doctype html>
 <html lang="pt-BR">
@@ -556,12 +572,16 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
   <style>
     @page { size: A4 landscape; margin: 8mm; }
     * { box-sizing: border-box; }
-    body {
+    html, body {
       margin: 0;
       color: #17211d;
       font-family: Inter, Arial, Helvetica, sans-serif;
       font-size: 10px;
       background: #fff;
+      /* Mantém fundos/cores dos gráficos na impressão/PDF do navegador. */
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      color-adjust: exact;
     }
     body.pdf-liganer { font-size: 7px; }
 
@@ -580,7 +600,14 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       font-weight: 700;
       cursor: pointer;
     }
-    @media print { .print-actions { display: none; } }
+    @media print {
+      .print-actions { display: none; }
+      html, body, body * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+    }
 
     .banner {
       display: flex;
