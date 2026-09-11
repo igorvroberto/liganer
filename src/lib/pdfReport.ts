@@ -35,6 +35,7 @@ import {
   type RankedPlan,
 } from "./types";
 import { groupIdenticalStrips, lossBreakdown, productIndicesInProgram } from "./optimize";
+import { coilForProgram } from "./slitterCoil";
 import { registerPdfFonts } from "./pdfFonts";
 import { localPrintNumber } from "./storage";
 
@@ -475,6 +476,7 @@ function appendCuttingResult(
   y += 6;
 
   plan.programs.forEach((program, idx) => {
+    const programCoil = coilForProgram(program, plan.products, coil);
     ensure(70);
     doc.setFont(fontName, "bold");
     doc.setFontSize(10);
@@ -497,7 +499,18 @@ function appendCuttingResult(
     doc.setTextColor(91, 103, 115);
     doc.text(`Comprimento total: ${fmtMeters(program.coilLengthMm)}`, margin, y);
     y += 3;
-    drawStripBar(doc, plan, coil.width, coil.edgeTrim, idx, margin, y, contentW, 8, fontName);
+    drawStripBar(
+      doc,
+      plan,
+      programCoil.width,
+      programCoil.edgeTrim,
+      idx,
+      margin,
+      y,
+      contentW,
+      8,
+      fontName,
+    );
     y += 20;
 
     autoTable(doc, {
@@ -531,7 +544,7 @@ function appendCuttingResult(
     y = lastTableY(doc) + 6;
 
     const usefulKg = program.weightPerProductKg.reduce((s, w) => s + w, 0);
-    const progBreakdown = lossBreakdown([program], usefulKg, coil);
+    const progBreakdown = lossBreakdown([program], usefulKg, programCoil);
 
     doc.setFont(fontName, "bold");
     doc.setFontSize(10);
@@ -547,7 +560,7 @@ function appendCuttingResult(
         widthWasteMm: progBreakdown.widthWasteMm,
         transversalPct: progBreakdown.transversalPct,
         transversalKg: progBreakdown.transversalKg,
-        edgeTrimTotalMm: coil.edgeTrim * 2,
+        edgeTrimTotalMm: programCoil.edgeTrim * 2,
         refilePct: progBreakdown.refilePct,
         refileKg: progBreakdown.refileKg,
       }),

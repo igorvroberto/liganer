@@ -22,7 +22,7 @@ import {
   type QuoteConditions as QuoteConditionsState,
 } from "../lib/quoteSummary";
 import { loadDraft, saveDraft } from "../lib/storage";
-import { coilFromSlitterItems } from "../lib/slitterCoil";
+import { coilForProgram, coilFromSlitterItems } from "../lib/slitterCoil";
 import {
   BLANK_COLORS,
   isSlitterItem,
@@ -373,8 +373,9 @@ export default function SlitterCalculator() {
               </p>
 
               {plan.programs.map((program, idx) => {
+                const programCoil = coilForProgram(program, plan.products, coil);
                 const usefulKg = program.weightPerProductKg.reduce((s, w) => s + w, 0);
-                const breakdown = lossBreakdown([program], usefulKg, coil);
+                const breakdown = lossBreakdown([program], usefulKg, programCoil);
                 return (
                   <div className="program" key={idx}>
                     <div className="program-head">
@@ -386,7 +387,11 @@ export default function SlitterCalculator() {
                     <p className="note" style={{ marginTop: 0 }}>
                       Comprimento total: <strong>{fmtMeters(program.coilLengthMm)}</strong>
                     </p>
-                    <LanePreview program={program} coilWidth={coil.width} edgeTrim={coil.edgeTrim} />
+                    <LanePreview
+                      program={program}
+                      coilWidth={programCoil.width}
+                      edgeTrim={programCoil.edgeTrim}
+                    />
                     <table>
                       <thead>
                         <tr>
@@ -437,7 +442,7 @@ export default function SlitterCalculator() {
                       ({fmtPlainInt(breakdown.widthWasteMm)}mm)
                       {" "}· Sobra transversal: <strong>{fmtPct(breakdown.transversalPct)}</strong>{" "}
                       ({fmtKg(breakdown.transversalKg)})
-                      {" "}· Refile: <strong>{fmtPlainMm(coil.edgeTrim * 2)}</strong>:{" "}
+                      {" "}· Refile: <strong>{fmtPlainMm(programCoil.edgeTrim * 2)}</strong>:{" "}
                       <strong>{fmtPct(breakdown.refilePct)}</strong> ({fmtKg(breakdown.refileKg)})
                       {" "}— refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.
                     </p>

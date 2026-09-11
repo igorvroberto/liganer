@@ -13,6 +13,7 @@ import {
 } from "./format";
 import { blankSpecCitation, blankSpecCitationLine } from "./materialGroups";
 import { groupIdenticalStrips, lossBreakdown, productIndicesInProgram } from "./optimize";
+import { coilForProgram } from "./slitterCoil";
 import {
   itemCommercial,
   parseFretePercent,
@@ -384,8 +385,9 @@ function productionRowsHtml(plan: RankedPlan, program: ProgramResult): string {
 function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
   const programsHtml = plan.programs
     .map((program, idx) => {
+      const programCoil = coilForProgram(program, plan.products, coil);
       const usefulKg = program.weightPerProductKg.reduce((s, w) => s + w, 0);
-      const breakdown = lossBreakdown([program], usefulKg, coil);
+      const breakdown = lossBreakdown([program], usefulKg, programCoil);
       const seen = new Set<number>();
       const specs: string[] = [];
       for (const strip of program.pattern.strips) {
@@ -422,7 +424,7 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
         <section class="cut-legacy-program">
           <h3>Programa ${idx + 1} · ${escapeHtml(titleExtra)}</h3>
           <p class="cut-legacy-note">Comprimento total: <strong>${escapeHtml(fmtMeters(program.coilLengthMm))}</strong></p>
-          ${stripBarHtml(program, coil.width, coil.edgeTrim)}
+          ${stripBarHtml(program, programCoil.width, programCoil.edgeTrim)}
           <table class="cut-legacy-table">
             <thead>
               <tr>
@@ -438,7 +440,7 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
             (${escapeHtml(fmtPlainInt(breakdown.widthWasteMm))}mm)
             · Sobra transversal: <strong>${escapeHtml(fmtPct(breakdown.transversalPct))}</strong>
             (${escapeHtml(fmtKg(breakdown.transversalKg))})
-            · Refile: <strong>${escapeHtml(fmtPlainMm(coil.edgeTrim * 2))}</strong>:
+            · Refile: <strong>${escapeHtml(fmtPlainMm(programCoil.edgeTrim * 2))}</strong>:
             <strong>${escapeHtml(fmtPct(breakdown.refilePct))}</strong>
             (${escapeHtml(fmtKg(breakdown.refileKg))})
             — refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.
