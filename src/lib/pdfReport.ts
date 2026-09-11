@@ -3,11 +3,12 @@ import autoTable from "jspdf-autotable";
 import {
   fmtCurrency,
   fmtDecimal2,
-  fmtDim,
   fmtInt,
   fmtKg,
   fmtMeters,
   fmtMm,
+  fmtPlainInt,
+  fmtPlainMm,
   fmtNumber,
   fmtPct,
   fmtThickness,
@@ -289,8 +290,8 @@ function appendItemsTable(
         dash(item.acabamento),
         item.pvc ? pvcLabel(item.pvc) : "—",
         item.thickness != null ? fmtThickness(item.thickness) : "—",
-        item.width > 0 ? fmtInt(item.width) : "—",
-        item.length > 0 ? fmtInt(item.length) : "—",
+        item.width > 0 ? fmtPlainInt(item.width) : "—",
+        item.length > 0 ? fmtPlainInt(item.length) : "—",
         item.minQty > 0 ? fmtInt(item.minQty) : "—",
         unitKg > 0 ? fmtDecimal2(unitKg) : "—",
         commercial.icms != null ? `${fmtNumber(commercial.icms, 0)}%` : "—",
@@ -302,14 +303,14 @@ function appendItemsTable(
 
     return [
       String(index + 1),
-      item.coilWidth != null && item.coilWidth > 0 ? fmtInt(item.coilWidth) : "—",
+      item.coilWidth != null && item.coilWidth > 0 ? fmtPlainInt(item.coilWidth) : "—",
       material,
       dash(item.tipo),
       dash(item.acabamento),
       item.pvc ? pvcLabel(item.pvc) : "—",
       item.thickness != null ? fmtThickness(item.thickness) : "—",
-      item.width > 0 ? fmtInt(item.width) : "—",
-      item.length > 0 ? fmtInt(item.length) : "—",
+      item.width > 0 ? fmtPlainInt(item.width) : "—",
+      item.length > 0 ? fmtPlainInt(item.length) : "—",
       item.minQty > 0 ? fmtInt(item.minQty) : "—",
       unitKg > 0 ? fmtNumber(unitKg, 3) : "—",
       item.minKg > 0 ? fmtNumber(item.minKg, 1) : "—",
@@ -514,8 +515,8 @@ function appendCuttingResult(
           spec?.acabamento ?? "—",
           spec?.pvc ?? "—",
           spec?.espessura ?? "—",
-          fmtMm(strip.stripWidth),
-          `${fmtMm(displayLen)}${strip.rotated ? " (girado)" : ""}`,
+          fmtPlainMm(strip.stripWidth),
+          `${fmtPlainMm(displayLen)}${strip.rotated ? " (girado)" : ""}`,
           fmtInt(n),
           fmtInt(strip.stripCount),
         ];
@@ -580,8 +581,8 @@ function appendCuttingResult(
         const weightKg = program.weightPerProductKg[index] ?? 0;
         return [[
           isSlitterItem(product.blank)
-            ? `${fmtInt(product.blank.width)} mm slitter`
-            : fmtDim(product.blank.width, product.blank.length),
+            ? `${fmtPlainInt(product.blank.width)} mm slitter`
+            : `${fmtPlainInt(product.blank.width)} × ${fmtPlainInt(product.blank.length)} mm`,
           isSlitterItem(product.blank)
             ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
             : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`,

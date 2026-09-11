@@ -112,6 +112,61 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).toContain("print-color-adjust: exact");
   });
 
+      it("PDF não usa separador de milhar em largura original, largura e comprimento", () => {
+    const items = [
+      {
+        ...blanks[0],
+        coilWidth: 1250,
+        width: 1000,
+        length: 2000,
+      },
+    ];
+    const coil = {
+      width: 1250,
+      thickness: 0.4,
+      density: DEFAULT_DENSITY,
+      kerf: 0,
+      edgeTrim: 5,
+      allowOvershoot: true,
+    };
+    const result = optimizeCutting({ coil, blanks: items });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const cellText = (html: string) =>
+      [...html.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((m) =>
+        m[1].replace(/<[^>]+>/g, "").trim(),
+      );
+
+    for (const kind of ["cliente", "liganer", "gestao"] as const) {
+      const html = buildQuotePdfHtml({
+        kind,
+        items,
+        conditions: EMPTY_QUOTE_CONDITIONS,
+        summary: { totalKg: 1000, subtotal: 100, ipi: 3.25, total: 103.25, frete: 0 },
+        plan: kind === "cliente" ? null : result.alternatives[0],
+        coil: kind === "cliente" ? undefined : coil,
+      });
+      const itemsTable = html.match(/<table class="items">[\s\S]*?<\/table>/)?.[0] ?? "";
+      const cells = cellText(itemsTable);
+      // Largura / comprimento sem milhar
+      expect(cells).toContain("1000");
+      expect(cells).toContain("2000");
+      const widthIdx = cells.indexOf("1000");
+      const lengthIdx = cells.indexOf("2000");
+      expect(widthIdx).toBeGreaterThanOrEqual(0);
+      expect(lengthIdx).toBeGreaterThanOrEqual(0);
+      expect(cells[widthIdx]).toBe("1000");
+      expect(cells[lengthIdx]).toBe("2000");
+      if (kind !== "cliente") {
+        expect(cells).toContain("1250");
+        expect(cells).not.toContain("1.250");
+        expect(html).toContain("1000 × 2000 mm");
+        expect(html).not.toContain("1.000 × 2.000 mm");
+      }
+    }
+  });
+
   it("PDF gestão inclui resultado do corte sem colunas internas sensíveis", () => {
     const coil = {
       width: 1250,

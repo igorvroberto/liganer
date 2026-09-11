@@ -26,6 +26,28 @@ export function fmtInt(value: number): string {
   return intFmt.format(value);
 }
 
+/** Inteiro sem separador de milhar (dimensões em mm nos PDFs). */
+export function fmtPlainInt(value: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    useGrouping: false,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+/** Número sem separador de milhar (vírgula decimal pt-BR). */
+export function fmtPlainNumber(value: number, maxDigits = 2): string {
+  return new Intl.NumberFormat("pt-BR", {
+    useGrouping: false,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: maxDigits,
+  }).format(value);
+}
+
+/** Dimensão em mm sem separador de milhar. */
+export function fmtPlainMm(value: number): string {
+  return `${fmtPlainNumber(value)} mm`;
+}
+
 export function fmtPct(value: number): string {
   return `${pctFmt.format(value)}%`;
 }
