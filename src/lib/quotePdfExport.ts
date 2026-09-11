@@ -452,10 +452,6 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
               <span>Peso necessário</span>
               <b>${escapeHtml(fmtKg(breakdown.physicalCoilKg))}</b>
             </div>
-            <div class="cut-legacy-kpi">
-              <span>Peso útil</span>
-              <b>${escapeHtml(fmtKg(usefulKg))}</b>
-            </div>
           </div>
           <table class="cut-legacy-table">
             <thead>
