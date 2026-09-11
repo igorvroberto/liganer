@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   fmtDecimal2,
   fmtPct,
+  fmtPlainInt,
+  fmtPlainMm,
   fmtThickness,
   parseDecimalBr2,
   parseThickness,
@@ -19,6 +21,15 @@ describe("espessura", () => {
     expect(parseThickness("0,40")).toBe(0.4);
     expect(parseThickness("0.40")).toBe(0.4);
     expect(parseThickness("")).toBeNull();
+  });
+});
+
+describe("dimensões PDF sem milhar", () => {
+  it("formata mm e inteiros sem separador de milhar", () => {
+    expect(fmtPlainInt(1250)).toBe("1250");
+    expect(fmtPlainInt(1000)).toBe("1000");
+    expect(fmtPlainMm(1250)).toBe("1250 mm");
+    expect(fmtPlainMm(1042.4)).toBe("1042,4 mm");
   });
 });
 

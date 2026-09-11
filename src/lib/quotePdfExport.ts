@@ -2,8 +2,9 @@ import { blankUnitKg } from "./blankSync";
 import {
   fmtCurrency,
   fmtDecimal2,
-  fmtDim,
   fmtInt,
+  fmtPlainInt,
+  fmtPlainMm,
   fmtKg,
   fmtMeters,
   fmtMm,
@@ -116,7 +117,7 @@ function allColumns(): PdfColumn[] {
     {
       key: "coilWidth",
       label: "LARGURA\nORIGINAL\nBOBINA",
-      value: ({ item }) => (item.coilWidth && item.coilWidth > 0 ? fmtInt(item.coilWidth) : "—"),
+      value: ({ item }) => (item.coilWidth && item.coilWidth > 0 ? fmtPlainInt(item.coilWidth) : "—"),
     },
     {
       key: "material",
@@ -141,12 +142,12 @@ function allColumns(): PdfColumn[] {
     {
       key: "width",
       label: "Largura",
-      value: ({ item }) => (item.width > 0 ? fmtInt(item.width) : "—"),
+      value: ({ item }) => (item.width > 0 ? fmtPlainInt(item.width) : "—"),
     },
     {
       key: "length",
       label: "Comprimento",
-      value: ({ item }) => (item.length > 0 ? fmtInt(item.length) : "—"),
+      value: ({ item }) => (item.length > 0 ? fmtPlainInt(item.length) : "—"),
     },
     {
       key: "minQty",
@@ -337,7 +338,7 @@ function stripBarHtml(program: ProgramResult, coilWidth: number, edgeTrim: numbe
       const w = strip.stripWidth * blankScale;
       return `<div class="lane" style="flex:${w} 1 0">
         <div class="blank-rect" style="background:${stripColor(idx)}">${escapeHtml(
-          fmtDim(strip.stripWidth, displayLen),
+          `${fmtPlainInt(strip.stripWidth)} × ${fmtPlainInt(displayLen)}`,
         )}</div>
       </div>`;
     })
@@ -358,8 +359,8 @@ function productionRowsHtml(plan: RankedPlan, program: ProgramResult): string {
       const pieces = program.piecesPerProduct[index] ?? 0;
       const weightKg = program.weightPerProductKg[index] ?? 0;
       const itemLabel = isSlitterItem(product.blank)
-        ? `${fmtInt(product.blank.width)} mm slitter`
-        : fmtDim(product.blank.width, product.blank.length);
+        ? `${fmtPlainInt(product.blank.width)} mm slitter`
+        : `${fmtPlainInt(product.blank.width)} × ${fmtPlainInt(product.blank.length)} mm`;
       const pedido = isSlitterItem(product.blank)
         ? `${product.blank.minQty > 0 ? `${fmtInt(product.blank.minQty)} un · ` : ""}${fmtKg(product.blank.minKg)}`
         : `${fmtInt(product.blank.minQty)} un · ${fmtKg(product.blank.minKg)}`;
@@ -410,8 +411,8 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
             <td>${escapeHtml(spec?.acabamento ?? "—")}</td>
             <td>${escapeHtml(spec?.pvc ?? "—")}</td>
             <td>${escapeHtml(spec?.espessura ?? "—")}</td>
-            <td>${escapeHtml(fmtMm(strip.stripWidth))}</td>
-            <td>${escapeHtml(`${fmtMm(displayLen)}${strip.rotated ? " (girado)" : ""}`)}</td>
+            <td>${escapeHtml(fmtPlainMm(strip.stripWidth))}</td>
+            <td>${escapeHtml(`${fmtPlainMm(displayLen)}${strip.rotated ? " (girado)" : ""}`)}</td>
             <td>${escapeHtml(fmtInt(n))}</td>
             <td>${escapeHtml(fmtInt(strip.stripCount))}</td>
           </tr>`;
