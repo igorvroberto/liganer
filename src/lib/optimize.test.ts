@@ -288,6 +288,37 @@ describe("optimizeCutting — exemplo 600×470 e 650×500", () => {
     }
   });
 
+  it("reduz comprimento e peso necessário quando allowOvershoot passa a falso", () => {
+    const blanks = [
+      {
+        id: "1",
+        name: "",
+        width: 300,
+        length: 800,
+        minKg: 6000,
+        minQty: 5209,
+        coilWidth: 1250,
+        thickness: 0.6,
+      },
+    ];
+    const base = { width: 1250, thickness: 0.6, density: 8, kerf: 0, edgeTrim: 5 };
+    const withOvershoot = optimizeCutting({ coil: { ...base, allowOvershoot: true }, blanks });
+    const withoutOvershoot = optimizeCutting({ coil: { ...base, allowOvershoot: false }, blanks });
+    expect(withOvershoot.ok).toBe(true);
+    expect(withoutOvershoot.ok).toBe(true);
+    if (!withOvershoot.ok || !withoutOvershoot.ok) return;
+
+    const planYes = withOvershoot.alternatives[0];
+    const planNo = withoutOvershoot.alternatives[0];
+    expect(planNo.products[0].pieces).toBeLessThan(planYes.products[0].pieces);
+    expect(planNo.products[0].weightKg).toBeLessThanOrEqual(6000 + 1e-6);
+    expect(planNo.totalCoilLengthMm).toBeLessThan(planYes.totalCoilLengthMm);
+    expect(planNo.coilWeightKg).toBeLessThan(planYes.coilWeightKg);
+    // Comprimento alinhado a cortes inteiros (sem resto de ~799 mm no peso).
+    expect(planNo.programs[0].remainderMmPerStrip.every((r) => r < 1e-6)).toBe(true);
+    expect(planYes.programs[0].remainderMmPerStrip.every((r) => r < 1e-6)).toBe(true);
+  });
+
   it("empacota 10 tiras de 122 mm em bobina 1250 com refile 5+5 (útil 1240)", () => {
     const coil = { width: 1250, thickness: 0.4, density: 8, kerf: 0, edgeTrim: 5 };
     expect(usableWidth(coil)).toBe(1240);
