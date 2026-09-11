@@ -111,7 +111,8 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).not.toMatch(/Sobra\s+[\d.,]+\s*mm/);
     expect(html).toContain("Fator");
     expect(html).toContain("ICMS");
-    expect(html).toContain("Sem condições preenchidas");
+    expect(html).not.toContain("Sem condições preenchidas");
+    expect(html).not.toContain("<h2>Condições</h2>");
     expect(html).toContain("print-color-adjust: exact");
   });
 
@@ -208,6 +209,20 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).not.toContain("IMG\nMTO");
     expect(html).not.toContain("CSA\nMTO");
     expect(html).not.toContain("TETTO\nMTO");
+  });
+
+
+  it("omite a seção Condições no PDF quando nenhuma condição está preenchida", () => {
+    const html = buildQuotePdfHtml({
+      kind: "cliente",
+      items: blanks,
+      conditions: EMPTY_QUOTE_CONDITIONS,
+      summary: { totalKg: 2000, subtotal: 1000, ipi: 32.5, total: 1032.5, frete: 0 },
+      client: { name: "Cliente Teste", cnpj: "00.000.000/0001-00" },
+    });
+    expect(html).toContain("Totais");
+    expect(html).not.toContain("<h2>Condições</h2>");
+    expect(html).not.toContain("Sem condições preenchidas");
   });
 
 });

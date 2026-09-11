@@ -542,25 +542,23 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       </div>
     </section>`;
 
-  const conditionsHtml = `
+  const conditionsHtml = footer.length
+    ? `
     <section class="panel">
       <h2>Condições</h2>
       <div class="kv">
-        ${
-          footer.length
-            ? footer
-                .map(
-                  (field) => `
+        ${footer
+          .map(
+            (field) => `
           <div>
             <strong>${escapeHtml(field.label)}</strong>
             <span>${escapeHtml(String(conditions[field.key]))}</span>
           </div>`,
-                )
-                .join("")
-            : '<div><strong>—</strong><span>Sem condições preenchidas</span></div>'
-        }
+          )
+          .join("")}
       </div>
-    </section>`;
+    </section>`
+    : "";
 
   const cutting =
     isInternalPdf(kind) && plan && coil ? cuttingHtml(plan, coil) : "";

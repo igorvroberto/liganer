@@ -94,7 +94,8 @@ describe("pdfReport", () => {
     expect(text).toContain("Uso interno Liganer");
     expect(text).toContain("Resultado do corte");
     expect(text).toContain("Totais");
-    expect(text).toContain("Condi\u00e7\u00f5es");
+    expect(text).not.toContain("Condi\u00e7\u00f5es");
+    expect(text).not.toContain("Sem condi\u00e7\u00f5es preenchidas");
     expect(text).toContain("Melhor aproveitamento");
     expect(text).toContain("Sobra longitudinal");
     expect(text).not.toContain("Sobra total");
