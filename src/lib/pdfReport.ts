@@ -408,26 +408,28 @@ function appendTotalsAndConditions(
   });
   y = lastTableY(doc) + 8;
 
+  const filled = QUOTE_CONDITION_FIELDS.filter((f) => {
+    if (!String(conditions[f.key] ?? "").trim()) return false;
+    if (variant === "cliente" && f.key === "frete") return false; // gestão/liganer mantêm frete
+    return true;
+  });
+
+  if (filled.length === 0) {
+    return y;
+  }
+
   doc.setFont(fontName, "bold");
   doc.setFontSize(10);
   doc.setTextColor(...BRAND);
   doc.text("Condições", margin, y);
   y += 2;
 
-  const filled = QUOTE_CONDITION_FIELDS.filter((f) => {
-    if (!String(conditions[f.key] ?? "").trim()) return false;
-    if (variant === "cliente" && f.key === "frete") return false; // gestão/liganer mantêm frete
-    return true;
-  });
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
     theme: "grid",
     styles: { font: fontName, fontSize: 8, cellPadding: 2 },
-    body:
-      filled.length > 0
-        ? filled.map((f) => [f.label, String(conditions[f.key])])
-        : [["—", "Sem condições preenchidas"]],
+    body: filled.map((f) => [f.label, String(conditions[f.key])]),
     columnStyles: {
       0: { cellWidth: contentW / 2, fontStyle: "bold", textColor: [86, 99, 93] },
       1: { cellWidth: contentW / 2, fontStyle: "bold", halign: "center" },
