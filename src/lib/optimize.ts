@@ -319,6 +319,18 @@ function piecesFromLength(pattern: Pattern, coilLengthMm: number, productCount: 
   return pieces;
 }
 
+/** Comprimento efetivo da bobina: só o que cobre cortes inteiros (sem resto inútil no peso). */
+function snapLengthToCuts(pattern: Pattern, coilLengthMm: number): number {
+  if (!(coilLengthMm > 0)) return 0;
+  let used = 0;
+  for (const strip of pattern.strips) {
+    if (!(strip.cutLength > 0)) continue;
+    const cuts = Math.floor((coilLengthMm + LENGTH_EPS) / strip.cutLength);
+    used = Math.max(used, cuts * strip.cutLength);
+  }
+  return used;
+}
+
 function remainders(pattern: Pattern, coilLengthMm: number): number[] {
   return pattern.strips.map((strip) => {
     const n = Math.floor((coilLengthMm + LENGTH_EPS) / strip.cutLength);
@@ -435,13 +447,17 @@ function toPrograms(
 ): ProgramResult[] {
   return chosen
     .filter((c) => c.lengthMm > 0.5)
-    .map((c) => ({
-      pattern: c.pattern,
-      coilLengthMm: c.lengthMm,
-      piecesPerProduct: piecesFromLength(c.pattern, c.lengthMm, productCount),
-      weightPerProductKg: [],
-      remainderMmPerStrip: remainders(c.pattern, c.lengthMm),
-    }));
+    .map((c) => {
+      const coilLengthMm = snapLengthToCuts(c.pattern, c.lengthMm);
+      return {
+        pattern: c.pattern,
+        coilLengthMm,
+        piecesPerProduct: piecesFromLength(c.pattern, coilLengthMm, productCount),
+        weightPerProductKg: [],
+        remainderMmPerStrip: remainders(c.pattern, coilLengthMm),
+      };
+    })
+    .filter((p) => p.coilLengthMm > 0.5);
 }
 
 function fillProgramWeights(programs: ProgramResult[], blanks: BlankInput[], coil: CoilInput) {
