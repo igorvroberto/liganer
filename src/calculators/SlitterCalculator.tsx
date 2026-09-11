@@ -450,10 +450,6 @@ export default function SlitterCalculator() {
                         <span>Peso necessário</span>
                         <b>{fmtKg(breakdown.physicalCoilKg)}</b>
                       </div>
-                      <div className="kpi">
-                        <span>Peso útil</span>
-                        <b>{fmtKg(usefulKg)}</b>
-                      </div>
                     </div>
 
                     <ProgramProductsTable

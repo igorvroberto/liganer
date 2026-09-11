@@ -101,7 +101,7 @@ describe("pdfReport", () => {
     expect(text).not.toContain("Sobra total");
     expect(text).not.toContain("desconsiderando o refile");
     expect(text).toContain("Peso necess\u00e1rio");
-    expect(text).toContain("Peso \u00fatil");
+    expect(text).not.toContain("Peso \u00fatil");
     expect(text).toContain("Tipo");
     expect(text).toContain("Acabamento");
     expect(text).toContain("PVC");

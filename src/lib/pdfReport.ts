@@ -559,12 +559,11 @@ function appendCuttingResult(
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [["Aproveitamento", "Peso necessário", "Peso útil"]],
+      head: [["Aproveitamento", "Peso necessário"]],
       body: [
         [
           fmtPct(progBreakdown.yieldPercent),
           fmtKg(progBreakdown.physicalCoilKg),
-          fmtKg(usefulKg),
         ],
       ],
       headStyles: {
