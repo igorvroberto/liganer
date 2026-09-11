@@ -96,6 +96,9 @@ describe("pdfReport", () => {
     expect(text).toContain("Totais");
     expect(text).toContain("Condi\u00e7\u00f5es");
     expect(text).toContain("Melhor aproveitamento");
+    expect(text).toContain("Sobra longitudinal");
+    expect(text).not.toContain("Sobra total");
+    expect(text).not.toContain("desconsiderando o refile");
     expect(text).toContain("Peso necess\u00e1rio");
     expect(text).toContain("Peso \u00fatil");
     expect(text).toContain("Tipo");
@@ -157,6 +160,9 @@ describe("pdfReport", () => {
     expect(text).toContain("Gestão");
     expect(text).toContain("Resultado do corte");
     expect(text).toContain("Melhor aproveitamento");
+    expect(text).toContain("Sobra longitudinal");
+    expect(text).not.toContain("Sobra total");
+    expect(text).not.toContain("desconsiderando o refile");
     expect(text).not.toContain("Observa");
     expect(text).not.toContain("Comiss");
     expect(reportFileName("gestao", plan)).toMatch(/^\d{8}\.pdf$/);

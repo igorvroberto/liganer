@@ -115,3 +115,22 @@ export function parseThickness(raw: string): number | null {
   const n = Number(normalized);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
+
+
+/** Texto do bloco Melhor aproveitamento (UI/PDF). */
+export function formatLossInfoNote(parts: {
+  longitudinalPct: number;
+  widthWasteMm: number;
+  transversalPct: number;
+  transversalKg: number;
+  edgeTrimTotalMm: number;
+  refilePct: number;
+  refileKg: number;
+}): string {
+  return (
+    `Sobra longitudinal: ${fmtPct(parts.longitudinalPct)} (${fmtPlainInt(parts.widthWasteMm)}mm)` +
+    ` · Sobra transversal: ${fmtPct(parts.transversalPct)} (${fmtKg(parts.transversalKg)})` +
+    ` · Refile: ${fmtPlainMm(parts.edgeTrimTotalMm)}: ${fmtPct(parts.refilePct)} (${fmtKg(parts.refileKg)})` +
+    ` — refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.`
+  );
+}

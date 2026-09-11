@@ -7,7 +7,6 @@ import {
   fmtPlainMm,
   fmtKg,
   fmtMeters,
-  fmtMm,
   fmtNumber,
   fmtPct,
   fmtThickness,
@@ -435,12 +434,13 @@ function cuttingHtml(plan: RankedPlan, coil: CoilInput): string {
           </table>
           <h3>Melhor aproveitamento</h3>
           <p class="cut-legacy-loss-note">
-            <strong>Aproveitamento na largura total da bobina, desconsiderando o refile.</strong>
-            Refile: <strong>${escapeHtml(fmtMm(coil.edgeTrim * 2))}</strong> (2×${escapeHtml(fmtMm(coil.edgeTrim))})
-            · ${escapeHtml(fmtKg(breakdown.refileKg))} (${escapeHtml(fmtPct(breakdown.refilePct))})
+            Sobra longitudinal: <strong>${escapeHtml(fmtPct(breakdown.longitudinalPct))}</strong>
+            (${escapeHtml(fmtPlainInt(breakdown.widthWasteMm))}mm)
             · Sobra transversal: <strong>${escapeHtml(fmtPct(breakdown.transversalPct))}</strong>
             (${escapeHtml(fmtKg(breakdown.transversalKg))})
-            · Sobra total: <strong>${escapeHtml(fmtPct(100 - breakdown.yieldPercent))}</strong>
+            · Refile: <strong>${escapeHtml(fmtPlainMm(coil.edgeTrim * 2))}</strong>:
+            <strong>${escapeHtml(fmtPct(breakdown.refilePct))}</strong>
+            (${escapeHtml(fmtKg(breakdown.refileKg))})
             — refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.
           </p>
           <div class="cut-legacy-kpis">
