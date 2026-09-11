@@ -103,6 +103,9 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).toContain("pattern-bar");
     expect(html).toContain("cut-legacy");
     expect(html).toContain("Melhor aproveitamento");
+    expect(html).toContain("Sobra longitudinal");
+    expect(html).not.toContain("Sobra total");
+    expect(html).not.toContain("desconsiderando o refile");
     expect(html).toContain("Peso necessário");
     expect(html).toContain("Peso produzido");
     expect(html).not.toMatch(/Sobra\s+[\d.,]+\s*mm/);
@@ -191,6 +194,9 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).toContain('class="pdf-liganer"');
     expect(html).toContain("Resultado do corte");
     expect(html).toContain("Melhor aproveitamento");
+    expect(html).toContain("Sobra longitudinal");
+    expect(html).not.toContain("Sobra total");
+    expect(html).not.toContain("desconsiderando o refile");
     expect(html).toContain("Peso necessário");
     expect(html).toContain("Fator\nutilizado");
     expect(html).not.toContain("Observação");

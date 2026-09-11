@@ -3,7 +3,7 @@ import QuoteClientFields from "../components/QuoteClientFields";
 import QuoteConditions from "../components/QuoteConditions";
 import QuoteTotals from "../components/QuoteTotals";
 import SlitterItemsTable from "../components/SlitterItemsTable";
-import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct } from "../lib/format";
+import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtPlainInt, fmtPlainMm } from "../lib/format";
 import { blankSpecCitation, blankSpecCitationLine } from "../lib/materialGroups";
 import {
   groupIdenticalStrips,
@@ -433,12 +433,12 @@ export default function SlitterCalculator() {
                       <h3>Melhor aproveitamento</h3>
                     </div>
                     <p className="note loss-info-note">
-                      <strong>Aproveitamento na largura total da bobina, desconsiderando o refile.</strong>
-                      {" "}Refile: <strong>{fmtMm(coil.edgeTrim * 2)}</strong> (2×{fmtMm(coil.edgeTrim)})
-                      {" "}· {fmtKg(breakdown.refileKg)} ({fmtPct(breakdown.refilePct)})
-                      {" "}· Sobra transversal: <strong>{fmtPct(breakdown.transversalPct)}</strong>
-                      {" "}({fmtKg(breakdown.transversalKg)})
-                      {" "}· Sobra total: <strong>{fmtPct(100 - breakdown.yieldPercent)}</strong>
+                      Sobra longitudinal: <strong>{fmtPct(breakdown.longitudinalPct)}</strong>{" "}
+                      ({fmtPlainInt(breakdown.widthWasteMm)}mm)
+                      {" "}· Sobra transversal: <strong>{fmtPct(breakdown.transversalPct)}</strong>{" "}
+                      ({fmtKg(breakdown.transversalKg)})
+                      {" "}· Refile: <strong>{fmtPlainMm(coil.edgeTrim * 2)}</strong>:{" "}
+                      <strong>{fmtPct(breakdown.refilePct)}</strong> ({fmtKg(breakdown.refileKg)})
                       {" "}— refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.
                     </p>
                     <div className="kpis">

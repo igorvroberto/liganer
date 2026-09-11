@@ -5,6 +5,7 @@ import {
   fmtPlainInt,
   fmtPlainMm,
   fmtThickness,
+  formatLossInfoNote,
   parseDecimalBr2,
   parseThickness,
   round2,
@@ -52,5 +53,23 @@ describe("percentuais (2 casas)", () => {
     expect(fmtPct(5)).toBe("5,00%");
     expect(fmtPct(3.2)).toBe("3,20%");
     expect(fmtPct(97.456)).toBe("97,46%");
+  });
+});
+
+
+describe("formatLossInfoNote", () => {
+  it("monta o texto com sobra longitudinal em % e mm", () => {
+    const text = formatLossInfoNote({
+      longitudinalPct: 3.2,
+      widthWasteMm: 40,
+      transversalPct: 0,
+      transversalKg: 0,
+      edgeTrimTotalMm: 10,
+      refilePct: 0.8,
+      refileKg: 41.7,
+    });
+    expect(text).toBe(
+      "Sobra longitudinal: 3,20% (40mm) · Sobra transversal: 0,00% (0,0 Kg) · Refile: 10 mm: 0,80% (41,7 Kg) — refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.",
+    );
   });
 });

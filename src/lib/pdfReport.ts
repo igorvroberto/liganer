@@ -6,12 +6,12 @@ import {
   fmtInt,
   fmtKg,
   fmtMeters,
-  fmtMm,
   fmtPlainInt,
   fmtPlainMm,
   fmtNumber,
   fmtPct,
   fmtThickness,
+  formatLossInfoNote,
 } from "./format";
 import { blankSpecCitation, blankSpecCitationLine } from "./materialGroups";
 import { blankUnitKg } from "./blankSync";
@@ -540,7 +540,15 @@ function appendCuttingResult(
     doc.setFontSize(7);
     doc.setTextColor(91, 103, 115);
     const lossLines = doc.splitTextToSize(
-      `Aproveitamento na largura total da bobina, desconsiderando o refile. Refile: ${fmtMm(coil.edgeTrim * 2)} (2×${fmtMm(coil.edgeTrim)}) · ${fmtKg(progBreakdown.refileKg)} (${fmtPct(progBreakdown.refilePct)}) · Sobra transversal: ${fmtPct(progBreakdown.transversalPct)} (${fmtKg(progBreakdown.transversalKg)}) · Sobra total: ${fmtPct(100 - progBreakdown.yieldPercent)} — refile e transversal não entram no %; o refile só reduz a largura útil dos planos de corte.`,
+      formatLossInfoNote({
+        longitudinalPct: progBreakdown.longitudinalPct,
+        widthWasteMm: progBreakdown.widthWasteMm,
+        transversalPct: progBreakdown.transversalPct,
+        transversalKg: progBreakdown.transversalKg,
+        edgeTrimTotalMm: coil.edgeTrim * 2,
+        refilePct: progBreakdown.refilePct,
+        refileKg: progBreakdown.refileKg,
+      }),
       contentW,
     );
     doc.text(lossLines, margin, y);
