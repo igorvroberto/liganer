@@ -353,6 +353,7 @@ function appendItemsTable(
     margin: { left: margin, right: margin },
     head: [internal ? headInternal : headCliente],
     body: internal ? bodyInternal : body,
+    tableWidth: "auto",
     headStyles: {
       font: fontName,
       fontStyle: "bold",
@@ -362,7 +363,12 @@ function appendItemsTable(
       halign: "center",
     },
     bodyStyles: { font: fontName, fontSize: internal ? 4.8 : 7, halign: "center" },
-    styles: { font: fontName, cellPadding: internal ? 0.8 : 1.2, overflow: "linebreak" },
+    styles: {
+      font: fontName,
+      cellPadding: internal ? 0.8 : 1.2,
+      overflow: "linebreak",
+      cellWidth: "wrap",
+    },
   });
 
   return lastTableY(doc) + 6;

@@ -705,7 +705,7 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
     table.items {
       width: 100%;
       border-collapse: collapse;
-      table-layout: fixed;
+      table-layout: auto;
     }
     table.items th,
     table.items td {
@@ -713,7 +713,8 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       padding: 5px 4px;
       vertical-align: middle;
       text-align: center;
-      overflow: hidden;
+      overflow: visible;
+      width: 1%;
     }
     table.items th {
       background: #c60000;
@@ -727,7 +728,6 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
     }
     table.items td {
       white-space: nowrap;
-      text-overflow: clip;
     }
     table.items td.item-no {
       width: 28px;

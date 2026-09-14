@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   IPI_RATE,
+  QUOTE_CONDITION_FIELDS,
   applyFretePercent,
   itemCommercial,
   parseFretePercent,
@@ -97,5 +98,13 @@ describe("quoteSummary (paridade chapas-bobinas)", () => {
     const summary = quoteSummary([priced], {}, "1");
     expect(summary.frete).toBeCloseTo(0.01, 10);
     expect(summary.subtotal).toBeCloseTo(1010, 6);
+  });
+});
+
+describe("QUOTE_CONDITION_FIELDS", () => {
+  it("rotula cidade como Cidade/UF do cliente", () => {
+    expect(QUOTE_CONDITION_FIELDS.find((f) => f.key === "cidade_cliente")?.label).toBe(
+      "Cidade/UF do cliente",
+    );
   });
 });
