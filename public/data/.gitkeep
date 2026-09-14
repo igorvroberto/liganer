@@ -1,0 +1,4 @@
+# Pasta de orçamentos no servidor
+
+Criada automaticamente pela API (`api/budgets.php`).
+Não versionar nem apagar no deploy — contém `orcamento-{number}.json`.

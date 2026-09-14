@@ -1,0 +1,4 @@
+{
+  "saveUrl": "api/budgets.php",
+  "syncSecret": "TROQUE-ESTE-SEGREDO"
+}

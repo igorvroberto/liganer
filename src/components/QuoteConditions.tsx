@@ -6,24 +6,24 @@ import {
 type Props = {
   conditions: QuoteConditions;
   onChange: (key: keyof QuoteConditions, value: string) => void;
-  onSave: () => void;
   onPdfCliente: () => void;
   onPdfLiganer: () => void;
   onPdfGestao: () => void;
   statusText?: string;
   statusKind?: "" | "ok" | "error";
+  pdfClienteBusy?: boolean;
 };
 
-/** Condições + ações idênticas ao orçamento chapas-bobinas. */
+/** Condições + ações de PDF (salvamento ocorre ao gerar PDF cliente). */
 export default function QuoteConditions({
   conditions,
   onChange,
-  onSave,
   onPdfCliente,
   onPdfLiganer,
   onPdfGestao,
   statusText,
   statusKind = "",
+  pdfClienteBusy = false,
 }: Props) {
   return (
     <section className="card">
@@ -55,11 +55,13 @@ export default function QuoteConditions({
         ))}
       </div>
       <div className="actions" style={{ marginTop: 16 }}>
-        <button type="button" className="btn btn-dark" onClick={onSave}>
-          Salvar
-        </button>
-        <button type="button" className="btn btn-secondary" onClick={onPdfCliente}>
-          PDF cliente
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={onPdfCliente}
+          disabled={pdfClienteBusy}
+        >
+          {pdfClienteBusy ? "Salvando…" : "PDF cliente"}
         </button>
         <button type="button" className="btn btn-secondary" onClick={onPdfLiganer}>
           PDF Liganer
