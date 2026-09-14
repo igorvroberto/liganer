@@ -52,12 +52,55 @@ function normalizeSearch(value: unknown): string {
     .toLowerCase()
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
+    .replace(/[^a-z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function searchTokens(query: string): string[] {
+  return normalizeSearch(query)
+    .split(' ')
+    .filter((token) => token.length > 0)
 }
 
 function roundPrice(value: unknown): number {
   const n = numericValue(value)
   return n ? Math.round(n * 1e6) / 1e6 : 0
+}
+
+/** Quantidade mínima de caracteres alfanuméricos antes de sugerir. */
+const MIN_SEARCH_CHARS = 3
+
+/** Materiais do catálogo filtrados por texto digitado (todos os termos, AND). */
+export function searchCatalogMaterials(query: string, limit = 20): PriceCatalogRow[] {
+  const q = normalizeSearch(query)
+  const compact = q.replace(/\s+/g, '')
+  // Sem termo suficiente → lista vazia (não sugere “qualquer coisa”).
+  if (!compact || compact.length < MIN_SEARCH_CHARS) return []
+
+  const tokens = searchTokens(query).filter(
+    (token) => token.length >= 2 || /^\d+$/.test(token),
+  )
+  if (!tokens.length) return []
+
+  const scored: { row: PriceCatalogRow; score: number }[] = []
+  for (const row of catalogRows) {
+    const hayMaterial = normalizeSearch(row.material)
+    const hayCodigo = normalizeSearch(row.codigo)
+    const hay = `${hayMaterial} ${hayCodigo}`.trim()
+    if (!tokens.every((token) => hay.includes(token))) continue
+
+    const starts = hayMaterial.startsWith(q) || hayCodigo.startsWith(q) ? 0 : 2
+    const exactCode = hayCodigo === q ? 0 : 1
+    const first = tokens[0]
+    const early = Math.min(
+      hayMaterial.indexOf(first) >= 0 ? hayMaterial.indexOf(first) : 999,
+      hayCodigo.indexOf(first) >= 0 ? hayCodigo.indexOf(first) : 999,
+    )
+    scored.push({ row, score: exactCode * 100 + starts * 1000 + early })
+  }
+  scored.sort((a, b) => a.score - b.score || a.row.material.localeCompare(b.row.material, 'pt-BR'))
+  return scored.slice(0, limit).map((item) => item.row)
 }
 
 function findHeaderColumn(headers: string[], aliases: string[]): number {
@@ -269,29 +312,11 @@ export function usesPriceCatalog(modelId: string): boolean {
   return modelId === 'chapas'
 }
 
-/** Materiais do catálogo filtrados por texto livre (typeahead). */
-export function searchCatalogMaterials(query: string, limit = 20): PriceCatalogRow[] {
-  const q = normalizeSearch(query)
-  if (!q) {
-    return catalogRows.slice(0, limit)
-  }
-  const tokens = q.split(' ').filter(Boolean)
-  const scored: { row: PriceCatalogRow; score: number }[] = []
-  for (const row of catalogRows) {
-    const hay = normalizeSearch(row.material)
-    if (!tokens.every((token) => hay.includes(token))) continue
-    const starts = hay.startsWith(q) ? 0 : 1
-    const early = hay.indexOf(tokens[0])
-    scored.push({ row, score: starts * 1000 + early })
-  }
-  scored.sort((a, b) => a.score - b.score || a.row.material.localeCompare(b.row.material, 'pt-BR'))
-  return scored.slice(0, limit).map((item) => item.row)
-}
-
 /** Ao escolher um material do catálogo, preenche UM (e deixa o preço vir do lookup). */
 export function applyCatalogMaterial(row: ItemRow, material: string): ItemRow {
   const next: ItemRow = { ...row, material }
   const match = findPriceRow(next)
   if (match?.um) next.um = match.um
+  if (match?.codigo) next.referencia = match.codigo
   return next
 }
