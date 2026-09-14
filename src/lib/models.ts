@@ -107,12 +107,18 @@ export const MODELS: ModelDef[] = [
         label: 'Preço\nICMS 18%',
         aliases: ['preco sp', 'preço sp', 'preco icms 18', 'icms 18', 'sp para sp'],
         type: 'currency',
+        calculated: true,
+        virtual: true,
+        calc: 'precoSp',
       },
       {
         key: 'preco_ce',
         label: 'Preço\nICMS 4%',
         aliases: ['preco ce', 'preço ce', 'preco icms 4', 'icms 4', 'ce para sp'],
         type: 'currency',
+        calculated: true,
+        virtual: true,
+        calc: 'precoCe',
       },
       {
         key: 'ipi',
@@ -184,8 +190,6 @@ export const MODELS: ModelDef[] = [
         options: COMMISSION_OPTIONS,
         askWhenNew: true,
       },
-      calcField('_preco_total', 'Preço\ntotal', 'currency', 'precoTotal'),
-      calcField('_preco_sem_ipi', 'Preço\nsem IPI', 'currency', 'precoSemIpi'),
       // Por último, como no Excel exemplo (origem: catálogo do produto)
       {
         key: 'fator_real_18',
@@ -242,7 +246,6 @@ export const HIDDEN_FROM_CLIENT = new Set([
   'acrescimo_perda_percentual',
   '_acrescimo_perda_percentual',
   '_acrescimo_perda_valor',
-  '_preco_total',
   'estoque_total',
   '_estoque_total',
   'estoque_sp',

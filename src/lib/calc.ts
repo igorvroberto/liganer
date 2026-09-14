@@ -25,16 +25,46 @@ export function percentRate(value: unknown): number {
   return n >= 1 ? n / 100 : n
 }
 
+/** Itens sem "IMP" na descrição: fator real 4% fixo em 170. */
+export function materialHasImp(material: unknown): boolean {
+  return /\bIMP\b/i.test(String(material ?? ''))
+}
+
+const FATOR_REAL_4_SEM_IMP = 170
+
+export function resolveFatorReal4(row: ItemRow): number {
+  if (!materialHasImp(row.material)) return FATOR_REAL_4_SEM_IMP
+  return numericValue(row.fator_real_4)
+}
+
+/** Aplica teto de fator e fator real 4% quando o material não tem IMP. */
+export function applyFatorRules(row: ItemRow): ItemRow {
+  const next: ItemRow = { ...row }
+  if (materialHasImp(next.material)) return next
+
+  next.fator_real_4 = FATOR_REAL_4_SEM_IMP
+  const max = numericValue(next.fator_maximo)
+  const used = numericValue(next.fator_utilizado)
+  if (max > FATOR_REAL_4_SEM_IMP) next.fator_maximo = FATOR_REAL_4_SEM_IMP
+  if (used > FATOR_REAL_4_SEM_IMP) next.fator_utilizado = FATOR_REAL_4_SEM_IMP
+  return next
+}
+
+/** Preço ICMS = Preço fator 100 ÷ (fator real ÷ 100). */
+export function priceFromFatorReal(precoFator100: number, fatorReal: number): number {
+  if (!precoFator100 || !fatorReal) return 0
+  return (precoFator100 * 100) / fatorReal
+}
+
 /**
- * ACE alinhado ao exemplo tubos/barras:
- * Subtotal SP/CE = Qde. × preço (ICMS 18% / 4%).
+ * ACE: Preço ICMS 18%/4% a partir do preço fator 100 e fator real.
+ * Subtotal = Qde. × preço ICMS.
  */
 export function calculateRow(
   modelId: string,
   row: ItemRow,
   conditions: Conditions,
 ): RowCalculation {
-  const fatorUtilizado = numericValue(row.fator_utilizado)
   const catalog = usesPriceCatalog(modelId) ? lookupCatalogPrice(row) : null
   const catalogPrice = catalog?.precoFator100 ?? 0
   const precoFator100 = catalogPrice || numericValue(row.preco_fator_100 ?? row.preco)
@@ -43,9 +73,19 @@ export function calculateRow(
   const icms = catalog?.icms || percentRate(row.icms)
   const ipiRate = percentRate(row.ipi)
 
+  const fatorReal18 = numericValue(row.fator_real_18)
+  const fatorReal4 = resolveFatorReal4(row)
+  let fatorMaximo = numericValue(row.fator_maximo)
+  let fatorUtilizado = numericValue(row.fator_utilizado)
+  if (!materialHasImp(row.material)) {
+    if (fatorMaximo > FATOR_REAL_4_SEM_IMP) fatorMaximo = FATOR_REAL_4_SEM_IMP
+    if (fatorUtilizado > FATOR_REAL_4_SEM_IMP) fatorUtilizado = FATOR_REAL_4_SEM_IMP
+  }
+
+  const precoSp = priceFromFatorReal(precoFator100, fatorReal18)
+  const precoCe = priceFromFatorReal(precoFator100, fatorReal4)
+
   const quantidade = numericValue(row.quantidade)
-  const precoSp = numericValue(row.preco_sp) || catalogPrice
-  const precoCe = numericValue(row.preco_ce) || catalogPrice
   const subtotalSp = quantidade && precoSp ? quantidade * precoSp : 0
   const subtotalCe = quantidade && precoCe ? quantidade * precoCe : 0
   const calculoIpiSp = subtotalSp * ipiRate

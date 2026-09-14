@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { calculateRow, calculateSummary, numericValue } from './lib/calc'
+import { applyFatorRules, calculateRow, calculateSummary, materialHasImp, numericValue, resolveFatorReal4 } from './lib/calc'
 import { exportExcel, exportPdf } from './lib/export'
 import {
   displayFieldValue,
@@ -142,14 +142,19 @@ function MaterialSearchControl({
 function CellControl({
   field,
   value,
+  row,
   onChange,
 }: {
   field: FieldDef
   value: string | number | boolean | undefined
+  row: ItemRow
   onChange: (value: string | number | boolean) => void
 }) {
-  if (isCalculatedForRow(field) || field.locked) {
-    return <span className="calculated-cell">{displayFieldValue(value, field)}</span>
+  const lockFatorReal4 = field.key === 'fator_real_4' && !materialHasImp(row.material)
+  if (isCalculatedForRow(field) || field.locked || lockFatorReal4) {
+    const displayValue =
+      field.key === 'fator_real_4' && !materialHasImp(row.material) ? resolveFatorReal4(row) : value
+    return <span className="calculated-cell">{displayFieldValue(displayValue, field)}</span>
   }
 
   if (field.searchable || field.key === 'material') {
@@ -351,6 +356,7 @@ export default function App() {
       if (key === 'material') {
         nextRow = applyCatalogMaterial(nextRow, String(value).trim())
       }
+      nextRow = applyFatorRules(nextRow)
       list[index] = nextRow
       return { ...prev, [modelId]: list }
     })
@@ -614,13 +620,19 @@ export default function App() {
                         ? field.calc
                           ? calc[field.calc]
                           : row[field.key]
-                        : row[field.key]
+                        : field.key === 'fator_real_4' && !materialHasImp(row.material)
+                          ? resolveFatorReal4(row)
+                          : row[field.key]
+                      const lockedCell =
+                        isCalculatedForRow(field) ||
+                        field.locked ||
+                        (field.key === 'fator_real_4' && !materialHasImp(row.material))
                       return (
                         <td
                           key={field.key}
                           className={[
                             field.type === 'boolean' ? 'boolean-column' : '',
-                            isCalculatedForRow(field) || field.locked ? 'formula-cell' : '',
+                            lockedCell ? 'formula-cell' : '',
                             field.searchable || field.key === 'material' ? 'material-column' : '',
                           ]
                             .filter(Boolean)
@@ -629,6 +641,7 @@ export default function App() {
                           <CellControl
                             field={field}
                             value={value}
+                            row={row}
                             onChange={(v) => {
                               setActiveRowIndex(index)
                               updateRow(index, field.key, v)
