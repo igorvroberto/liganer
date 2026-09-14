@@ -3,12 +3,16 @@ import { calculateRow } from './calc'
 import { displayFieldValue, formatCurrency } from './format'
 import {
   HIDDEN_FROM_CLIENT,
+  PDF_18_ONLY_KEYS,
+  PDF_4_ONLY_KEYS,
   fieldLabel,
   footerFields,
   itemFields,
 } from './models'
 import { localPrintNumber } from './storage'
 import type { ClientInfo, Conditions, FieldDef, ItemRow, ModelDef, Summary } from './types'
+
+export type PdfKind = 'cliente18' | 'cliente4' | 'liganer'
 
 function valueForField(
   field: FieldDef,
@@ -25,10 +29,15 @@ function valueForField(
   return row[field.key]
 }
 
-function exportableFields(model: ModelDef, kind: 'cliente' | 'liganer'): FieldDef[] {
+function exportableFields(model: ModelDef, kind: PdfKind): FieldDef[] {
   const fields = itemFields(model).filter((f) => !f.hiddenInApp)
   if (kind === 'liganer') return fields
-  const visible = fields.filter((f) => !HIDDEN_FROM_CLIENT.has(f.key) && f.type !== 'boolean')
+  let visible = fields.filter((f) => !HIDDEN_FROM_CLIENT.has(f.key) && f.type !== 'boolean')
+  if (kind === 'cliente18') {
+    visible = visible.filter((f) => !PDF_4_ONLY_KEYS.has(f.key))
+  } else if (kind === 'cliente4') {
+    visible = visible.filter((f) => !PDF_18_ONLY_KEYS.has(f.key))
+  }
   return orderClientePdfFields(visible)
 }
 
@@ -86,8 +95,33 @@ function logoUrl(): string {
   return `${window.location.origin}${base}liganer_favicon.webp`
 }
 
+function summaryRowsForPdf(kind: PdfKind, summary: Summary): [string, string][] {
+  if (kind === 'cliente18') {
+    return [
+      ['Subtotal 18%', formatCurrency(summary.subtotalSp ?? summary.subtotal)],
+      ['IPI 18%', formatCurrency(summary.ipiSp ?? summary.ipi)],
+      ['Total 18%', formatCurrency(summary.totalSp ?? summary.total)],
+    ]
+  }
+  if (kind === 'cliente4') {
+    return [
+      ['Subtotal 4%', formatCurrency(summary.subtotalCe ?? 0)],
+      ['IPI 4%', formatCurrency(summary.ipiCe ?? 0)],
+      ['Total 4%', formatCurrency(summary.totalCe ?? 0)],
+    ]
+  }
+  return [
+    ['Subtotal 18%', formatCurrency(summary.subtotalSp ?? summary.subtotal)],
+    ['Subtotal 4%', formatCurrency(summary.subtotalCe ?? 0)],
+    ['IPI 18%', formatCurrency(summary.ipiSp ?? summary.ipi)],
+    ['IPI 4%', formatCurrency(summary.ipiCe ?? 0)],
+    ['Total 18%', formatCurrency(summary.totalSp ?? summary.total)],
+    ['Total 4%', formatCurrency(summary.totalCe ?? 0)],
+  ]
+}
+
 export function exportPdf(
-  kind: 'cliente' | 'liganer',
+  kind: PdfKind,
   model: ModelDef,
   client: ClientInfo,
   rows: ItemRow[],
@@ -99,13 +133,15 @@ export function exportPdf(
   const fields = exportableFields(model, kind)
   const footer = footerFields(model).filter((f) => {
     if (!String(conditions[f.key] ?? '').trim()) return false
-    if (kind === 'cliente' && f.key === 'frete_percentual') return false
+    if (kind !== 'liganer' && f.key === 'frete_percentual') return false
     return true
   })
   const number = String(options?.number ?? '').trim() || localPrintNumber()
   const now = new Date().toLocaleString('pt-BR')
   const pdfClass = kind === 'liganer' ? 'pdf-liganer' : 'pdf-cliente'
   const logo = logoUrl()
+  const regimeLabel =
+    kind === 'cliente18' ? 'ICMS 18%' : kind === 'cliente4' ? 'ICMS 4%' : 'Liganer'
 
   const itemRows = rows
     .map((row, index) => {
@@ -125,18 +161,11 @@ export function exportPdf(
     })
     .join('')
 
-  const summaryRows = [
-    ['Subtotal SP', formatCurrency(summary.subtotalSp ?? summary.subtotal)],
-    ['Subtotal CE', formatCurrency(summary.subtotalCe ?? 0)],
-    ['IPI SP', formatCurrency(summary.ipiSp ?? summary.ipi)],
-    ['IPI CE', formatCurrency(summary.ipiCe ?? 0)],
-    ['Total SP', formatCurrency(summary.totalSp ?? summary.total)],
-    ['Total CE', formatCurrency(summary.totalCe ?? 0)],
-  ]
+  const summaryRows = summaryRowsForPdf(kind, summary)
 
   const summaryHtml = `
     <section class="panel">
-      <h2>Totais</h2>
+      <h2>Totais · ${escapeHtml(regimeLabel)}</h2>
       <div class="kv">
         ${summaryRows
           .map(
@@ -194,7 +223,7 @@ export function exportPdf(
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>${escapeHtml(number)}</title>
+  <title>${escapeHtml(`${number} · ${regimeLabel}`)}</title>
   <style>
     /* A4 retrato (210×297mm). */
     @page {
@@ -450,6 +479,7 @@ export function exportPdf(
     </div>
     <div class="banner-meta">
       <div><strong>Nº ${escapeHtml(number)}</strong></div>
+      <div>${escapeHtml(regimeLabel)}</div>
       <div>${escapeHtml(now)}</div>
       <div>${rows.length} item(ns)</div>
     </div>
