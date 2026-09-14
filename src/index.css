@@ -602,7 +602,8 @@ select:disabled {
 .material-search-list {
   position: absolute;
   z-index: 40;
-  top: calc(100% + 2px);
+  bottom: calc(100% + 2px);
+  top: auto;
   left: 0;
   right: 0;
   max-height: 240px;
