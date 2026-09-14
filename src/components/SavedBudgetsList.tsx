@@ -38,8 +38,8 @@ export default function SavedBudgetsList({
         <p className="note">Nenhum orçamento salvo ainda. Use Salvar nas Condições.</p>
       ) : null}
       {items.length > 0 ? (
-        <div className="table-scroll">
-          <table className="items-table saved-budgets-table">
+        <div className="table-scroll saved-budgets-scroll">
+          <table className="saved-budgets-table">
             <thead>
               <tr>
                 <th>Nome do orçamento</th>
@@ -62,36 +62,44 @@ export default function SavedBudgetsList({
                     <div className="saved-budget-actions">
                       <button
                         type="button"
-                        className="btn btn-secondary"
+                        className="btn btn-secondary btn-compact"
                         onClick={() => onPdfCliente(row.number)}
                       >
                         PDF cliente
                       </button>
                       <button
                         type="button"
-                        className="btn btn-secondary"
+                        className="btn btn-secondary btn-compact"
                         onClick={() => onPdfLiganer(row.number)}
                       >
                         PDF Liganer
                       </button>
                       <button
                         type="button"
-                        className="btn btn-secondary"
+                        className="btn btn-secondary btn-compact"
                         onClick={() => onPdfGestao(row.number)}
                       >
                         PDF gestão
                       </button>
                       <button
                         type="button"
-                        className="btn btn-secondary"
+                        className="btn btn-secondary btn-compact"
                         onClick={() => onXlsx(row.number)}
                       >
                         XLSX
                       </button>
-                      <button type="button" className="btn btn-secondary" onClick={() => onEdit(row.number)}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-compact"
+                        onClick={() => onEdit(row.number)}
+                      >
                         Editar
                       </button>
-                      <button type="button" className="btn btn-ghost" onClick={() => onDelete(row.number)}>
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-compact"
+                        onClick={() => onDelete(row.number)}
+                      >
                         Excluir
                       </button>
                     </div>
