@@ -104,14 +104,14 @@ export const MODELS: ModelDef[] = [
       { key: 'um', label: 'UM', aliases: ['um', 'unidade medida'], default: 'KG', locked: true },
       {
         key: 'preco_sp',
-        label: 'SP para SP\n(ICMS 18%)',
-        aliases: ['preco sp', 'preço sp', 'icms 18', 'sp para sp'],
+        label: 'Preço\nICMS 18%',
+        aliases: ['preco sp', 'preço sp', 'preco icms 18', 'icms 18', 'sp para sp'],
         type: 'currency',
       },
       {
         key: 'preco_ce',
-        label: 'CE para SP ou\nSP para demais UFs\n(ICMS 4%)',
-        aliases: ['preco ce', 'preço ce', 'icms 4', 'ce para sp'],
+        label: 'Preço\nICMS 4%',
+        aliases: ['preco ce', 'preço ce', 'preco icms 4', 'icms 4', 'ce para sp'],
         type: 'currency',
       },
       {
@@ -166,14 +166,6 @@ export const MODELS: ModelDef[] = [
 
       // Campos que já existiam no app (mantidos)
       {
-        key: 'icms',
-        label: 'ICMS',
-        aliases: ['icms'],
-        type: 'percent',
-        fractionDigits: 0,
-      },
-      calcField('_subtotal', 'Subtotal', 'currency', 'subtotal'),
-      {
         key: 'preco_fator_100',
         label: 'Preço\nfator 100',
         aliases: [
@@ -185,7 +177,6 @@ export const MODELS: ModelDef[] = [
         virtual: true,
         calc: 'precoFator100',
       },
-      calcField('_preco_fator_utilizado', 'Preço\nfator utilizado', 'currency', 'precoFatorUtilizado'),
       {
         key: 'comissao',
         label: 'Comissão',
@@ -260,8 +251,6 @@ export const HIDDEN_FROM_CLIENT = new Set([
   '_calculo_ipi_ce',
   '_preco_com_ipi_sp',
   '_preco_com_ipi_ce',
-  'icms',
-  '_subtotal',
 ])
 
 /** Colunas só do regime ICMS 4% (omitidas no PDF 18%). */
