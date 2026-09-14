@@ -47,13 +47,15 @@ Roda automaticamente no push da `main` quando `deploy/root-index/` (ou o própri
 
 Fonte compartilhada (fora deste app):
 
-`/vendas.liganer.com.br/orcamento/tabelas/precos-chapas-bobinas.xlsx`
+Fonte ACE:
 
-URL pública: `https://vendas.liganer.com.br/orcamento/tabelas/precos-chapas-bobinas.xlsx`
+`/vendas.liganer.com.br/orcamento/tabelas/precos-ace.xlsx`
 
-- Substitua só esse arquivo no FTP e dê hard-refresh nos apps — sem rebuild.
+URL pública: `https://vendas.liganer.com.br/orcamento/tabelas/precos-ace.xlsx`
+
+- Substitua só esse arquivo no FTP e dê hard-refresh no app — sem rebuild.
 - O build deste repo só regenera o JSON de fallback embutido (`npm run sync:prices`).
-- Tipo, acabamento, PVC e espessura do formulário vêm dos valores/colunas dessa planilha.
+- O material é pesquisável a partir da descrição da planilha (mapeamento de colunas sujeito a orientação posterior).
 
 ### Primeira publicação
 
