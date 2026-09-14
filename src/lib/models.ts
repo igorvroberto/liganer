@@ -60,38 +60,10 @@ function footerFieldsModule(): FieldDef[] {
   ]
 }
 
-function commercialFields(): FieldDef[] {
-  return [
-    { key: 'observacao', label: 'Observação', aliases: ['observacao', 'observação', 'obs'] },
-    {
-      key: 'preco_fator_100',
-      label: 'Preço\nfator 100',
-      aliases: [
-        'preco fator 100', 'preço fator 100', 'preco', 'preço', 'valor',
-        'preco bobina fator 100', 'preço bobina fator 100',
-      ],
-      type: 'currency',
-      calculated: true,
-      virtual: true,
-      calc: 'precoFator100',
-    },
-    { key: 'fator_maximo', label: 'Fator\nmáximo', aliases: ['fator maximo', 'fator máximo'], type: 'number' },
-    { key: 'fator_utilizado', label: 'Fator\nutilizado', aliases: ['fator utilizado', 'fator usado'], type: 'number' },
-    calcField('_preco_fator_utilizado', 'Preço\nfator utilizado', 'currency', 'precoFatorUtilizado'),
-    { key: 'comissao', label: 'Comissão', aliases: ['comissao', 'comissão'], options: COMMISSION_OPTIONS, askWhenNew: true },
-  ]
-}
-
-function icmsField(): FieldDef {
-  return {
-    key: 'icms',
-    label: 'ICMS',
-    aliases: ['icms'],
-    type: 'percent',
-    fractionDigits: 0,
-  }
-}
-
+/**
+ * Campos alinhados ao exemplo tubos/barras.
+ * Colunas novas do Excel entram aqui; as que já existiam no app são mantidas.
+ */
 export const MODELS: ModelDef[] = [
   {
     id: 'chapas',
@@ -101,18 +73,138 @@ export const MODELS: ModelDef[] = [
     rowRange: '3 a 12',
     fields: [
       {
+        key: 'referencia',
+        label: 'Referência',
+        aliases: ['referencia', 'referência', 'codigo', 'código', 'ref'],
+      },
+      {
         key: 'material',
         label: 'Material',
         aliases: ['material', 'produto', 'descricao', 'descrição'],
         searchable: true,
         askWhenNew: true,
       },
+      {
+        key: 'pecas',
+        label: 'Peças',
+        aliases: ['pecas', 'peças', 'peca', 'peça'],
+        type: 'number',
+        fractionDigits: 0,
+        useGrouping: true,
+      },
+      {
+        key: 'quantidade',
+        label: 'Qde.',
+        aliases: ['qde', 'qtde', 'quantidade', 'qtd'],
+        type: 'number',
+        fractionDigits: 2,
+        useGrouping: true,
+      },
       { key: 'um', label: 'UM', aliases: ['um', 'unidade medida'], default: 'KG' },
-      icmsField(),
+      {
+        key: 'preco_sp',
+        label: 'SP para SP\n(ICMS 18%)',
+        aliases: ['preco sp', 'preço sp', 'icms 18', 'sp para sp'],
+        type: 'currency',
+      },
+      {
+        key: 'preco_ce',
+        label: 'CE para SP ou\nSP para demais UFs\n(ICMS 4%)',
+        aliases: ['preco ce', 'preço ce', 'icms 4', 'ce para sp'],
+        type: 'currency',
+      },
+      {
+        key: 'ipi',
+        label: 'IPI',
+        aliases: ['ipi'],
+        type: 'percent',
+        default: 5,
+        fractionDigits: 0,
+      },
+      {
+        key: 'estoque_total',
+        label: 'Estoque\ntotal',
+        aliases: ['estoque total', 'estoque'],
+        type: 'number',
+        fractionDigits: 0,
+        useGrouping: true,
+      },
+      {
+        key: 'estoque_sp',
+        label: 'Estoque\nSP',
+        aliases: ['estoque sp'],
+        type: 'number',
+        fractionDigits: 0,
+        useGrouping: true,
+      },
+      {
+        key: 'estoque_ce',
+        label: 'Estoque\nCE',
+        aliases: ['estoque ce'],
+        type: 'number',
+        fractionDigits: 0,
+        useGrouping: true,
+      },
+      calcField('_subtotal_sp', 'Subtotal\nSP', 'currency', 'subtotalSp'),
+      calcField('_subtotal_ce', 'Subtotal\nCE', 'currency', 'subtotalCe'),
+      { key: 'observacao', label: 'Observação', aliases: ['observacao', 'observação', 'obs'] },
+      {
+        key: 'fator_maximo',
+        label: 'Fator\nmáximo',
+        aliases: ['fator maximo', 'fator máximo'],
+        type: 'number',
+      },
+      {
+        key: 'fator_utilizado',
+        label: 'Fator\nutilizado',
+        aliases: ['fator utilizado', 'fator usado'],
+        type: 'number',
+      },
+      calcField('_calculo_ipi_sp', 'Cálculo IPI\n18%', 'currency', 'calculoIpiSp'),
+      calcField('_calculo_ipi_ce', 'Cálculo IPI\n4%', 'currency', 'calculoIpiCe'),
+      calcField('_preco_com_ipi_sp', 'Com IPI\n18%', 'currency', 'precoComIpiSp'),
+      calcField('_preco_com_ipi_ce', 'Com IPI\n4%', 'currency', 'precoComIpiCe'),
+
+      // Campos que já existiam no app (mantidos)
+      {
+        key: 'icms',
+        label: 'ICMS',
+        aliases: ['icms'],
+        type: 'percent',
+        fractionDigits: 0,
+      },
       calcField('_subtotal', 'Subtotal', 'currency', 'subtotal'),
-      ...commercialFields(),
-      { key: 'preco_servico', label: 'Preço\nserviço', aliases: ['preco servico', 'preço serviço'], type: 'currency' },
-      { key: 'descricao_servico', label: 'Descrição\nserviço', aliases: ['descricao servico', 'descrição serviço'] },
+      {
+        key: 'preco_fator_100',
+        label: 'Preço\nfator 100',
+        aliases: [
+          'preco fator 100', 'preço fator 100', 'preco', 'preço', 'valor',
+          'preco bobina fator 100', 'preço bobina fator 100',
+        ],
+        type: 'currency',
+        calculated: true,
+        virtual: true,
+        calc: 'precoFator100',
+      },
+      calcField('_preco_fator_utilizado', 'Preço\nfator utilizado', 'currency', 'precoFatorUtilizado'),
+      {
+        key: 'comissao',
+        label: 'Comissão',
+        aliases: ['comissao', 'comissão'],
+        options: COMMISSION_OPTIONS,
+        askWhenNew: true,
+      },
+      {
+        key: 'preco_servico',
+        label: 'Preço\nserviço',
+        aliases: ['preco servico', 'preço serviço'],
+        type: 'currency',
+      },
+      {
+        key: 'descricao_servico',
+        label: 'Descrição\nserviço',
+        aliases: ['descricao servico', 'descrição serviço'],
+      },
       calcField('_preco_total', 'Preço\ntotal', 'currency', 'precoTotal'),
       calcField('_preco_sem_ipi', 'Preço\nsem IPI', 'currency', 'precoSemIpi'),
       ...footerFieldsModule(),
@@ -157,5 +249,13 @@ export const HIDDEN_FROM_CLIENT = new Set([
   '_acrescimo_perda_percentual',
   '_acrescimo_perda_valor',
   '_preco_total',
+  'estoque_total',
+  'estoque_sp',
+  'estoque_ce',
+  '_calculo_ipi_sp',
+  '_calculo_ipi_ce',
+  '_preco_com_ipi_sp',
+  '_preco_com_ipi_ce',
+  'icms',
+  '_subtotal',
 ])
-

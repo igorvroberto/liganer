@@ -652,21 +652,30 @@ export default function App() {
         <h2>Totais</h2>
         <div className="summary-grid">
           <div className="summary-item">
-            <span>Subtotal</span>
-            <strong>{formatCurrency(summary.subtotal)}</strong>
+            <span>Subtotal SP</span>
+            <strong>{formatCurrency(summary.subtotalSp)}</strong>
           </div>
           <div className="summary-item">
-            <span>IPI 3,25%</span>
-            <strong>{formatCurrency(summary.ipi)}</strong>
+            <span>Subtotal CE</span>
+            <strong>{formatCurrency(summary.subtotalCe)}</strong>
           </div>
           <div className="summary-item">
-            <span>Total</span>
-            <strong>{formatCurrency(summary.total)}</strong>
+            <span>IPI SP</span>
+            <strong>{formatCurrency(summary.ipiSp)}</strong>
+          </div>
+          <div className="summary-item">
+            <span>IPI CE</span>
+            <strong>{formatCurrency(summary.ipiCe)}</strong>
+          </div>
+          <div className="summary-item">
+            <span>Total SP</span>
+            <strong>{formatCurrency(summary.totalSp)}</strong>
+          </div>
+          <div className="summary-item">
+            <span>Total CE</span>
+            <strong>{formatCurrency(summary.totalCe)}</strong>
           </div>
         </div>
-        <p className="muted-note">
-          Subtotal por peso/quantidade aguarda orientação da planilha <code>precos-ace.xlsx</code>.
-        </p>
       </section>
 
       <section className="card">
