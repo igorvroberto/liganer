@@ -547,7 +547,6 @@ export default function App() {
           <h1>Orçamento ACE</h1>
         </div>
       </div>
-      <p className="lede">Pesquise o material na tabela e complete fator, comissão e condições.</p>
 
       {model.status === 'pending' && (
         <div className="notice">
