@@ -5,7 +5,6 @@ import {
   HIDDEN_FROM_CLIENT,
   fieldLabel,
   footerFields,
-  isSupplierKey,
   itemFields,
 } from './models'
 import { localPrintNumber } from './storage'
@@ -29,9 +28,7 @@ function valueForField(
 function exportableFields(model: ModelDef, kind: 'cliente' | 'liganer'): FieldDef[] {
   const fields = itemFields(model).filter((f) => !f.hiddenInApp)
   if (kind === 'liganer') return fields
-  const visible = fields.filter(
-    (f) => !HIDDEN_FROM_CLIENT.has(f.key) && f.type !== 'boolean' && !isSupplierKey(f.key),
-  )
+  const visible = fields.filter((f) => !HIDDEN_FROM_CLIENT.has(f.key) && f.type !== 'boolean')
   return orderClientePdfFields(visible)
 }
 
