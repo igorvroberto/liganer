@@ -98,14 +98,56 @@ function summaryRowsForPdf(kind: PdfKind, summary: Summary): [string, string][] 
       ['Total 4%', formatCurrency(summary.totalCe ?? 0)],
     ]
   }
-  return [
-    ['Subtotal 18%', formatCurrency(summary.subtotalSp ?? summary.subtotal)],
-    ['Subtotal 4%', formatCurrency(summary.subtotalCe ?? 0)],
-    ['IPI 18%', formatCurrency(summary.ipiSp ?? summary.ipi)],
-    ['IPI 4%', formatCurrency(summary.ipiCe ?? 0)],
-    ['Total 18%', formatCurrency(summary.totalSp ?? summary.total)],
-    ['Total 4%', formatCurrency(summary.totalCe ?? 0)],
-  ]
+  return []
+}
+
+function kvRowsHtml(rows: [string, string][]): string {
+  return rows
+    .map(
+      ([label, value]) => `
+          <div>
+            <strong>${escapeHtml(label)}</strong>
+            <span>${escapeHtml(value)}</span>
+          </div>`,
+    )
+    .join('')
+}
+
+function summaryHtmlForPdf(kind: PdfKind, summary: Summary, regimeLabel: string): string {
+  if (kind === 'liganer') {
+    const col4: [string, string][] = [
+      ['Subtotal 4%', formatCurrency(summary.subtotalCe ?? 0)],
+      ['IPI 4%', formatCurrency(summary.ipiCe ?? 0)],
+      ['Total 4%', formatCurrency(summary.totalCe ?? 0)],
+    ]
+    const col18: [string, string][] = [
+      ['Subtotal 18%', formatCurrency(summary.subtotalSp ?? summary.subtotal)],
+      ['IPI 18%', formatCurrency(summary.ipiSp ?? summary.ipi)],
+      ['Total 18%', formatCurrency(summary.totalSp ?? summary.total)],
+    ]
+    return `
+    <section class="panel">
+      <h2>Totais · ${escapeHtml(regimeLabel)}</h2>
+      <div class="summary-columns">
+        <div class="summary-column">
+          <h3>4%</h3>
+          <div class="kv">${kvRowsHtml(col4)}</div>
+        </div>
+        <div class="summary-column">
+          <h3>18%</h3>
+          <div class="kv">${kvRowsHtml(col18)}</div>
+        </div>
+      </div>
+    </section>`
+  }
+
+  return `
+    <section class="panel">
+      <h2>Totais · ${escapeHtml(regimeLabel)}</h2>
+      <div class="kv">
+        ${kvRowsHtml(summaryRowsForPdf(kind, summary))}
+      </div>
+    </section>`
 }
 
 export function exportPdf(
@@ -149,23 +191,7 @@ export function exportPdf(
     })
     .join('')
 
-  const summaryRows = summaryRowsForPdf(kind, summary)
-
-  const summaryHtml = `
-    <section class="panel">
-      <h2>Totais · ${escapeHtml(regimeLabel)}</h2>
-      <div class="kv">
-        ${summaryRows
-          .map(
-            ([label, value]) => `
-          <div>
-            <strong>${escapeHtml(label)}</strong>
-            <span>${escapeHtml(value)}</span>
-          </div>`,
-          )
-          .join('')}
-      </div>
-    </section>`
+  const summaryHtml = summaryHtmlForPdf(kind, summary, regimeLabel)
 
   const conditionsHtml = footer.length
     ? `
@@ -421,6 +447,25 @@ export function exportPdf(
       border-bottom: 1px solid #d8dfd9;
     }
     body.pdf-liganer .panel h2 { font-size: 9px; padding: 5px 8px; }
+    .summary-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .summary-column h3 {
+      margin: 0;
+      padding: 6px 8px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: #1a1f1c;
+      background: #f2f2f2;
+      border-bottom: 1px solid #d8dfd9;
+    }
+    body.pdf-liganer .summary-column h3 { font-size: 8px; padding: 4px 6px; }
+    .summary-column + .summary-column {
+      border-left: 1px solid #d8dfd9;
+    }
     .kv div {
       display: grid;
       grid-template-columns: 1fr 1.1fr;
