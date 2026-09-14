@@ -32,18 +32,12 @@ function exportableFields(model: ModelDef, kind: 'cliente' | 'liganer'): FieldDe
   return orderClientePdfFields(visible)
 }
 
-/** PDF cliente: ICMS após UM; preço sem IPI antes do subtotal. */
+/** PDF cliente: preço sem IPI legado antes do subtotal legado, se ainda existir. */
 function orderClientePdfFields(fields: FieldDef[]): FieldDef[] {
   const byKey = new Map(fields.map((field) => [field.key, field]))
   const result: FieldDef[] = []
   for (const field of fields) {
-    if (field.key === 'icms' || field.key === '_preco_sem_ipi') continue
-    if (field.key === 'um') {
-      result.push(field)
-      const icms = byKey.get('icms')
-      if (icms) result.push(icms)
-      continue
-    }
+    if (field.key === '_preco_sem_ipi') continue
     if (field.key === '_subtotal') {
       const precoSemIpi = byKey.get('_preco_sem_ipi')
       if (precoSemIpi) result.push(precoSemIpi)
@@ -132,9 +126,12 @@ export function exportPdf(
     .join('')
 
   const summaryRows = [
-    ['Subtotal', formatCurrency(summary.subtotal)],
-    ['IPI 3,25%', formatCurrency(summary.ipi)],
-    ['Total', formatCurrency(summary.total)],
+    ['Subtotal SP', formatCurrency(summary.subtotalSp ?? summary.subtotal)],
+    ['Subtotal CE', formatCurrency(summary.subtotalCe ?? 0)],
+    ['IPI SP', formatCurrency(summary.ipiSp ?? summary.ipi)],
+    ['IPI CE', formatCurrency(summary.ipiCe ?? 0)],
+    ['Total SP', formatCurrency(summary.totalSp ?? summary.total)],
+    ['Total CE', formatCurrency(summary.totalCe ?? 0)],
   ]
 
   const summaryHtml = `

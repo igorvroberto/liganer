@@ -331,11 +331,18 @@ export function usesPriceCatalog(modelId: string): boolean {
   return modelId === 'chapas'
 }
 
-/** Ao escolher um material do catálogo, preenche UM (e deixa o preço vir do lookup). */
+/** Ao escolher um material do catálogo, preenche referência, UM, estoque e preços. */
 export function applyCatalogMaterial(row: ItemRow, material: string): ItemRow {
   const next: ItemRow = { ...row, material }
   const match = findPriceRow(next)
-  if (match?.um) next.um = match.um
-  if (match?.codigo) next.referencia = match.codigo
+  if (!match) return next
+  if (match.codigo) next.referencia = match.codigo
+  if (match.um) next.um = match.um
+  if (match.estoque) next.estoque_total = match.estoque
+  // precos-ace.xlsx ainda tem um preço só — replica em SP e CE até haver colunas dual.
+  if (match.preco) {
+    next.preco_sp = match.preco
+    next.preco_ce = match.preco
+  }
   return next
 }

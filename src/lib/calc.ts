@@ -26,8 +26,8 @@ export function percentRate(value: unknown): number {
 }
 
 /**
- * ACE: preço unitário (KG/MT) vem do catálogo pelo material.
- * Quantidade/peso saíram do app — subtotal de linha fica 0 até nova orientação da planilha.
+ * ACE alinhado ao exemplo tubos/barras:
+ * Subtotal SP/CE = Qde. × preço (ICMS 18% / 4%).
  */
 export function calculateRow(
   modelId: string,
@@ -42,6 +42,17 @@ export function calculateRow(
   const precoServico = numericValue(row.preco_servico)
   const frete = percentRate(conditions.frete_percentual)
   const icms = catalog?.icms || percentRate(row.icms)
+  const ipiRate = percentRate(row.ipi)
+
+  const quantidade = numericValue(row.quantidade)
+  const precoSp = numericValue(row.preco_sp) || catalogPrice
+  const precoCe = numericValue(row.preco_ce) || catalogPrice
+  const subtotalSp = quantidade && precoSp ? quantidade * precoSp : 0
+  const subtotalCe = quantidade && precoCe ? quantidade * precoCe : 0
+  const calculoIpiSp = subtotalSp * ipiRate
+  const calculoIpiCe = subtotalCe * ipiRate
+  const precoComIpiSp = precoSp ? precoSp * (1 + ipiRate) : 0
+  const precoComIpiCe = precoCe ? precoCe * (1 + ipiRate) : 0
 
   const precoFatorUtilizado = fatorUtilizado ? precoFator100 / (fatorUtilizado / 100) : 0
   const precoBobinaFatorUtilizado = fatorUtilizado
@@ -50,7 +61,7 @@ export function calculateRow(
 
   const precoTotal = precoFatorUtilizado + precoServico
   const precoSemIpi = frete === 0 ? precoTotal : precoTotal + precoTotal * frete
-  const subtotal = 0
+  const subtotal = subtotalSp
 
   return {
     pesoUnitario: 0,
@@ -62,6 +73,14 @@ export function calculateRow(
     precoTotal,
     precoSemIpi,
     subtotal,
+    precoSp,
+    precoCe,
+    subtotalSp,
+    subtotalCe,
+    calculoIpiSp,
+    calculoIpiCe,
+    precoComIpiSp,
+    precoComIpiCe,
     pesoNecessario: 0,
     quantidadeCortes: 0,
     perdaMm: 0,
@@ -69,6 +88,7 @@ export function calculateRow(
     acrescimoPerdaPercentual: 0,
     acrescimoPerdaValor: 0,
     icms,
+    ipiRate,
   }
 }
 
@@ -77,13 +97,31 @@ export function calculateSummary(
   rows: ItemRow[],
   conditions: Conditions,
 ): Summary {
-  let subtotal = 0
+  let subtotalSp = 0
+  let subtotalCe = 0
+  let ipiSp = 0
+  let ipiCe = 0
   for (const row of rows) {
     const calculated = calculateRow(modelId, row, conditions)
-    subtotal += calculated.subtotal
+    subtotalSp += calculated.subtotalSp
+    subtotalCe += calculated.subtotalCe
+    ipiSp += calculated.calculoIpiSp
+    ipiCe += calculated.calculoIpiCe
   }
-  const ipi = subtotal * 0.0325
-  const total = subtotal + ipi
+  const totalSp = subtotalSp + ipiSp
+  const totalCe = subtotalCe + ipiCe
   const frete = percentRate(conditions.frete_percentual)
-  return { totalKg: 0, subtotal, ipi, total, frete }
+  return {
+    totalKg: 0,
+    subtotal: subtotalSp,
+    subtotalSp,
+    subtotalCe,
+    ipi: ipiSp,
+    ipiSp,
+    ipiCe,
+    total: totalSp,
+    totalSp,
+    totalCe,
+    frete,
+  }
 }

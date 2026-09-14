@@ -52,6 +52,14 @@ export type RowCalculation = {
   precoTotal: number
   precoSemIpi: number
   subtotal: number
+  precoSp: number
+  precoCe: number
+  subtotalSp: number
+  subtotalCe: number
+  calculoIpiSp: number
+  calculoIpiCe: number
+  precoComIpiSp: number
+  precoComIpiCe: number
   pesoNecessario: number
   quantidadeCortes: number
   perdaMm: number
@@ -60,13 +68,21 @@ export type RowCalculation = {
   acrescimoPerdaValor: number
   /** Alíquota ICMS (ex.: 0.04 = 4%). */
   icms: number
+  /** Alíquota IPI da linha. */
+  ipiRate: number
 }
 
 export type Summary = {
   totalKg: number
   subtotal: number
+  subtotalSp: number
+  subtotalCe: number
   ipi: number
+  ipiSp: number
+  ipiCe: number
   total: number
+  totalSp: number
+  totalCe: number
   frete: number
 }
 
