@@ -163,7 +163,7 @@ function allColumns(): PdfColumn[] {
     {
       key: "unitKg",
       label: "Peso\nunitário",
-      value: ({ unitKg }) => (unitKg > 0 ? fmtNumber(unitKg, 3) : "—"),
+      value: ({ unitKg }) => (unitKg > 0 ? fmtDecimal2(unitKg) : "—"),
     },
     {
       key: "minKg",

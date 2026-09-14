@@ -312,7 +312,7 @@ function appendItemsTable(
       item.width > 0 ? fmtPlainInt(item.width) : "—",
       item.length > 0 ? fmtPlainInt(item.length) : "—",
       item.minQty > 0 ? fmtInt(item.minQty) : "—",
-      unitKg > 0 ? fmtNumber(unitKg, 3) : "—",
+      unitKg > 0 ? fmtDecimal2(unitKg) : "—",
       item.minKg > 0 ? fmtNumber(item.minKg, 1) : "—",
       commercial.priceWithoutIpi != null ? fmtCurrency(commercial.priceWithoutIpi) : "—",
       commercial.icms != null ? `${fmtNumber(commercial.icms, 0)}%` : "—",
