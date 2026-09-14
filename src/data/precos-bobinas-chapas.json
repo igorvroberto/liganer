@@ -1,0 +1,1839 @@
+{
+  "source": "https://vendas.liganer.com.br/orcamento/tabelas/precos-chapas-bobinas.xlsx",
+  "rows": [
+    {
+      "tipo": "201",
+      "espessura": 0.4,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 0,
+        "bobina_reduzida_ou_chapa_sem_pvc": 0,
+        "azul": 0,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 0.5,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 29.763396,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.70404,
+        "azul": 32.12388,
+        "preto_e_branco": 33.45498,
+        "preto": 34.96356,
+        "nitto_fiber": 36.02844
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 0.6,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 29.497176,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.43782,
+        "azul": 31.626936,
+        "preto_e_branco": 32.74506,
+        "preto": 33.98742,
+        "nitto_fiber": 34.96356
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 0.8,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 29.19546,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.136104,
+        "azul": 31.023504,
+        "preto_e_branco": 31.893156,
+        "preto": 32.798304,
+        "nitto_fiber": 33.508224
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 1,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 28.911492,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.852136,
+        "azul": 30.562056,
+        "preto_e_branco": 31.23648,
+        "preto": 31.999644,
+        "nitto_fiber": 32.603076
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 1.2,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 28.3968,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.337444,
+        "azul": 29.923128,
+        "preto_e_branco": 30.491064,
+        "preto": 31.112244,
+        "nitto_fiber": 31.644684
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 1.5,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 28.3968,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.337444,
+        "azul": 29.81664,
+        "preto_e_branco": 30.242592,
+        "preto": 30.757284,
+        "nitto_fiber": 31.165488
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 2,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 28.3968,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.337444,
+        "azul": 29.692404,
+        "preto_e_branco": 30.029616,
+        "preto": 30.402324,
+        "nitto_fiber": 30.721788
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 2.5,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 28.3968,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.337444,
+        "azul": 29.63916,
+        "preto_e_branco": 29.887632,
+        "preto": 30.224844,
+        "nitto_fiber": 30.420072
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 3,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 28.3968,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.337444,
+        "azul": 29.585916,
+        "preto_e_branco": 29.81664,
+        "preto": 30.047364,
+        "nitto_fiber": 30.08286
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 0.4,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 0,
+        "bobina_reduzida_ou_chapa_sem_pvc": 0,
+        "azul": 0,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 6.92172
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 0.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 31.484952,
+        "bobina_reduzida_ou_chapa_sem_pvc": 32.425596,
+        "azul": 33.845436,
+        "preto_e_branco": 35.176536,
+        "preto": 36.685116,
+        "nitto_fiber": 37.749996
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 0.6,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 30.988008,
+        "bobina_reduzida_ou_chapa_sem_pvc": 31.928652,
+        "azul": 33.117768,
+        "preto_e_branco": 34.235892,
+        "preto": 35.478252,
+        "nitto_fiber": 36.454392
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 0.8,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 30.633048,
+        "bobina_reduzida_ou_chapa_sem_pvc": 31.573692,
+        "azul": 32.461092,
+        "preto_e_branco": 33.330744,
+        "preto": 34.235892,
+        "nitto_fiber": 34.945812
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 1,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 29.443932,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.384576,
+        "azul": 31.094496,
+        "preto_e_branco": 31.76892,
+        "preto": 32.532084,
+        "nitto_fiber": 33.135516
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 1.2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 29.443932,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.384576,
+        "azul": 30.97026,
+        "preto_e_branco": 31.538196,
+        "preto": 32.159376,
+        "nitto_fiber": 32.691816
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 1.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 29.443932,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.384576,
+        "azul": 30.863772,
+        "preto_e_branco": 31.289724,
+        "preto": 31.804416,
+        "nitto_fiber": 32.21262
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 29.443932,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.384576,
+        "azul": 30.739536,
+        "preto_e_branco": 31.076748,
+        "preto": 31.449456,
+        "nitto_fiber": 31.76892
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 2.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 29.443932,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.384576,
+        "azul": 30.686292,
+        "preto_e_branco": 30.934764,
+        "preto": 31.271976,
+        "nitto_fiber": 31.467204
+      }
+    },
+    {
+      "tipo": "201",
+      "espessura": 3,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 29.443932,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.384576,
+        "azul": 30.633048,
+        "preto_e_branco": 30.863772,
+        "preto": 31.094496,
+        "nitto_fiber": 31.129992
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 0.4,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 37.0446,
+        "bobina_reduzida_ou_chapa_sem_pvc": 37.9668,
+        "azul": 39.6894,
+        "preto_e_branco": 41.2728,
+        "preto": 43.1868,
+        "nitto_fiber": 44.7528
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 0.5,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 36.4878,
+        "bobina_reduzida_ou_chapa_sem_pvc": 37.41,
+        "azul": 38.802,
+        "preto_e_branco": 40.107,
+        "preto": 41.586,
+        "nitto_fiber": 42.63
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 0.6,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 36.192,
+        "bobina_reduzida_ou_chapa_sem_pvc": 37.1142,
+        "azul": 38.28,
+        "preto_e_branco": 39.3762,
+        "preto": 40.5942,
+        "nitto_fiber": 41.5512
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 0.8,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 36.192,
+        "bobina_reduzida_ou_chapa_sem_pvc": 37.1142,
+        "azul": 37.9842,
+        "preto_e_branco": 38.8368,
+        "preto": 39.7242,
+        "nitto_fiber": 40.4202
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 1,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 36.192,
+        "bobina_reduzida_ou_chapa_sem_pvc": 37.1142,
+        "azul": 37.8102,
+        "preto_e_branco": 38.4714,
+        "preto": 39.2196,
+        "nitto_fiber": 39.8112
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 1.2,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 36.192,
+        "bobina_reduzida_ou_chapa_sem_pvc": 37.1142,
+        "azul": 37.6884,
+        "preto_e_branco": 38.2452,
+        "preto": 38.8542,
+        "nitto_fiber": 39.3762
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 1.5,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 35.7744,
+        "bobina_reduzida_ou_chapa_sem_pvc": 36.6966,
+        "azul": 37.1664,
+        "preto_e_branco": 37.584,
+        "preto": 38.0886,
+        "nitto_fiber": 38.4888
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 2,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 35.7744,
+        "bobina_reduzida_ou_chapa_sem_pvc": 36.6966,
+        "azul": 37.0446,
+        "preto_e_branco": 37.3752,
+        "preto": 37.7406,
+        "nitto_fiber": 38.0538
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 2.5,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 35.7744,
+        "bobina_reduzida_ou_chapa_sem_pvc": 36.6966,
+        "azul": 36.9924,
+        "preto_e_branco": 37.236,
+        "preto": 37.5666,
+        "nitto_fiber": 37.758
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 3,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 35.7744,
+        "bobina_reduzida_ou_chapa_sem_pvc": 36.6966,
+        "azul": 36.9402,
+        "preto_e_branco": 37.1664,
+        "preto": 37.3926,
+        "nitto_fiber": 37.4274
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 0.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 39.8286,
+        "bobina_reduzida_ou_chapa_sem_pvc": 40.36,
+        "azul": 42.1428,
+        "preto_e_branco": 43.4478,
+        "preto": 44.9268,
+        "nitto_fiber": 45.9708
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 0.6,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 38.7672,
+        "bobina_reduzida_ou_chapa_sem_pvc": 39.3,
+        "azul": 40.8552,
+        "preto_e_branco": 41.9514,
+        "preto": 43.1694,
+        "nitto_fiber": 44.1264
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 0.8,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 37.7232,
+        "bobina_reduzida_ou_chapa_sem_pvc": 38.6454,
+        "azul": 39.5154,
+        "preto_e_branco": 40.368,
+        "preto": 41.2554,
+        "nitto_fiber": 41.9514
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 1,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 37.7232,
+        "bobina_reduzida_ou_chapa_sem_pvc": 38.6454,
+        "azul": 39.3414,
+        "preto_e_branco": 40.0026,
+        "preto": 40.7508,
+        "nitto_fiber": 41.3424
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 1.2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 37.5144,
+        "bobina_reduzida_ou_chapa_sem_pvc": 38.4366,
+        "azul": 39.0108,
+        "preto_e_branco": 39.5676,
+        "preto": 40.1766,
+        "nitto_fiber": 40.6986
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 1.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 36.6966,
+        "bobina_reduzida_ou_chapa_sem_pvc": 37.6188,
+        "azul": 38.0886,
+        "preto_e_branco": 38.5062,
+        "preto": 39.0108,
+        "nitto_fiber": 39.411
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 0,
+        "bobina_reduzida_ou_chapa_sem_pvc": 0,
+        "azul": 0,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 2.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 0,
+        "bobina_reduzida_ou_chapa_sem_pvc": 0,
+        "azul": 0,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "QN1803",
+      "espessura": 3,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 0,
+        "bobina_reduzida_ou_chapa_sem_pvc": 0,
+        "azul": 0,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 0.35,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 23.19275,
+        "bobina_reduzida_ou_chapa_sem_pvc": 24.157,
+        "azul": 25.781,
+        "preto_e_branco": 27.202,
+        "preto": 29.029,
+        "nitto_fiber": 30.3485
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 0.4,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 26.328312,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.273706,
+        "azul": 29.039629,
+        "preto_e_branco": 30.662852,
+        "preto": 32.624989,
+        "nitto_fiber": 34.230374
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 0.5,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 26.060748,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.006142,
+        "azul": 28.43315,
+        "preto_e_branco": 29.770971,
+        "preto": 31.287168,
+        "nitto_fiber": 32.357425
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 0.6,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 25.793184,
+        "bobina_reduzida_ou_chapa_sem_pvc": 26.738577,
+        "azul": 27.933697,
+        "preto_e_branco": 29.057467,
+        "preto": 30.306099,
+        "nitto_fiber": 31.287168
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 0.8,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 25.793184,
+        "bobina_reduzida_ou_chapa_sem_pvc": 26.738577,
+        "azul": 27.630458,
+        "preto_e_branco": 28.504501,
+        "preto": 29.414219,
+        "nitto_fiber": 30.127723
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 1,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 25.793184,
+        "bobina_reduzida_ou_chapa_sem_pvc": 26.738577,
+        "azul": 27.452082,
+        "preto_e_branco": 28.129911,
+        "preto": 28.896928,
+        "nitto_fiber": 29.503407
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 1.2,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 25.793184,
+        "bobina_reduzida_ou_chapa_sem_pvc": 26.738577,
+        "azul": 27.327219,
+        "preto_e_branco": 27.898022,
+        "preto": 28.522338,
+        "nitto_fiber": 29.057467
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 1.5,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 25.793184,
+        "bobina_reduzida_ou_chapa_sem_pvc": 26.738577,
+        "azul": 27.220193,
+        "preto_e_branco": 27.648296,
+        "preto": 28.165586,
+        "nitto_fiber": 28.575851
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 0.4,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 27.427533,
+        "bobina_reduzida_ou_chapa_sem_pvc": 28.363566,
+        "azul": 30.112005,
+        "preto_e_branco": 31.719156,
+        "preto": 33.661866,
+        "nitto_fiber": 35.251356
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 0.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 27.180279,
+        "bobina_reduzida_ou_chapa_sem_pvc": 28.116312,
+        "azul": 29.529192,
+        "preto_e_branco": 30.853767,
+        "preto": 32.354952,
+        "nitto_fiber": 33.414612
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 0.6,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 26.897703,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.833736,
+        "azul": 29.017023,
+        "preto_e_branco": 30.129666,
+        "preto": 31.365936,
+        "nitto_fiber": 32.337291
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 0.8,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 26.897703,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.833736,
+        "azul": 28.716786,
+        "preto_e_branco": 29.582175,
+        "preto": 30.482886,
+        "nitto_fiber": 31.189326
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 1,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 26.897703,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.833736,
+        "azul": 28.540176,
+        "preto_e_branco": 29.211294,
+        "preto": 29.970717,
+        "nitto_fiber": 30.571191
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 1.2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 26.897703,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.833736,
+        "azul": 28.416549,
+        "preto_e_branco": 28.981701,
+        "preto": 29.599836,
+        "nitto_fiber": 30.129666
+      }
+    },
+    {
+      "tipo": "410S",
+      "espessura": 1.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 26.897703,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.833736,
+        "azul": 28.310583,
+        "preto_e_branco": 28.734447,
+        "preto": 29.246616,
+        "nitto_fiber": 29.652819
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.4,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 44.603523,
+        "bobina_reduzida_ou_chapa_sem_pvc": 45.552534,
+        "azul": 47.325215,
+        "preto_e_branco": 48.954649,
+        "preto": 50.924295,
+        "nitto_fiber": 52.535823
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.5,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 43.153147,
+        "bobina_reduzida_ou_chapa_sem_pvc": 44.0962,
+        "azul": 45.5415,
+        "preto_e_branco": 46.877568,
+        "preto": 48.399567,
+        "nitto_fiber": 49.4797
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.6,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 43.153147,
+        "bobina_reduzida_ou_chapa_sem_pvc": 44.102158,
+        "azul": 45.301852,
+        "preto_e_branco": 46.4242,
+        "preto": 47.683332,
+        "nitto_fiber": 48.668155
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.8,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 42.651783,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.600794,
+        "azul": 44.5036,
+        "preto_e_branco": 45.3669,
+        "preto": 46.286674,
+        "nitto_fiber": 47.002909
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 1,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 42.651783,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.600794,
+        "azul": 44.317029,
+        "preto_e_branco": 44.997452,
+        "preto": 45.767404,
+        "nitto_fiber": 46.376204
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 1.2,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 42.651783,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.600794,
+        "azul": 44.191688,
+        "preto_e_branco": 44.764675,
+        "preto": 45.391381,
+        "nitto_fiber": 45.928557
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 1.5,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 42.36887,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.317881,
+        "azul": 43.80134,
+        "preto_e_branco": 44.231081,
+        "preto": 44.750351,
+        "nitto_fiber": 45.162186
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 2,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 41.846019,
+        "bobina_reduzida_ou_chapa_sem_pvc": 42.79503,
+        "azul": 43.153147,
+        "preto_e_branco": 43.493359,
+        "preto": 43.869382,
+        "nitto_fiber": 44.191688
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 2.5,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 41.846019,
+        "bobina_reduzida_ou_chapa_sem_pvc": 42.79503,
+        "azul": 43.09943,
+        "preto_e_branco": 43.350112,
+        "preto": 43.690323,
+        "nitto_fiber": 43.887288
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 3,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 41.846019,
+        "bobina_reduzida_ou_chapa_sem_pvc": 42.79503,
+        "azul": 43.045712,
+        "preto_e_branco": 43.278488,
+        "preto": 43.511265,
+        "nitto_fiber": 43.547076
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 3.5,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 41.040254,
+        "bobina_reduzida_ou_chapa_sem_pvc": 41.989266,
+        "azul": 42.239948,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 4,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 41.040254,
+        "bobina_reduzida_ou_chapa_sem_pvc": 41.989266,
+        "azul": 42.239948,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 5,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 41.040254,
+        "bobina_reduzida_ou_chapa_sem_pvc": 41.989266,
+        "azul": 42.239948,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 2.5,
+      "acabamento": "BQ",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 38.855738,
+        "bobina_reduzida_ou_chapa_sem_pvc": 39.804749,
+        "azul": 40.109149,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 3,
+      "acabamento": "BQ",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 38.855738,
+        "bobina_reduzida_ou_chapa_sem_pvc": 39.804749,
+        "azul": 40.055432,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 3.5,
+      "acabamento": "BQ",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 38.855738,
+        "bobina_reduzida_ou_chapa_sem_pvc": 39.804749,
+        "azul": 40.055432,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 4,
+      "acabamento": "BQ",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 38.855738,
+        "bobina_reduzida_ou_chapa_sem_pvc": 39.804749,
+        "azul": 40.055432,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 5,
+      "acabamento": "BQ",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 38.855738,
+        "bobina_reduzida_ou_chapa_sem_pvc": 39.804749,
+        "azul": 40.055432,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 6,
+      "acabamento": "BQ",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 38.855738,
+        "bobina_reduzida_ou_chapa_sem_pvc": 39.804749,
+        "azul": 40.055432,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 8,
+      "acabamento": "BQ",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 38.855738,
+        "bobina_reduzida_ou_chapa_sem_pvc": 39.804749,
+        "azul": 40.055432,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.4,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 46.197145,
+        "bobina_reduzida_ou_chapa_sem_pvc": 47.1517,
+        "azul": 48.918837,
+        "preto_e_branco": 50.548272,
+        "preto": 52.517917,
+        "nitto_fiber": 54.129446
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 44.531899,
+        "bobina_reduzida_ou_chapa_sem_pvc": 45.48091,
+        "azul": 46.91338,
+        "preto_e_branco": 48.25632,
+        "preto": 49.778319,
+        "nitto_fiber": 50.852671
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.6,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 43.851476,
+        "bobina_reduzida_ou_chapa_sem_pvc": 44.800487,
+        "azul": 46.000181,
+        "preto_e_branco": 47.12825,
+        "preto": 48.381661,
+        "nitto_fiber": 49.366484
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.8,
+      "acabamento": "ESCOVADO",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 43.368018,
+        "bobina_reduzida_ou_chapa_sem_pvc": 44.317029,
+        "azul": 45.212322,
+        "preto_e_branco": 46.0847,
+        "preto": 47.002909,
+        "nitto_fiber": 47.719144
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 1,
+      "acabamento": "ESCOVADO",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 43.1941,
+        "bobina_reduzida_ou_chapa_sem_pvc": 44.1447,
+        "azul": 44.854205,
+        "preto_e_branco": 45.5415,
+        "preto": 46.30458,
+        "nitto_fiber": 46.9189
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 1.2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 42.8352,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.8052,
+        "azul": 44.388652,
+        "preto_e_branco": 44.96164,
+        "preto": 45.588346,
+        "nitto_fiber": 46.1332
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 1.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 42.8352,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.8052,
+        "azul": 44.281217,
+        "preto_e_branco": 44.710958,
+        "preto": 45.230228,
+        "nitto_fiber": 45.642063
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 42.4957,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.439641,
+        "azul": 43.797759,
+        "preto_e_branco": 44.1447,
+        "preto": 44.513993,
+        "nitto_fiber": 44.8431
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 2.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 42.49063,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.439641,
+        "azul": 43.744041,
+        "preto_e_branco": 43.994723,
+        "preto": 44.334935,
+        "nitto_fiber": 44.531899
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 3,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 44.281217,
+        "bobina_reduzida_ou_chapa_sem_pvc": 45.230228,
+        "azul": 45.48091,
+        "preto_e_branco": 45.7064,
+        "preto": 45.946463,
+        "nitto_fiber": 45.982275
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.5,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 44.048441,
+        "bobina_reduzida_ou_chapa_sem_pvc": 44.997452,
+        "azul": 46.429921,
+        "preto_e_branco": 47.772862,
+        "preto": 49.294861,
+        "nitto_fiber": 50.369213
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.6,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 43.511265,
+        "bobina_reduzida_ou_chapa_sem_pvc": 44.460276,
+        "azul": 45.659969,
+        "preto_e_branco": 46.788039,
+        "preto": 48.04145,
+        "nitto_fiber": 49.026273
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 0.8,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 42.974088,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.9231,
+        "azul": 44.818393,
+        "preto_e_branco": 45.695781,
+        "preto": 46.60898,
+        "nitto_fiber": 47.325215
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 1,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 42.974088,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.9231,
+        "azul": 44.639334,
+        "preto_e_branco": 45.319757,
+        "preto": 46.08971,
+        "nitto_fiber": 46.698509
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 1.2,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 42.257854,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.206865,
+        "azul": 43.797759,
+        "preto_e_branco": 44.370746,
+        "preto": 44.997452,
+        "nitto_fiber": 45.534628
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 1.5,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 42.257854,
+        "bobina_reduzida_ou_chapa_sem_pvc": 43.206865,
+        "azul": 43.690323,
+        "preto_e_branco": 44.120064,
+        "preto": 44.639334,
+        "nitto_fiber": 45.051169
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 2,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 41.989266,
+        "bobina_reduzida_ou_chapa_sem_pvc": 42.938277,
+        "azul": 43.296394,
+        "preto_e_branco": 43.636606,
+        "preto": 44.012629,
+        "nitto_fiber": 44.334935
+      }
+    },
+    {
+      "tipo": "304",
+      "espessura": 2.5,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 41.989266,
+        "bobina_reduzida_ou_chapa_sem_pvc": 42.938277,
+        "azul": 43.242677,
+        "preto_e_branco": 43.493359,
+        "preto": 43.83357,
+        "nitto_fiber": 44.030535
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 0.35,
+      "acabamento": "BA",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 26.54225,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.4456,
+        "azul": 29.14065,
+        "preto_e_branco": 30.6936,
+        "preto": 32.5815,
+        "nitto_fiber": 34.11415
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 0.4,
+      "acabamento": "BA",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 29.07,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.020698,
+        "azul": 31.786621,
+        "preto_e_branco": 33.409844,
+        "preto": 35.371981,
+        "nitto_fiber": 36.977366
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 0.5,
+      "acabamento": "BA",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 28.540176,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.485569,
+        "azul": 30.912578,
+        "preto_e_branco": 32.250399,
+        "preto": 33.766596,
+        "nitto_fiber": 34.836852
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 0.6,
+      "acabamento": "BA",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 28.415313,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.360706,
+        "azul": 30.555826,
+        "preto_e_branco": 31.679595,
+        "preto": 32.928228,
+        "nitto_fiber": 33.909297
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 0.8,
+      "acabamento": "BA",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 28.005048,
+        "bobina_reduzida_ou_chapa_sem_pvc": 28.950441,
+        "azul": 29.842322,
+        "preto_e_branco": 30.716364,
+        "preto": 31.626083,
+        "nitto_fiber": 32.339587
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 1,
+      "acabamento": "BA",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 28.005048,
+        "bobina_reduzida_ou_chapa_sem_pvc": 28.950441,
+        "azul": 29.663945,
+        "preto_e_branco": 30.341775,
+        "preto": 31.108792,
+        "nitto_fiber": 31.715271
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 1.2,
+      "acabamento": "BA",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 28.005048,
+        "bobina_reduzida_ou_chapa_sem_pvc": 28.950441,
+        "azul": 29.539082,
+        "preto_e_branco": 30.109886,
+        "preto": 30.734202,
+        "nitto_fiber": 31.26933
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 1.5,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 27.255868,
+        "bobina_reduzida_ou_chapa_sem_pvc": 28.201261,
+        "azul": 28.682877,
+        "preto_e_branco": 29.11098,
+        "preto": 29.62827,
+        "nitto_fiber": 30.038535
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 2,
+      "acabamento": "2B",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 26.952629,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.898022,
+        "azul": 28.254774,
+        "preto_e_branco": 28.593689,
+        "preto": 28.968279,
+        "nitto_fiber": 29.289356
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 0.4,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 32.584545,
+        "bobina_reduzida_ou_chapa_sem_pvc": 33.520578,
+        "azul": 35.269017,
+        "preto_e_branco": 36.876168,
+        "preto": 38.818878,
+        "nitto_fiber": 40.408368
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 0.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 31.312953,
+        "bobina_reduzida_ou_chapa_sem_pvc": 32.248986,
+        "azul": 33.661866,
+        "preto_e_branco": 34.986441,
+        "preto": 36.487626,
+        "nitto_fiber": 37.547286
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 0.6,
+      "acabamento": "ESCOVADO",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 30.482886,
+        "bobina_reduzida_ou_chapa_sem_pvc": 31.418919,
+        "azul": 32.602206,
+        "preto_e_branco": 33.714849,
+        "preto": 34.951119,
+        "nitto_fiber": 35.922474
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 0.8,
+      "acabamento": "ESCOVADO",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 29.49387,
+        "bobina_reduzida_ou_chapa_sem_pvc": 30.429903,
+        "azul": 31.312953,
+        "preto_e_branco": 32.178342,
+        "preto": 33.079053,
+        "nitto_fiber": 33.785493
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 1,
+      "acabamento": "ESCOVADO",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 28.78743,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.723463,
+        "azul": 30.429903,
+        "preto_e_branco": 31.101021,
+        "preto": 31.860444,
+        "nitto_fiber": 32.460918
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 1.2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 28.2576,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.193633,
+        "azul": 29.776446,
+        "preto_e_branco": 30.341598,
+        "preto": 30.959733,
+        "nitto_fiber": 31.489563
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 1.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 27.72777,
+        "bobina_reduzida_ou_chapa_sem_pvc": 28.663803,
+        "azul": 29.14065,
+        "preto_e_branco": 29.564514,
+        "preto": 30.076683,
+        "nitto_fiber": 30.482886
+      }
+    },
+    {
+      "tipo": "430",
+      "espessura": 2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 27.37455,
+        "bobina_reduzida_ou_chapa_sem_pvc": 28.310583,
+        "azul": 28.663803,
+        "preto_e_branco": 28.999362,
+        "preto": 29.370243,
+        "nitto_fiber": 29.688141
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 0.6,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 32.79726,
+        "bobina_reduzida_ou_chapa_sem_pvc": 33.74,
+        "azul": 34.9479,
+        "preto_e_branco": 36.076986,
+        "preto": 37.331526,
+        "nitto_fiber": 38.317236
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 0.8,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 32.2596,
+        "bobina_reduzida_ou_chapa_sem_pvc": 33.209466,
+        "azul": 34.105566,
+        "preto_e_branco": 34.983744,
+        "preto": 35.897766,
+        "nitto_fiber": 36.614646
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 1,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 32.08038,
+        "bobina_reduzida_ou_chapa_sem_pvc": 33.030246,
+        "azul": 33.747126,
+        "preto_e_branco": 34.428162,
+        "preto": 35.198808,
+        "nitto_fiber": 35.808156
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 1.2,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 31.3635,
+        "bobina_reduzida_ou_chapa_sem_pvc": 32.313366,
+        "azul": 32.904792,
+        "preto_e_branco": 33.478296,
+        "preto": 34.105566,
+        "nitto_fiber": 34.643226
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 1.5,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 31.3635,
+        "bobina_reduzida_ou_chapa_sem_pvc": 32.313366,
+        "azul": 32.79726,
+        "preto_e_branco": 33.227388,
+        "preto": 33.747126,
+        "nitto_fiber": 34.159332
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 2,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 31.3635,
+        "bobina_reduzida_ou_chapa_sem_pvc": 32.313366,
+        "azul": 32.671806,
+        "preto_e_branco": 33.012324,
+        "preto": 33.388686,
+        "nitto_fiber": 33.711282
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 2.5,
+      "acabamento": "2B",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 31.3635,
+        "bobina_reduzida_ou_chapa_sem_pvc": 32.313366,
+        "azul": 32.61804,
+        "preto_e_branco": 32.868948,
+        "preto": 33.209466,
+        "nitto_fiber": 33.406608
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 0.6,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 34.76868,
+        "bobina_reduzida_ou_chapa_sem_pvc": 35.718546,
+        "azul": 36.91932,
+        "preto_e_branco": 38.048406,
+        "preto": 39.302946,
+        "nitto_fiber": 40.288656
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 0.8,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 34.23102,
+        "bobina_reduzida_ou_chapa_sem_pvc": 35.180886,
+        "azul": 36.076986,
+        "preto_e_branco": 36.955164,
+        "preto": 37.869186,
+        "nitto_fiber": 38.586066
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 1,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 33.87258,
+        "bobina_reduzida_ou_chapa_sem_pvc": 34.822446,
+        "azul": 35.539326,
+        "preto_e_branco": 36.23,
+        "preto": 36.991008,
+        "nitto_fiber": 37.600356
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 1.2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 33.370764,
+        "bobina_reduzida_ou_chapa_sem_pvc": 34.32063,
+        "azul": 34.912056,
+        "preto_e_branco": 35.48,
+        "preto": 36.11283,
+        "nitto_fiber": 36.65049
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 1.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 33.370764,
+        "bobina_reduzida_ou_chapa_sem_pvc": 34.32063,
+        "azul": 34.804524,
+        "preto_e_branco": 35.234652,
+        "preto": 35.75439,
+        "nitto_fiber": 36.166596
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 2,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 33.370764,
+        "bobina_reduzida_ou_chapa_sem_pvc": 34.32063,
+        "azul": 34.67907,
+        "preto_e_branco": 35.019588,
+        "preto": 35.39595,
+        "nitto_fiber": 35.718546
+      }
+    },
+    {
+      "tipo": "J4",
+      "espessura": 2.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 33.370764,
+        "bobina_reduzida_ou_chapa_sem_pvc": 34.32063,
+        "azul": 34.625304,
+        "preto_e_branco": 34.876212,
+        "preto": 35.21673,
+        "nitto_fiber": 35.413872
+      }
+    },
+    {
+      "tipo": "316L",
+      "espessura": 3,
+      "acabamento": "BQ",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 72.297,
+        "bobina_reduzida_ou_chapa_sem_pvc": 73.2192,
+        "azul": 0,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "316L",
+      "espessura": 5,
+      "acabamento": "BQ",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 72.297,
+        "bobina_reduzida_ou_chapa_sem_pvc": 73.2192,
+        "azul": 0,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "410D",
+      "espessura": 3,
+      "acabamento": "BQ",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 23.925,
+        "bobina_reduzida_ou_chapa_sem_pvc": 24.8472,
+        "azul": 0,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "410D",
+      "espessura": 5,
+      "acabamento": "BQ",
+      "icms": 0.12,
+      "precos": {
+        "bobina_inteira": 23.925,
+        "bobina_reduzida_ou_chapa_sem_pvc": 24.8472,
+        "azul": 0,
+        "preto_e_branco": 0,
+        "preto": 0,
+        "nitto_fiber": 0
+      }
+    },
+    {
+      "tipo": "439",
+      "espessura": 0.5,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 28.5928,
+        "bobina_reduzida_ou_chapa_sem_pvc": 29.4477,
+        "azul": 30.88146,
+        "preto_e_branco": 32.22561,
+        "preto": 33.74898,
+        "nitto_fiber": 34.8243
+      }
+    },
+    {
+      "tipo": "439",
+      "espessura": 0.6,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 27.8409,
+        "bobina_reduzida_ou_chapa_sem_pvc": 28.6855,
+        "azul": 29.886274,
+        "preto_e_branco": 30.7558,
+        "preto": 32.2699,
+        "nitto_fiber": 33.25561
+      }
+    },
+    {
+      "tipo": "439",
+      "espessura": 1,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 26.9345,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.7894,
+        "azul": 28.50628,
+        "preto_e_branco": 29.187316,
+        "preto": 29.957962,
+        "nitto_fiber": 30.56731
+      }
+    },
+    {
+      "tipo": "439",
+      "espessura": 0.8,
+      "acabamento": "ESCOVADO",
+      "icms": 0.04,
+      "precos": {
+        "bobina_inteira": 26.2856,
+        "bobina_reduzida_ou_chapa_sem_pvc": 27.1405,
+        "azul": 28.0366,
+        "preto_e_branco": 28.914778,
+        "preto": 29.8288,
+        "nitto_fiber": 30.54568
+      }
+    }
+  ]
+}
