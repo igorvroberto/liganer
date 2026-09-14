@@ -4,6 +4,7 @@ type Props = {
   items: BudgetListItem[];
   loading?: boolean;
   onPdf: (number: string) => void;
+  onXlsx: (number: string) => void;
   onEdit: (number: string) => void;
   onDelete: (number: string) => void;
 };
@@ -19,6 +20,7 @@ export default function SavedBudgetsList({
   items,
   loading = false,
   onPdf,
+  onXlsx,
   onEdit,
   onDelete,
 }: Props) {
@@ -56,6 +58,9 @@ export default function SavedBudgetsList({
                     <div className="saved-budget-actions">
                       <button type="button" className="btn btn-secondary" onClick={() => onPdf(row.number)}>
                         PDF
+                      </button>
+                      <button type="button" className="btn btn-secondary" onClick={() => onXlsx(row.number)}>
+                        XLSX
                       </button>
                       <button type="button" className="btn btn-secondary" onClick={() => onEdit(row.number)}>
                         Editar

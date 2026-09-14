@@ -458,15 +458,6 @@ export default function SlitterCalculator() {
     });
   };
 
-  const handleXlsx = () => {
-    if (!items.length) {
-      setStatus({ text: "Informe ao menos um item antes de exportar XLSX.", kind: "error" });
-      return;
-    }
-    downloadItemsExcel(items, conditions);
-    setStatus({ text: "XLSX exportado.", kind: "ok" });
-  };
-
   const loadBudgetByNumber = async (number: string): Promise<BudgetRecord | null> => {
     const cfg = appConfig.saveUrl ? appConfig : await loadAppConfig();
     if (hasRemoteSync(cfg)) {
@@ -479,6 +470,23 @@ export default function SlitterCalculator() {
       }
     }
     return findSavedBudget(number);
+  };
+
+  const handleSavedXlsx = async (number: string) => {
+    try {
+      const budget = await loadBudgetByNumber(number);
+      if (!budget) {
+        setStatus({ text: `Orçamento ${number} não encontrado.`, kind: "error" });
+        return;
+      }
+      downloadItemsExcel(budget.items, budget.conditions, { number: budget.number });
+      setStatus({ text: `XLSX do orçamento ${budget.number} exportado.`, kind: "ok" });
+    } catch (err) {
+      setStatus({
+        text: err instanceof Error ? err.message : "Falha ao exportar XLSX do orçamento.",
+        kind: "error",
+      });
+    }
   };
 
   const handleSavedPdf = async (number: string) => {
@@ -595,7 +603,6 @@ export default function SlitterCalculator() {
         onPdfCliente={() => void handlePdfCliente()}
         onPdfLiganer={() => handlePdf("liganer")}
         onPdfGestao={() => handlePdf("gestao")}
-        onXlsx={handleXlsx}
         statusText={status.text}
         statusKind={status.kind}
         pdfClienteBusy={pdfClienteBusy}
@@ -605,6 +612,7 @@ export default function SlitterCalculator() {
         items={budgetList}
         loading={budgetsLoading}
         onPdf={(n) => void handleSavedPdf(n)}
+        onXlsx={(n) => void handleSavedXlsx(n)}
         onEdit={(n) => void handleSavedEdit(n)}
         onDelete={(n) => void handleSavedDelete(n)}
       />
