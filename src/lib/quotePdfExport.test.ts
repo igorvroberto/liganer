@@ -262,4 +262,18 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(onlyCnpj).toContain("client-card--single");
   });
 
+  it("usa table-layout auto sem ocultar conteúdo nas colunas", () => {
+    const html = buildQuotePdfHtml({
+      kind: "cliente",
+      items: blanks,
+      conditions: EMPTY_QUOTE_CONDITIONS,
+      summary: { totalKg: 2000, subtotal: 1000, ipi: 32.5, total: 1032.5, frete: 0 },
+      client: { name: "ACME", cnpj: "12.345.678/0001-99" },
+    });
+    expect(html).toContain("table-layout: auto");
+    expect(html).not.toContain("table-layout: fixed");
+    expect(html).toContain("overflow: visible");
+    expect(html).not.toContain("text-overflow: clip");
+  });
+
 });

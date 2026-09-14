@@ -191,7 +191,7 @@ export const QUOTE_CONDITION_FIELDS: Array<{
   { key: "pagamento", label: "Pagamento", kind: "text" },
   { key: "prazo_entrega", label: "Prazo de entrega", kind: "text" },
   { key: "local_expedicao", label: "Local de expedição", kind: "select", options: LOCAL_EXPEDICAO_OPTIONS },
-  { key: "cidade_cliente", label: "Cidade do cliente", kind: "text" },
+  { key: "cidade_cliente", label: "Cidade/UF do cliente", kind: "text" },
   { key: "tipo_frete", label: "Tipo de frete", kind: "select", options: TIPO_FRETE_OPTIONS },
   { key: "observacoes_gerais", label: "Observações gerais", kind: "text" },
   { key: "frete", label: "Frete (%)", kind: "text" },

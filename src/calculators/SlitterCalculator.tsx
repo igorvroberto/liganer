@@ -14,7 +14,6 @@ import {
 import { EMPTY_QUOTE_CLIENT, type QuoteClientInfo } from "../lib/quoteClient";
 import { exportQuotePdf } from "../lib/quotePdfExport";
 import { loadPriceTable } from "../lib/priceTable";
-import { downloadItemsCsv, downloadItemsExcel } from "../lib/quoteExport";
 import {
   EMPTY_QUOTE_CONDITIONS,
   itemLossFromPlan,
@@ -310,16 +309,6 @@ export default function SlitterCalculator() {
     });
   };
 
-  const handleExcel = () => {
-    downloadItemsExcel(items, conditions);
-    setStatus({ text: "Excel exportado.", kind: "ok" });
-  };
-
-  const handleCsv = () => {
-    downloadItemsCsv(items, conditions);
-    setStatus({ text: "CSV exportado.", kind: "ok" });
-  };
-
   return (
     <div className="calculator-model" data-model="slitters">
       <QuoteClientFields client={client} onChange={setClient} />
@@ -354,8 +343,6 @@ export default function SlitterCalculator() {
         onPdfCliente={() => handlePdf("cliente")}
         onPdfLiganer={() => handlePdf("liganer")}
         onPdfGestao={() => handlePdf("gestao")}
-        onExcel={handleExcel}
-        onCsv={handleCsv}
         statusText={status.text}
         statusKind={status.kind}
       />

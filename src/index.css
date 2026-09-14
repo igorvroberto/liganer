@@ -254,8 +254,9 @@ h1 {
 .items-table {
   border-collapse: collapse;
   background: #fff;
-  width: 100%;
-  min-width: 2680px;
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
   font-size: 0.88rem;
 }
 
@@ -266,6 +267,8 @@ h1 {
   vertical-align: middle;
   white-space: nowrap;
   padding: 8px 10px;
+  width: 1%;
+  overflow: visible;
 }
 
 .items-table th {
@@ -323,7 +326,7 @@ h1 {
 .cell-control {
   border: 1px solid var(--line);
   width: 100%;
-  min-width: 92px;
+  min-width: 3.25rem;
   min-height: 34px;
   color: var(--ink);
   background: #fff;
@@ -331,6 +334,7 @@ h1 {
   padding: 6px 8px;
   font-size: 0.86rem;
   box-sizing: border-box;
+  field-sizing: content;
 }
 
 .cell-control:disabled {
@@ -347,11 +351,12 @@ h1 {
 }
 
 .calculated-cell {
-  min-width: 72px;
+  min-width: 0;
   color: #8a1a1a;
   font-size: 0.86rem;
   font-weight: 800;
   display: inline-block;
+  white-space: nowrap;
 }
 
 select.cell-control.item-kind-select {
