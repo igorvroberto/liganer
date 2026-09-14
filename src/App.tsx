@@ -484,6 +484,20 @@ export default function App() {
     )
   }
 
+  async function openSavedPdfLiganer(item: BudgetListItem) {
+    const record = await resolveSavedRecord(item)
+    if (!record) return
+    exportPdf(
+      'liganer',
+      getModel(record.modelId),
+      record.client,
+      record.rows,
+      record.conditions,
+      record.summary,
+      { number: record.number || item.number || undefined },
+    )
+  }
+
   async function exportSavedXlsx(item: BudgetListItem) {
     const record = await resolveSavedRecord(item)
     if (!record) return
@@ -492,14 +506,13 @@ export default function App() {
     })
   }
 
-  async function handlePdfCliente(kind: 'cliente18' | 'cliente4') {
+  async function handleSaveBudget() {
     if (!rows.length) {
       setStatus({ text: 'Adicione ao menos um item.', kind: 'error' })
       return
     }
     const number = editingBudget?.number || localPrintNumber()
     const createdAt = editingBudget?.createdAt || new Date().toISOString()
-    const regime = kind === 'cliente18' ? '18%' : '4%'
     const record: BudgetRecord = {
       id: editingBudget?.id || number,
       createdAt,
@@ -512,7 +525,7 @@ export default function App() {
       summary,
       number,
       name: number,
-      source: `pdf-${regime}`,
+      source: 'salvar',
     }
     upsertSavedBudget(record)
     pushSavedBudget(record)
@@ -522,10 +535,9 @@ export default function App() {
         setStatus({ text: remote.error || 'Falha ao sincronizar o orçamento.', kind: 'error' })
       }
     }
-    exportPdf(kind, model, client, rows, conditions, summary, { number })
     await refreshSavedBudgetsList()
     setEditingBudget({ id: record.id, number, createdAt })
-    setStatus({ text: `PDF ${regime} ${number} gerado.`, kind: 'ok' })
+    setStatus({ text: `Orçamento ${number} salvo.`, kind: 'ok' })
   }
 
   return (
@@ -713,26 +725,8 @@ export default function App() {
           ))}
         </div>
         <div className="actions" style={{ marginTop: 16 }}>
-          <button
-            type="button"
-            className="btn btn-dark"
-            onClick={() => void handlePdfCliente('cliente18')}
-          >
-            {editingBudget ? `Atualizar PDF 18% ${editingBudget.number}` : 'PDF 18%'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-dark"
-            onClick={() => void handlePdfCliente('cliente4')}
-          >
-            {editingBudget ? `Atualizar PDF 4% ${editingBudget.number}` : 'PDF 4%'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => exportPdf('liganer', model, client, rows, conditions, summary)}
-          >
-            PDF Liganer
+          <button type="button" className="btn btn-dark" onClick={() => void handleSaveBudget()}>
+            {editingBudget ? `Atualizar ${editingBudget.number}` : 'Salvar'}
           </button>
           {editingBudget ? (
             <button type="button" className="btn btn-secondary" onClick={cancelEditingBudget}>
@@ -746,8 +740,8 @@ export default function App() {
         <h2>Orçamentos salvos</h2>
         {editingBudget ? (
           <p className="editing-banner">
-            Editando orçamento <strong>{editingBudget.number}</strong>. Ao gerar PDF 18% ou PDF 4%, este
-            número será atualizado.
+            Editando orçamento <strong>{editingBudget.number}</strong>. Use <strong>Atualizar</strong> para
+            gravar as alterações; exporte PDF/XLSX pelos botões da lista.
           </p>
         ) : null}
         {savedBudgets.length ? (
@@ -793,6 +787,13 @@ export default function App() {
                           <button
                             type="button"
                             className="btn btn-secondary btn-compact"
+                            onClick={() => void openSavedPdfLiganer(item)}
+                          >
+                            PDF Liganer
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-compact"
                             onClick={() => void exportSavedXlsx(item)}
                           >
                             XLSX
@@ -820,7 +821,7 @@ export default function App() {
             </table>
           </div>
         ) : (
-          <p className="muted-note">Nenhum orçamento salvo ainda. Use PDF 18% ou PDF 4%.</p>
+          <p className="muted-note">Nenhum orçamento salvo ainda. Use Salvar abaixo de Condições.</p>
         )}
       </section>
 
