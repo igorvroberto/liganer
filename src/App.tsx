@@ -148,7 +148,7 @@ function CellControl({
   value: string | number | boolean | undefined
   onChange: (value: string | number | boolean) => void
 }) {
-  if (isCalculatedForRow(field)) {
+  if (isCalculatedForRow(field) || field.locked) {
     return <span className="calculated-cell">{displayFieldValue(value, field)}</span>
   }
 
@@ -168,14 +168,11 @@ function CellControl({
     )
   }
 
-  const locked = Boolean(field.locked)
-
   if (Array.isArray(field.options)) {
     const normalizedValue = value == null ? '' : String(value)
     return (
       <select
         className="cell-control"
-        disabled={locked}
         value={normalizedValue}
         onChange={(e) => onChange(e.target.value)}
         aria-label={fieldLabel(field.label)}
@@ -202,7 +199,6 @@ function CellControl({
   return (
     <input
       className="cell-control"
-      disabled={locked}
       inputMode={
         field.type === 'number' || field.type === 'currency' || field.type === 'percent'
           ? 'decimal'
@@ -623,7 +619,7 @@ export default function App() {
                           key={field.key}
                           className={[
                             field.type === 'boolean' ? 'boolean-column' : '',
-                            isCalculatedForRow(field) ? 'formula-cell' : '',
+                            isCalculatedForRow(field) || field.locked ? 'formula-cell' : '',
                             field.searchable || field.key === 'material' ? 'material-column' : '',
                           ]
                             .filter(Boolean)
