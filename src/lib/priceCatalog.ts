@@ -340,10 +340,5 @@ export function applyCatalogMaterial(row: ItemRow, material: string): ItemRow {
   if (match.um) next.um = match.um
   next.estoque_ce = match.estoqueCe || 0
   next.estoque_sp = match.estoqueSp || 0
-  // precos-ace.xlsx ainda tem um preço só — replica em SP e CE até haver colunas dual.
-  if (match.preco) {
-    next.preco_sp = match.preco
-    next.preco_ce = match.preco
-  }
   return next
 }

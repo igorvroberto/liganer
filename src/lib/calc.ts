@@ -25,16 +25,65 @@ export function percentRate(value: unknown): number {
   return n >= 1 ? n / 100 : n
 }
 
+/** Itens sem "IMP" na descrição: fator utilizado / fator real 4% fixos em 170. */
+export function materialHasImp(material: unknown): boolean {
+  return /\bIMP\b/i.test(String(material ?? ''))
+}
+
+const FATOR_REAL_4_SEM_IMP = 170
+
+/** Fator real 4% = fator utilizado (sem IMP → 170). */
+export function resolveFatorUtilizado(row: ItemRow): number {
+  if (!materialHasImp(row.material)) return FATOR_REAL_4_SEM_IMP
+  return numericValue(row.fator_utilizado)
+}
+
+export function resolveFatorReal4(row: ItemRow): number {
+  return resolveFatorUtilizado(row)
+}
+
+/** Fator real 18% = fator real 4% − 25. */
+export function resolveFatorReal18(row: ItemRow): number {
+  const fator4 = resolveFatorReal4(row)
+  return fator4 ? fator4 - 25 : 0
+}
+
 /**
- * ACE alinhado ao exemplo tubos/barras:
- * Subtotal SP/CE = Qde. × preço (ICMS 18% / 4%).
+ * Sincroniza fatores:
+ * - fator real 4% = fator utilizado
+ * - fator real 18% = fator real 4% − 25
+ * - sem IMP: fator utilizado = 170 (e teto em fator máximo)
+ */
+export function applyFatorRules(row: ItemRow): ItemRow {
+  const next: ItemRow = { ...row }
+
+  if (!materialHasImp(next.material)) {
+    next.fator_utilizado = FATOR_REAL_4_SEM_IMP
+    const max = numericValue(next.fator_maximo)
+    if (max > FATOR_REAL_4_SEM_IMP) next.fator_maximo = FATOR_REAL_4_SEM_IMP
+  }
+
+  const fatorUtilizado = resolveFatorUtilizado(next)
+  next.fator_real_4 = fatorUtilizado || 0
+  next.fator_real_18 = fatorUtilizado ? fatorUtilizado - 25 : 0
+  return next
+}
+
+/** Preço ICMS = Preço fator 100 ÷ (fator real ÷ 100). */
+export function priceFromFatorReal(precoFator100: number, fatorReal: number): number {
+  if (!precoFator100 || !fatorReal) return 0
+  return (precoFator100 * 100) / fatorReal
+}
+
+/**
+ * ACE: Preço ICMS 18%/4% a partir do preço fator 100 e fator real.
+ * Subtotal = Qde. × preço ICMS.
  */
 export function calculateRow(
   modelId: string,
   row: ItemRow,
   conditions: Conditions,
 ): RowCalculation {
-  const fatorUtilizado = numericValue(row.fator_utilizado)
   const catalog = usesPriceCatalog(modelId) ? lookupCatalogPrice(row) : null
   const catalogPrice = catalog?.precoFator100 ?? 0
   const precoFator100 = catalogPrice || numericValue(row.preco_fator_100 ?? row.preco)
@@ -43,9 +92,18 @@ export function calculateRow(
   const icms = catalog?.icms || percentRate(row.icms)
   const ipiRate = percentRate(row.ipi)
 
+  const fatorReal18 = resolveFatorReal18(row)
+  const fatorReal4 = resolveFatorReal4(row)
+  let fatorMaximo = numericValue(row.fator_maximo)
+  const fatorUtilizado = resolveFatorUtilizado(row)
+  if (!materialHasImp(row.material) && fatorMaximo > FATOR_REAL_4_SEM_IMP) {
+    fatorMaximo = FATOR_REAL_4_SEM_IMP
+  }
+
+  const precoSp = priceFromFatorReal(precoFator100, fatorReal18)
+  const precoCe = priceFromFatorReal(precoFator100, fatorReal4)
+
   const quantidade = numericValue(row.quantidade)
-  const precoSp = numericValue(row.preco_sp) || catalogPrice
-  const precoCe = numericValue(row.preco_ce) || catalogPrice
   const subtotalSp = quantidade && precoSp ? quantidade * precoSp : 0
   const subtotalCe = quantidade && precoCe ? quantidade * precoCe : 0
   const calculoIpiSp = subtotalSp * ipiRate
@@ -82,6 +140,8 @@ export function calculateRow(
     precoComIpiSp,
     precoComIpiCe,
     estoqueTotal,
+    fatorReal4,
+    fatorReal18,
     pesoNecessario: 0,
     quantidadeCortes: 0,
     perdaMm: 0,
