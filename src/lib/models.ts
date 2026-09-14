@@ -193,17 +193,6 @@ export const MODELS: ModelDef[] = [
         options: COMMISSION_OPTIONS,
         askWhenNew: true,
       },
-      {
-        key: 'preco_servico',
-        label: 'Preço\nserviço',
-        aliases: ['preco servico', 'preço serviço'],
-        type: 'currency',
-      },
-      {
-        key: 'descricao_servico',
-        label: 'Descrição\nserviço',
-        aliases: ['descricao servico', 'descrição serviço'],
-      },
       calcField('_preco_total', 'Preço\ntotal', 'currency', 'precoTotal'),
       calcField('_preco_sem_ipi', 'Preço\nsem IPI', 'currency', 'precoSemIpi'),
       // Por último, como no Excel exemplo (origem: catálogo do produto)
@@ -258,8 +247,6 @@ export const HIDDEN_FROM_CLIENT = new Set([
   '_preco_fator_utilizado',
   'preco_bobina_fator_100',
   '_preco_bobina_fator_utilizado',
-  'preco_servico',
-  'descricao_servico',
   'campanha',
   'acrescimo_perda_percentual',
   '_acrescimo_perda_percentual',
