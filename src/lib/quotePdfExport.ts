@@ -706,7 +706,8 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
     body.pdf-liganer .client-card strong { font-size: 9px; }
 
     table.items {
-      width: 100%;
+      width: max-content;
+      max-width: 100%;
       border-collapse: collapse;
       table-layout: auto;
     }
@@ -717,7 +718,9 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       vertical-align: middle;
       text-align: center;
       overflow: visible;
-      width: 1%;
+      /* Largura pelo conteúdo (cabeçalho e dados juntos), sem esticar pela página. */
+      width: auto;
+      white-space: nowrap;
     }
     table.items th {
       background: #c60000;
@@ -726,7 +729,8 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       font-weight: 800;
       text-transform: uppercase;
       line-height: 1.15;
-      white-space: pre-line;
+      /* Rótulo em uma linha — largura pela célula, não pela página. */
+      white-space: nowrap;
       letter-spacing: 0.01em;
     }
     table.items td {

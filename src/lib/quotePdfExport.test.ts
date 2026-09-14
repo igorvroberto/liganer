@@ -264,7 +264,7 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(onlyCnpj).toContain("client-card--single");
   });
 
-  it("usa table-layout auto sem ocultar conteúdo nas colunas", () => {
+  it("colunas do PDF seguem o conteúdo, sem esticar pela página/cabeçalho", () => {
     const html = buildQuotePdfHtml({
       kind: "cliente",
       items: blanks,
@@ -274,8 +274,11 @@ describe("quotePdfExport (layout chapas)", () => {
     });
     expect(html).toContain("table-layout: auto");
     expect(html).not.toContain("table-layout: fixed");
+    expect(html).toContain("width: max-content");
     expect(html).toContain("overflow: visible");
     expect(html).not.toContain("text-overflow: clip");
+    expect(html).not.toContain("width: 1%");
+    expect(html).toMatch(/table\.items\s*\{[^}]*width:\s*max-content/);
   });
 
 });
