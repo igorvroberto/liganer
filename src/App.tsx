@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { calculateRow, calculateSummary, numericValue } from './lib/calc'
 import { exportExcel, exportPdf } from './lib/export'
 import {
@@ -53,9 +53,23 @@ function MaterialSearchControl({
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState(value == null ? '' : String(value))
+  const [listStyle, setListStyle] = useState<CSSProperties | undefined>()
   const rootRef = useRef<HTMLDivElement | null>(null)
   const text = value == null ? '' : String(value)
   const display = open ? query : text
+
+  function syncListPosition() {
+    const el = rootRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    setListStyle({
+      position: 'fixed',
+      left: rect.left,
+      width: Math.max(rect.width, 280),
+      bottom: window.innerHeight - rect.top + 2,
+      top: 'auto',
+    })
+  }
 
   useEffect(() => {
     function onDocClick(event: MouseEvent) {
@@ -64,6 +78,20 @@ function MaterialSearchControl({
     document.addEventListener('mousedown', onDocClick)
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [])
+
+  useEffect(() => {
+    if (!open) return
+    syncListPosition()
+    function onReposition() {
+      syncListPosition()
+    }
+    window.addEventListener('resize', onReposition)
+    window.addEventListener('scroll', onReposition, true)
+    return () => {
+      window.removeEventListener('resize', onReposition)
+      window.removeEventListener('scroll', onReposition, true)
+    }
+  }, [open])
 
   const suggestions = useMemo(
     () => searchCatalogMaterials(open ? query : text, 25),
@@ -97,17 +125,11 @@ function MaterialSearchControl({
         }}
       />
       {open && suggestions.length ? (
-        <ul className="material-search-list" role="listbox">
+        <ul className="material-search-list" role="listbox" style={listStyle}>
           {suggestions.map((row) => (
             <li key={`${row.codigo}|${row.material}`}>
               <button type="button" role="option" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(row)}>
-                <span className="material-search-name">{row.material}</span>
-                <span className="material-search-meta">
-                  {row.um}
-                  {row.preco
-                    ? ` · ${row.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
-                    : ''}
-                </span>
+                {row.material}
               </button>
             </li>
           ))}
