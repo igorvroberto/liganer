@@ -52,15 +52,13 @@ export function resolveFatorReal18(row: ItemRow): number {
  * Sincroniza fatores:
  * - fator real 4% = fator utilizado
  * - fator real 18% = fator real 4% − 25
- * - sem IMP: fator utilizado = 170 (e teto em fator máximo)
+ * - sem IMP: fator utilizado = 170
  */
 export function applyFatorRules(row: ItemRow): ItemRow {
   const next: ItemRow = { ...row }
 
   if (!materialHasImp(next.material)) {
     next.fator_utilizado = FATOR_REAL_4_SEM_IMP
-    const max = numericValue(next.fator_maximo)
-    if (max > FATOR_REAL_4_SEM_IMP) next.fator_maximo = FATOR_REAL_4_SEM_IMP
   }
 
   const fatorUtilizado = resolveFatorUtilizado(next)
@@ -94,11 +92,7 @@ export function calculateRow(
 
   const fatorReal18 = resolveFatorReal18(row)
   const fatorReal4 = resolveFatorReal4(row)
-  let fatorMaximo = numericValue(row.fator_maximo)
   const fatorUtilizado = resolveFatorUtilizado(row)
-  if (!materialHasImp(row.material) && fatorMaximo > FATOR_REAL_4_SEM_IMP) {
-    fatorMaximo = FATOR_REAL_4_SEM_IMP
-  }
 
   const precoSp = priceFromFatorReal(precoFator100, fatorReal18)
   const precoCe = priceFromFatorReal(precoFator100, fatorReal4)

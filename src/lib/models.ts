@@ -1,7 +1,5 @@
 import type { FieldDef, ModelDef } from './types'
 
-export const COMMISSION_OPTIONS = ['Bonificada', 'Normal', 'Reduzida']
-
 function calcField(
   key: string,
   label: string,
@@ -154,15 +152,9 @@ export const MODELS: ModelDef[] = [
       calcField('_subtotal_ce', 'Subtotal\n4%', 'currency', 'subtotalCe'),
       { key: 'observacao', label: 'Observação', aliases: ['observacao', 'observação', 'obs'] },
       {
-        key: 'fator_maximo',
-        label: 'Fator\nmáximo',
-        aliases: ['fator maximo', 'fator máximo'],
-        type: 'number',
-      },
-      {
         key: 'fator_utilizado',
-        label: 'Fator\nutilizado',
-        aliases: ['fator utilizado', 'fator usado'],
+        label: 'Fator',
+        aliases: ['fator', 'fator utilizado', 'fator usado'],
         type: 'number',
       },
       calcField('_calculo_ipi_sp', 'Cálculo IPI\n18%', 'currency', 'calculoIpiSp'),
@@ -182,13 +174,6 @@ export const MODELS: ModelDef[] = [
         calculated: true,
         virtual: true,
         calc: 'precoFator100',
-      },
-      {
-        key: 'comissao',
-        label: 'Comissão',
-        aliases: ['comissao', 'comissão'],
-        options: COMMISSION_OPTIONS,
-        askWhenNew: true,
       },
       // Por último, como no Excel exemplo (origem: catálogo do produto)
       {
@@ -239,11 +224,9 @@ export function itemHeaderLabel(label: string): string {
 
 /** Campos internos omitidos no PDF do cliente */
 export const HIDDEN_FROM_CLIENT = new Set([
-  'fator_maximo',
   'fator_utilizado',
   'fator_real_18',
   'fator_real_4',
-  'comissao',
   'preco_fator_100',
   '_preco_fator_utilizado',
   'preco_bobina_fator_100',
