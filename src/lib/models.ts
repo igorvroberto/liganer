@@ -156,6 +156,8 @@ export const MODELS: ModelDef[] = [
         label: 'Fator',
         aliases: ['fator', 'fator utilizado', 'fator usado'],
         type: 'number',
+        fractionDigits: 2,
+        trimFractionZeros: true,
       },
       calcField('_calculo_ipi_sp', 'Cálculo IPI\n18%', 'currency', 'calculoIpiSp'),
       calcField('_calculo_ipi_ce', 'Cálculo IPI\n4%', 'currency', 'calculoIpiCe'),

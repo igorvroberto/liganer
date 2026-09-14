@@ -5,9 +5,10 @@ export function formatNumber(
   value: number,
   fractionDigits = 2,
   useGrouping = true,
+  trimFractionZeros = false,
 ): string {
   return Number(value || 0).toLocaleString('pt-BR', {
-    minimumFractionDigits: fractionDigits,
+    minimumFractionDigits: trimFractionZeros ? 0 : fractionDigits,
     maximumFractionDigits: fractionDigits,
     useGrouping,
   })
@@ -50,8 +51,13 @@ export function displayFieldValue(value: unknown, field: FieldDef): string {
   }
   if (field.type === 'number') {
     const n = numericValue(value)
-    const rounded = digits === 0 ? Math.round(n) : n
-    return formatNumber(rounded, digits, field.useGrouping !== false)
+    const rounded = digits === 0 && !field.trimFractionZeros ? Math.round(n) : n
+    return formatNumber(
+      rounded,
+      digits,
+      field.useGrouping !== false,
+      Boolean(field.trimFractionZeros),
+    )
   }
   return String(value)
 }
