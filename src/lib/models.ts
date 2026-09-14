@@ -197,6 +197,9 @@ export const MODELS: ModelDef[] = [
         aliases: ['fator real 18', 'fator real 18%'],
         type: 'number',
         fractionDigits: 0,
+        calculated: true,
+        virtual: true,
+        calc: 'fatorReal18',
       },
       {
         key: 'fator_real_4',

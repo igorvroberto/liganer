@@ -37,12 +37,23 @@ export function resolveFatorReal4(row: ItemRow): number {
   return numericValue(row.fator_real_4)
 }
 
+/** Fator real 18% = fator real 4% − 25. */
+export function resolveFatorReal18(row: ItemRow): number {
+  const fator4 = resolveFatorReal4(row)
+  return fator4 ? fator4 - 25 : 0
+}
+
 /** Aplica teto de fator e fator real 4% quando o material não tem IMP. */
 export function applyFatorRules(row: ItemRow): ItemRow {
   const next: ItemRow = { ...row }
-  if (materialHasImp(next.material)) return next
+  if (materialHasImp(next.material)) {
+    const fator4 = numericValue(next.fator_real_4)
+    next.fator_real_18 = fator4 ? fator4 - 25 : 0
+    return next
+  }
 
   next.fator_real_4 = FATOR_REAL_4_SEM_IMP
+  next.fator_real_18 = FATOR_REAL_4_SEM_IMP - 25
   const max = numericValue(next.fator_maximo)
   const used = numericValue(next.fator_utilizado)
   if (max > FATOR_REAL_4_SEM_IMP) next.fator_maximo = FATOR_REAL_4_SEM_IMP
@@ -73,7 +84,7 @@ export function calculateRow(
   const icms = catalog?.icms || percentRate(row.icms)
   const ipiRate = percentRate(row.ipi)
 
-  const fatorReal18 = numericValue(row.fator_real_18)
+  const fatorReal18 = resolveFatorReal18(row)
   const fatorReal4 = resolveFatorReal4(row)
   let fatorMaximo = numericValue(row.fator_maximo)
   let fatorUtilizado = numericValue(row.fator_utilizado)
@@ -122,6 +133,7 @@ export function calculateRow(
     precoComIpiSp,
     precoComIpiCe,
     estoqueTotal,
+    fatorReal18,
     pesoNecessario: 0,
     quantidadeCortes: 0,
     perdaMm: 0,

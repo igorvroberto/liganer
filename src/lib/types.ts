@@ -61,6 +61,7 @@ export type RowCalculation = {
   precoComIpiSp: number
   precoComIpiCe: number
   estoqueTotal: number
+  fatorReal18: number
   pesoNecessario: number
   quantidadeCortes: number
   perdaMm: number
