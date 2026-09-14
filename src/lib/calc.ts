@@ -39,7 +39,6 @@ export function calculateRow(
   const catalogPrice = catalog?.precoFator100 ?? 0
   const precoFator100 = catalogPrice || numericValue(row.preco_fator_100 ?? row.preco)
   const precoBobinaFator100 = catalogPrice || numericValue(row.preco_bobina_fator_100)
-  const precoServico = numericValue(row.preco_servico)
   const frete = percentRate(conditions.frete_percentual)
   const icms = catalog?.icms || percentRate(row.icms)
   const ipiRate = percentRate(row.ipi)
@@ -60,7 +59,7 @@ export function calculateRow(
     ? precoBobinaFator100 / (fatorUtilizado / 100)
     : 0
 
-  const precoTotal = precoFatorUtilizado + precoServico
+  const precoTotal = precoFatorUtilizado
   const precoSemIpi = frete === 0 ? precoTotal : precoTotal + precoTotal * frete
   const subtotal = subtotalSp
 
