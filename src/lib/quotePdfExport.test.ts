@@ -277,9 +277,8 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).toContain("width: max-content");
     expect(html).toContain("overflow: visible");
     expect(html).not.toContain("text-overflow: clip");
-    // Evita o hack width:1% + table 100% que desalinhava cabeçalho e dados na impressão.
-    expect(html).not.toMatch(/table\.items\s*\{[^}]*width:\s*100%/);
     expect(html).not.toContain("width: 1%");
+    expect(html).toMatch(/table\.items\s*\{[^}]*width:\s*max-content/);
   });
 
 });
