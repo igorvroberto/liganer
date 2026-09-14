@@ -594,7 +594,7 @@ select:focus {
 }
 
 .saved-budgets-table {
-  min-width: 720px;
+  min-width: 960px;
   width: 100%;
 }
 

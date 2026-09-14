@@ -36,11 +36,17 @@ function itemExportRows(items: BlankInput[], freteRaw: string) {
 }
 
 /** Exporta itens + condições em .xlsx */
-export function downloadItemsExcel(items: BlankInput[], conditions: QuoteConditions): void {
+export function downloadItemsExcel(
+  items: BlankInput[],
+  conditions: QuoteConditions,
+  options?: { number?: string },
+): void {
   const rows = itemExportRows(items, conditions.frete);
   const condRows = Object.entries(conditions).map(([k, v]) => ({ Campo: k, Valor: v }));
   const book = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(rows), "Itens");
   XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(condRows), "Condicoes");
-  XLSX.writeFile(book, `liganer-blanks-slitters-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  const number = String(options?.number ?? "").trim();
+  const stamp = number || new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(book, `liganer-blanks-slitters-${stamp}.xlsx`);
 }
