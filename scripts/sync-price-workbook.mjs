@@ -77,7 +77,7 @@ function looksLikePlaceholderHeader(headers) {
   return headers.some((h) => /^column\d+$/i.test(h) || /^col(una)?\s*\d+$/i.test(h))
 }
 
-function rowFromCells(codigo, material, um, preco, estoque, valor, icms) {
+function rowFromCells(codigo, material, um, preco, estoqueCe, estoqueSp, icms) {
   const materialText = String(material ?? '').trim()
   if (!materialText) return null
   if (/^column\d+$/i.test(materialText) || normalizeHeader(materialText) === 'material') {
@@ -88,8 +88,8 @@ function rowFromCells(codigo, material, um, preco, estoque, valor, icms) {
     material: materialText,
     um: String(um ?? '').trim().toUpperCase() || 'KG',
     preco: roundPrice(preco),
-    estoque: numericValue(estoque),
-    valor: roundPrice(valor),
+    estoqueCe: numericValue(estoqueCe),
+    estoqueSp: numericValue(estoqueSp),
     icms: numericValue(icms),
   }
 }
@@ -109,8 +109,8 @@ function parseWorkbookBuffer(buffer) {
     const colUm = findHeaderColumn(headers, ['um', 'unidade', 'unidade medida'])
     const colPreco = findHeaderColumn(headers, ['preco', 'preço', 'preco fator 100', 'valor unitario'])
     const colCodigo = findHeaderColumn(headers, ['codigo', 'código', 'cod', 'sku', 'id'])
-    const colEstoque = findHeaderColumn(headers, ['estoque', 'saldo', 'qtd estoque'])
-    const colValor = findHeaderColumn(headers, ['valor', 'valor total'])
+    const colEstoqueCe = findHeaderColumn(headers, ['estoque ce', 'ce'])
+    const colEstoqueSp = findHeaderColumn(headers, ['estoque sp', 'sp'])
     const colIcms = findHeaderColumn(headers, ['icms'])
     if (colMaterial < 0) return []
     for (let r = 1; r < matrix.length; r += 1) {
@@ -120,8 +120,8 @@ function parseWorkbookBuffer(buffer) {
         line[colMaterial],
         colUm >= 0 ? line[colUm] : 'KG',
         colPreco >= 0 ? line[colPreco] : 0,
-        colEstoque >= 0 ? line[colEstoque] : 0,
-        colValor >= 0 ? line[colValor] : 0,
+        colEstoqueCe >= 0 ? line[colEstoqueCe] : 0,
+        colEstoqueSp >= 0 ? line[colEstoqueSp] : 0,
         colIcms >= 0 ? line[colIcms] : 0,
       )
       if (parsed) rows.push(parsed)
@@ -129,6 +129,7 @@ function parseWorkbookBuffer(buffer) {
     return rows
   }
 
+  // A código | B material | C UM | D preço | E estoque CE | F estoque SP
   const start = looksLikePlaceholderHeader(headers) ? 1 : 0
   for (let r = start; r < matrix.length; r += 1) {
     const line = matrix[r] || []
