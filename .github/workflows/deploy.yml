@@ -1,4 +1,4 @@
-name: Deploy to vendas.liganer.com.br/orcamento/tubos-barras
+name: Deploy to vendas.liganer.com.br/orcamento/ace
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-orcamento-tubos-barras
+  group: deploy-orcamento-ace
   cancel-in-progress: true
 
 jobs:

@@ -5,12 +5,12 @@ App interno de orçamento comercial da Liganer, no mesmo padrão dos sistemas em
 - https://vendas.liganer.com.br/orcamento/blanks-slitters/
 - https://vendas.liganer.com.br/prospeccao/
 
-Destino de publicação: **https://vendas.liganer.com.br/orcamento/tubos-barras/**
+Destino de publicação: **https://vendas.liganer.com.br/orcamento/ace/**
 
 ## Stack
 
 - Vite + React + TypeScript
-- Base path `/orcamento/tubos-barras/`
+- Base path `/orcamento/ace/`
 - Cálculos e modelos portados do plugin WordPress legado (`legado/`)
 - Persistência local (`localStorage`) + API PHP opcional (`deploy/api/budgets.php`)
 
@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-Em dev o Vite serve em `/orcamento/tubos-barras/` (veja `vite.config.ts`).
+Em dev o Vite serve em `/orcamento/ace/` (veja `vite.config.ts`).
 
 ## Build
 

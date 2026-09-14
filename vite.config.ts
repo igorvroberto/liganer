@@ -1,10 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Deploy em vendas.liganer.com.br/orcamento/tubos-barras/
+// Deploy em vendas.liganer.com.br/orcamento/ace/
 export default defineConfig({
   plugins: [react()],
-  base: '/orcamento/tubos-barras/',
+  base: '/orcamento/ace/',
   server: {
     // Em dev, a planilha compartilhada vive no host de produção.
     proxy: {

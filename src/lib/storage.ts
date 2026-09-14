@@ -1,7 +1,7 @@
 import type { BudgetListItem, BudgetRecord, Conditions, ItemRow } from './types'
 
-const STORAGE_KEY = 'liganer-tubos-barras-draft-v1'
-const SAVED_KEY = 'liganer-tubos-barras-saved-v1'
+const STORAGE_KEY = 'liganer-ace-draft-v1'
+const SAVED_KEY = 'liganer-ace-saved-v1'
 
 const memory: Record<string, string> = {}
 
@@ -276,7 +276,7 @@ export function localPrintNumber(): string {
     String(stamp.getMonth() + 1).padStart(2, '0'),
     String(stamp.getDate()).padStart(2, '0'),
   ].join('')
-  const key = `liganer-tubos-barras-print-${ymd}`
+  const key = `liganer-ace-print-${ymd}`
   const next = Number(getItem(key, '0')) + 1
   setItem(key, String(next))
   return `${ymd}${String(next).padStart(2, '0')}`
