@@ -662,30 +662,36 @@ export default function App() {
 
       <section className="card">
         <h2>Totais</h2>
-        <div className="summary-grid">
-          <div className="summary-item">
-            <span>Subtotal 18%</span>
-            <strong>{formatCurrency(summary.subtotalSp)}</strong>
+        <div className="summary-columns">
+          <div className="summary-column">
+            <h3>4%</h3>
+            <div className="summary-item">
+              <span>Subtotal 4%</span>
+              <strong>{formatCurrency(summary.subtotalCe)}</strong>
+            </div>
+            <div className="summary-item">
+              <span>IPI 4%</span>
+              <strong>{formatCurrency(summary.ipiCe)}</strong>
+            </div>
+            <div className="summary-item summary-item-total">
+              <span>Total 4%</span>
+              <strong>{formatCurrency(summary.totalCe)}</strong>
+            </div>
           </div>
-          <div className="summary-item">
-            <span>Subtotal 4%</span>
-            <strong>{formatCurrency(summary.subtotalCe)}</strong>
-          </div>
-          <div className="summary-item">
-            <span>IPI 18%</span>
-            <strong>{formatCurrency(summary.ipiSp)}</strong>
-          </div>
-          <div className="summary-item">
-            <span>IPI 4%</span>
-            <strong>{formatCurrency(summary.ipiCe)}</strong>
-          </div>
-          <div className="summary-item">
-            <span>Total 18%</span>
-            <strong>{formatCurrency(summary.totalSp)}</strong>
-          </div>
-          <div className="summary-item">
-            <span>Total 4%</span>
-            <strong>{formatCurrency(summary.totalCe)}</strong>
+          <div className="summary-column">
+            <h3>18%</h3>
+            <div className="summary-item">
+              <span>Subtotal 18%</span>
+              <strong>{formatCurrency(summary.subtotalSp)}</strong>
+            </div>
+            <div className="summary-item">
+              <span>IPI 18%</span>
+              <strong>{formatCurrency(summary.ipiSp)}</strong>
+            </div>
+            <div className="summary-item summary-item-total">
+              <span>Total 18%</span>
+              <strong>{formatCurrency(summary.totalSp)}</strong>
+            </div>
           </div>
         </div>
       </section>
