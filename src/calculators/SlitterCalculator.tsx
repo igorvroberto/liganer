@@ -15,7 +15,7 @@ import {
 import type { BudgetListItem, BudgetRecord } from "../lib/budgetTypes";
 import { newBudgetId } from "../lib/budgetTypes";
 import { EMPTY_QUOTE_CLIENT, type QuoteClientInfo } from "../lib/quoteClient";
-import { exportQuotePdf } from "../lib/quotePdfExport";
+import { exportQuotePdf, type PdfKind } from "../lib/quotePdfExport";
 import { downloadItemsExcel } from "../lib/quoteExport";
 import { loadPriceTable } from "../lib/priceTable";
 import {
@@ -254,7 +254,7 @@ export default function SlitterCalculator() {
   const [editingBudget, setEditingBudget] = useState<BudgetRecord | null>(null);
   const [budgetList, setBudgetList] = useState<BudgetListItem[]>([]);
   const [budgetsLoading, setBudgetsLoading] = useState(true);
-  const [pdfClienteBusy, setPdfClienteBusy] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
   const [appConfig, setAppConfig] = useState<AppConfig>({});
 
   useEffect(() => {
@@ -373,12 +373,12 @@ export default function SlitterCalculator() {
     };
   };
 
-  const handlePdfCliente = async () => {
+  const handleSave = async () => {
     if (!items.length) {
-      setStatus({ text: "Informe ao menos um item antes de gerar o PDF.", kind: "error" });
+      setStatus({ text: "Informe ao menos um item antes de salvar.", kind: "error" });
       return;
     }
-    setPdfClienteBusy(true);
+    setSaveBusy(true);
     try {
       const cfg = await loadAppConfig();
       setAppConfig(cfg);
@@ -401,24 +401,12 @@ export default function SlitterCalculator() {
         });
       }
 
-      exportQuotePdf({
-        kind: "cliente",
-        items,
-        conditions,
-        summary,
-        lossByItemId: itemLossById,
-        plan: null,
-        coil,
-        client,
-        number: record.number,
-      });
-
       await refreshBudgetList(cfg);
       setEditingBudget(record);
       setStatus({
         text: remote
-          ? `Orçamento ${record.number} salvo e PDF cliente gerado.`
-          : `Orçamento ${record.number} salvo só neste navegador (sem syncSecret) e PDF gerado.`,
+          ? `Orçamento ${record.number} salvo.`
+          : `Orçamento ${record.number} salvo só neste navegador (sem syncSecret).`,
         kind: "ok",
       });
     } catch (err) {
@@ -427,44 +415,8 @@ export default function SlitterCalculator() {
         kind: "error",
       });
     } finally {
-      setPdfClienteBusy(false);
+      setSaveBusy(false);
     }
-  };
-
-  const handlePdf = (variant: "liganer" | "gestao") => {
-    if (!plan) {
-      setStatus({
-        text:
-          variant === "gestao"
-            ? "Calcule um plano de corte antes de gerar o PDF gestão."
-            : "Calcule um plano de corte antes de gerar o PDF Liganer.",
-        kind: "error",
-      });
-      return;
-    }
-    exportQuotePdf({
-      kind: variant,
-      items,
-      conditions,
-      summary,
-      lossByItemId: itemLossById,
-      plan,
-      coil,
-      client,
-    });
-    setStatus({
-      text: variant === "gestao" ? "PDF gestão gerado." : "PDF Liganer gerado.",
-      kind: "ok",
-    });
-  };
-
-  const handleXlsx = () => {
-    if (!items.length) {
-      setStatus({ text: "Informe ao menos um item antes de exportar XLSX.", kind: "error" });
-      return;
-    }
-    downloadItemsExcel(items, conditions);
-    setStatus({ text: "XLSX exportado.", kind: "ok" });
   };
 
   const loadBudgetByNumber = async (number: string): Promise<BudgetRecord | null> => {
@@ -481,26 +433,82 @@ export default function SlitterCalculator() {
     return findSavedBudget(number);
   };
 
-  const handleSavedPdf = async (number: string) => {
+  const handleSavedPdf = async (number: string, kind: PdfKind) => {
     try {
       const budget = await loadBudgetByNumber(number);
       if (!budget) {
         setStatus({ text: `Orçamento ${number} não encontrado.`, kind: "error" });
         return;
       }
-      const budgetSummary = budget.summary ?? quoteSummary(budget.items, {}, budget.conditions.frete);
+
+      if (kind === "cliente") {
+        const budgetSummary =
+          budget.summary ?? quoteSummary(budget.items, {}, budget.conditions.frete);
+        exportQuotePdf({
+          kind: "cliente",
+          items: budget.items,
+          conditions: budget.conditions,
+          summary: budgetSummary,
+          client: budget.client,
+          number: budget.number,
+        });
+        setStatus({ text: `PDF cliente do orçamento ${budget.number} gerado.`, kind: "ok" });
+        return;
+      }
+
+      const budgetCoil = coilFromSlitterItems(budget.items, budget.allowOvershoot !== false);
+      const cut = optimizeCutting({ coil: budgetCoil, blanks: budget.items });
+      const budgetPlan = cut.ok ? cut.alternatives[0] ?? null : null;
+      if (!budgetPlan) {
+        setStatus({
+          text:
+            kind === "gestao"
+              ? `Não há plano de corte válido para o PDF gestão do orçamento ${budget.number}.`
+              : `Não há plano de corte válido para o PDF Liganer do orçamento ${budget.number}.`,
+          kind: "error",
+        });
+        return;
+      }
+      const lossById = itemLossFromPlan(budgetPlan, budgetCoil);
+      const budgetSummary = quoteSummary(budget.items, lossById, budget.conditions.frete);
       exportQuotePdf({
-        kind: "cliente",
+        kind,
         items: budget.items,
         conditions: budget.conditions,
         summary: budgetSummary,
+        lossByItemId: lossById,
+        plan: budgetPlan,
+        coil: budgetCoil,
         client: budget.client,
         number: budget.number,
       });
-      setStatus({ text: `PDF do orçamento ${budget.number} gerado.`, kind: "ok" });
+      setStatus({
+        text:
+          kind === "gestao"
+            ? `PDF gestão do orçamento ${budget.number} gerado.`
+            : `PDF Liganer do orçamento ${budget.number} gerado.`,
+        kind: "ok",
+      });
     } catch (err) {
       setStatus({
         text: err instanceof Error ? err.message : "Falha ao abrir PDF do orçamento.",
+        kind: "error",
+      });
+    }
+  };
+
+  const handleSavedXlsx = async (number: string) => {
+    try {
+      const budget = await loadBudgetByNumber(number);
+      if (!budget) {
+        setStatus({ text: `Orçamento ${number} não encontrado.`, kind: "error" });
+        return;
+      }
+      downloadItemsExcel(budget.items, budget.conditions, { number: budget.number });
+      setStatus({ text: `XLSX do orçamento ${budget.number} exportado.`, kind: "ok" });
+    } catch (err) {
+      setStatus({
+        text: err instanceof Error ? err.message : "Falha ao exportar XLSX do orçamento.",
         kind: "error",
       });
     }
@@ -592,19 +600,19 @@ export default function SlitterCalculator() {
       <QuoteConditions
         conditions={conditions}
         onChange={updateCondition}
-        onPdfCliente={() => void handlePdfCliente()}
-        onPdfLiganer={() => handlePdf("liganer")}
-        onPdfGestao={() => handlePdf("gestao")}
-        onXlsx={handleXlsx}
+        onSave={() => void handleSave()}
         statusText={status.text}
         statusKind={status.kind}
-        pdfClienteBusy={pdfClienteBusy}
+        saveBusy={saveBusy}
       />
 
       <SavedBudgetsList
         items={budgetList}
         loading={budgetsLoading}
-        onPdf={(n) => void handleSavedPdf(n)}
+        onPdfCliente={(n) => void handleSavedPdf(n, "cliente")}
+        onPdfLiganer={(n) => void handleSavedPdf(n, "liganer")}
+        onPdfGestao={(n) => void handleSavedPdf(n, "gestao")}
+        onXlsx={(n) => void handleSavedXlsx(n)}
         onEdit={(n) => void handleSavedEdit(n)}
         onDelete={(n) => void handleSavedDelete(n)}
       />

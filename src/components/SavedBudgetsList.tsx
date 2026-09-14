@@ -3,7 +3,10 @@ import type { BudgetListItem } from "../lib/budgetTypes";
 type Props = {
   items: BudgetListItem[];
   loading?: boolean;
-  onPdf: (number: string) => void;
+  onPdfCliente: (number: string) => void;
+  onPdfLiganer: (number: string) => void;
+  onPdfGestao: (number: string) => void;
+  onXlsx: (number: string) => void;
   onEdit: (number: string) => void;
   onDelete: (number: string) => void;
 };
@@ -18,7 +21,10 @@ function formatWhen(iso: string): string {
 export default function SavedBudgetsList({
   items,
   loading = false,
-  onPdf,
+  onPdfCliente,
+  onPdfLiganer,
+  onPdfGestao,
+  onXlsx,
   onEdit,
   onDelete,
 }: Props) {
@@ -29,7 +35,7 @@ export default function SavedBudgetsList({
       </div>
       {loading ? <p className="note">Carregando orçamentos…</p> : null}
       {!loading && items.length === 0 ? (
-        <p className="note">Nenhum orçamento salvo ainda. Gere um PDF cliente para salvar.</p>
+        <p className="note">Nenhum orçamento salvo ainda. Use Salvar nas Condições.</p>
       ) : null}
       {items.length > 0 ? (
         <div className="table-scroll">
@@ -54,8 +60,33 @@ export default function SavedBudgetsList({
                   <td>{formatWhen(row.savedAt || row.createdAt)}</td>
                   <td>
                     <div className="saved-budget-actions">
-                      <button type="button" className="btn btn-secondary" onClick={() => onPdf(row.number)}>
-                        PDF
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => onPdfCliente(row.number)}
+                      >
+                        PDF cliente
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => onPdfLiganer(row.number)}
+                      >
+                        PDF Liganer
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => onPdfGestao(row.number)}
+                      >
+                        PDF gestão
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => onXlsx(row.number)}
+                      >
+                        XLSX
                       </button>
                       <button type="button" className="btn btn-secondary" onClick={() => onEdit(row.number)}>
                         Editar
