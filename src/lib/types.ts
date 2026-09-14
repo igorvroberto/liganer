@@ -18,6 +18,8 @@ export type FieldDef = {
   calculated?: boolean
   /** Casas decimais na exibição (padrão 2). Use 0 para inteiros. */
   fractionDigits?: number
+  /** Se true, omite zeros à direita (ex.: 170 em vez de 170,00). */
+  trimFractionZeros?: boolean
   /** Separador de milhar (padrão true). */
   useGrouping?: boolean
   calc?: keyof RowCalculation
