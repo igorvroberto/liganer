@@ -9,6 +9,7 @@ type Props = {
   onPdfCliente: () => void;
   onPdfLiganer: () => void;
   onPdfGestao: () => void;
+  onXlsx: () => void;
   statusText?: string;
   statusKind?: "" | "ok" | "error";
   pdfClienteBusy?: boolean;
@@ -21,6 +22,7 @@ export default function QuoteConditions({
   onPdfCliente,
   onPdfLiganer,
   onPdfGestao,
+  onXlsx,
   statusText,
   statusKind = "",
   pdfClienteBusy = false,
@@ -68,6 +70,9 @@ export default function QuoteConditions({
         </button>
         <button type="button" className="btn btn-secondary" onClick={onPdfGestao}>
           PDF gestão
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={onXlsx}>
+          XLSX
         </button>
       </div>
       {statusText ? <p className={`status ${statusKind}`}>{statusText}</p> : null}

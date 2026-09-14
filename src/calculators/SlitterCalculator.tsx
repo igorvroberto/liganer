@@ -16,6 +16,7 @@ import type { BudgetListItem, BudgetRecord } from "../lib/budgetTypes";
 import { newBudgetId } from "../lib/budgetTypes";
 import { EMPTY_QUOTE_CLIENT, type QuoteClientInfo } from "../lib/quoteClient";
 import { exportQuotePdf } from "../lib/quotePdfExport";
+import { downloadItemsExcel } from "../lib/quoteExport";
 import { loadPriceTable } from "../lib/priceTable";
 import {
   EMPTY_QUOTE_CONDITIONS,
@@ -457,6 +458,15 @@ export default function SlitterCalculator() {
     });
   };
 
+  const handleXlsx = () => {
+    if (!items.length) {
+      setStatus({ text: "Informe ao menos um item antes de exportar XLSX.", kind: "error" });
+      return;
+    }
+    downloadItemsExcel(items, conditions);
+    setStatus({ text: "XLSX exportado.", kind: "ok" });
+  };
+
   const loadBudgetByNumber = async (number: string): Promise<BudgetRecord | null> => {
     const cfg = appConfig.saveUrl ? appConfig : await loadAppConfig();
     if (hasRemoteSync(cfg)) {
@@ -585,6 +595,7 @@ export default function SlitterCalculator() {
         onPdfCliente={() => void handlePdfCliente()}
         onPdfLiganer={() => handlePdf("liganer")}
         onPdfGestao={() => handlePdf("gestao")}
+        onXlsx={handleXlsx}
         statusText={status.text}
         statusKind={status.kind}
         pdfClienteBusy={pdfClienteBusy}
