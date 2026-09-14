@@ -258,8 +258,7 @@ function appendItemsTable(
     "Subtotal",
     "Observação",
     "Fator 100",
-    "Fator máx.",
-    "Fator util.",
+    "Fator",
     "Preço fator util.",
     "Comissão",
     "Preço serviço",
@@ -320,7 +319,6 @@ function appendItemsTable(
       commercial.subtotal != null ? fmtCurrency(commercial.subtotal) : "—",
       dash(item.observation),
       item.priceFactor100 != null ? fmtCurrency(item.priceFactor100) : "—",
-      item.maxFactor != null ? fmtNumber(item.maxFactor, 2) : "—",
       item.usedFactor != null ? fmtNumber(item.usedFactor, 2) : "—",
       commercial.usedPrice != null ? fmtCurrency(commercial.usedPrice) : "—",
       commission,
@@ -337,7 +335,6 @@ function appendItemsTable(
   const gestaoExcluded = new Set([
     "Observação",
     "Fator 100",
-    "Fator máx.",
     "Comissão",
     ...MTO_FIELDS.map((f) => f.label.replace(/\n/g, " ")),
   ]);

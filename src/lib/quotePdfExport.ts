@@ -46,7 +46,6 @@ function isInternalPdf(kind: PdfKind): boolean {
 const GESTAO_EXCLUDED_COLUMNS = new Set([
   "observation",
   "priceFactor100",
-  "maxFactor",
   "commission",
   ...MTO_FIELDS.map((f) => f.key),
 ]);
@@ -201,13 +200,8 @@ function allColumns(): PdfColumn[] {
         item.priceFactor100 != null ? fmtCurrency(item.priceFactor100) : "—",
     },
     {
-      key: "maxFactor",
-      label: "Fator\nmáximo",
-      value: ({ item }) => (item.maxFactor != null ? fmtNumber(item.maxFactor, 2) : "—"),
-    },
-    {
       key: "usedFactor",
-      label: "Fator\nutilizado",
+      label: "Fator",
       value: ({ item }) => (item.usedFactor != null ? fmtNumber(item.usedFactor, 2) : "—"),
     },
     {
