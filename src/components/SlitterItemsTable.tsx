@@ -794,7 +794,7 @@ export default function SlitterItemsTable({
                     <td className="formula-cell">
                       <span
                         className="calculated-cell"
-                        title="<100 mm: sobra % · <300 mm: sobra % × 0,20 · ≥300 mm: sobra % × 0,15"
+                        title="<100 mm: sobra % · <300 mm: sobra % × 0,30 · ≥300 mm: sobra % × 0,20"
                       >
                         {commercial.acrescimoPerda != null ? fmtPct(commercial.acrescimoPerda) : "—"}
                       </span>
