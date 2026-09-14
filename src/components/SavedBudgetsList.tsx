@@ -52,9 +52,7 @@ export default function SavedBudgetsList({
             <tbody>
               {items.map((row) => (
                 <tr key={`${row.source}-${row.number}`}>
-                  <td>
-                    <strong>{row.number}</strong>
-                  </td>
+                  <td>{row.number}</td>
                   <td>{row.client || "—"}</td>
                   <td>{row.cnpj || "—"}</td>
                   <td>{formatWhen(row.savedAt || row.createdAt)}</td>

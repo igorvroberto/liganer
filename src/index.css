@@ -624,18 +624,26 @@ select:focus {
 .saved-budgets-table td {
   font-size: 0.9rem;
   color: var(--ink);
+  line-height: 1.25;
 }
 
 .saved-budget-actions {
   display: flex;
   flex-wrap: nowrap;
+  align-items: center;
   gap: 6px;
+  width: max-content;
+}
+
+.saved-budget-actions .btn {
+  flex: 0 0 auto;
 }
 
 .btn-compact {
   padding: 6px 10px;
   font-size: 0.8rem;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
 .summary-grid {
