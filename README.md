@@ -44,7 +44,7 @@ Acabamento é filtrado pelo tipo; espessura pelo par tipo+acabamento (como em bl
 
 ## Funcionalidades
 
-- Orçamento de tubos e barras (persistência/PDF/lista no padrão chapas-bobinas)
+- Orçamento ACE (persistência/PDF/lista no padrão chapas-bobinas)
 - Cliente (nome / CNPJ), itens, condições (pagamento, frete CIF/FOB, expedição SP/CE…)
 - Preço fator 100 e ICMS pela planilha Excel
 - Peso, fator utilizado, frete %, IPI 3,25%

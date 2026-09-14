@@ -927,7 +927,7 @@ export default function App() {
         />
         <div>
           <p className="eyebrow">Liganer</p>
-          <h1>Orçamento de tubos e barras</h1>
+          <h1>Orçamento ACE</h1>
         </div>
       </div>
       <p className="lede">

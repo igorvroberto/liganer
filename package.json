@@ -25,5 +25,5 @@
     "typescript": "~6.0.2",
     "vite": "^8.2.2"
   },
-  "description": "Orçamento Liganer — tubos e barras (Vite + React)"
+  "description": "Orçamento Liganer — ACE (Vite + React)"
 }

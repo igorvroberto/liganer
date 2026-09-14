@@ -215,7 +215,7 @@ function supplierFields(): FieldDef[] {
 export const MODELS: ModelDef[] = [
   {
     id: 'chapas',
-    name: 'Tubos e barras',
+    name: 'ACE',
     status: 'configured',
     sheet: 'Orçamento',
     rowRange: '3 a 12',
