@@ -1,3 +1,4 @@
+import * as XLSX from 'xlsx'
 import { calculateRow, usesManualUnitWeight } from './calc'
 import { displayFieldValue, formatCurrency, formatNumber } from './format'
 import {
@@ -6,7 +7,6 @@ import {
   footerFields,
   isSupplierKey,
   itemFields,
-  itemHeaderLabel,
 } from './models'
 import { localPrintNumber } from './storage'
 import type { ClientInfo, Conditions, FieldDef, ItemRow, ModelDef, Summary } from './types'
@@ -59,6 +59,38 @@ function orderClientePdfFields(fields: FieldDef[]): FieldDef[] {
     result.push(field)
   }
   return result
+}
+
+export function exportExcel(
+  model: ModelDef,
+  client: ClientInfo,
+  rows: ItemRow[],
+  conditions: Conditions,
+  options?: { number?: string },
+): void {
+  if (!rows.length) return
+  const fields = exportableFields(model, 'liganer')
+  const aoa: (string | number)[][] = [
+    ['Cliente', 'CNPJ', ...fields.map((f) => fieldLabel(f.label))],
+  ]
+  rows.forEach((row, index) => {
+    aoa.push([
+      client.name,
+      client.cnpj,
+      ...fields.map((f) => {
+        const v = valueForField(f, model.id, row, conditions, index)
+        if (typeof v === 'boolean') return v ? 'X' : ''
+        if (typeof v === 'number') return v
+        return v == null ? '' : String(v)
+      }),
+    ])
+  })
+  const sheet = XLSX.utils.aoa_to_sheet(aoa)
+  const book = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(book, sheet, 'Orcamento')
+  const number = String(options?.number ?? '').trim()
+  const filename = number ? `${number}.xlsx` : `orcamento-${model.id}.xlsx`
+  XLSX.writeFile(book, filename)
 }
 
 function logoUrl(): string {
@@ -172,23 +204,33 @@ export function exportPdf(
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Liganer · Orçamento ${escapeHtml(number)}</title>
+  <title>${escapeHtml(number)}</title>
   <style>
-    @page { size: A4 landscape; margin: 8mm; }
+    /* A4 retrato (210×297mm). */
+    @page {
+      size: 210mm 297mm;
+      margin: 8mm;
+    }
     * { box-sizing: border-box; }
-    body {
+    html, body {
       margin: 0;
       color: #17211d;
       font-family: Inter, Arial, Helvetica, sans-serif;
       font-size: 10px;
       background: #fff;
     }
+    body {
+      min-width: 210mm;
+      max-width: 210mm;
+    }
     body.pdf-liganer { font-size: 7px; }
 
     .print-actions {
       display: flex;
+      flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 8px;
+      align-items: center;
+      gap: 8px 12px;
       margin-bottom: 10px;
     }
     .print-actions button {
@@ -200,7 +242,22 @@ export function exportPdf(
       font-weight: 700;
       cursor: pointer;
     }
-    @media print { .print-actions { display: none; } }
+    .print-actions .print-hint {
+      color: #56635d;
+      font-size: 11px;
+    }
+    @media print {
+      .print-actions { display: none; }
+      @page {
+        size: 210mm 297mm;
+        margin: 8mm;
+      }
+      html, body {
+        width: 210mm;
+        min-height: 297mm;
+        max-width: none;
+      }
+    }
 
     .banner {
       display: flex;
@@ -274,45 +331,42 @@ export function exportPdf(
 
     table.items {
       width: max-content;
-      max-width: 100%;
+      max-width: none;
       border-collapse: collapse;
       table-layout: auto;
     }
     table.items th,
     table.items td {
       border: 1px solid #d8dfd9;
-      padding: 5px 4px;
+      padding: 4px 5px;
       vertical-align: middle;
       text-align: center;
       overflow: visible;
       width: auto;
       max-width: none;
+      white-space: nowrap;
+      word-break: keep-all;
+      overflow-wrap: normal;
     }
     table.items th {
       background: #c60000;
       color: #fff;
-      font-size: 7.5px;
+      font-size: 7px;
       font-weight: 800;
       text-transform: uppercase;
       line-height: 1.15;
-      white-space: pre-line;
       letter-spacing: 0.01em;
     }
     table.items td {
-      white-space: normal;
-      overflow-wrap: anywhere;
-      word-break: break-word;
-      background: #f2f2f2;
+      font-size: 7.5px;
     }
     table.items td.item-no {
       width: 1%;
-      white-space: nowrap;
       font-weight: 700;
       color: #56635d;
     }
     table.items th.item-no {
       width: 1%;
-      white-space: nowrap;
     }
     body.pdf-liganer table.items th {
       font-size: 5px;
@@ -322,6 +376,16 @@ export function exportPdf(
       font-size: 5.4px;
       padding: 2px 1px;
       line-height: 1.12;
+    }
+
+    .sheet-scale {
+      width: 100%;
+      overflow: hidden;
+    }
+    .sheet {
+      display: inline-block;
+      min-width: 100%;
+      transform-origin: top left;
     }
 
     .bottom {
@@ -381,9 +445,12 @@ export function exportPdf(
 </head>
 <body class="${pdfClass}">
   <div class="print-actions">
+    <span class="print-hint">Orientação: retrato (vertical)</span>
     <button type="button" onclick="window.print()">Salvar em PDF</button>
   </div>
 
+  <div class="sheet-scale">
+  <div class="sheet">
   <header class="banner">
     <div class="brand">
       <img src="${escapeHtml(logo)}" alt="Liganer" width="40" height="40" />
@@ -405,7 +472,7 @@ export function exportPdf(
       <tr>
         <th class="item-no">Item</th>
         ${fields
-          .map((field) => `<th>${escapeHtml(itemHeaderLabel(field.label))}</th>`)
+          .map((field) => `<th>${escapeHtml(fieldLabel(field.label))}</th>`)
           .join('')}
       </tr>
     </thead>
@@ -416,19 +483,61 @@ export function exportPdf(
     ${summaryHtml}
     ${conditionsHtml}
   </div>
+  </div>
+  </div>
 
-  <script>window.addEventListener('load', () => setTimeout(() => window.print(), 350))</script>
+  <script>
+    function fitSheetToPage() {
+      const sheet = document.querySelector('.sheet')
+      const scaleBox = document.querySelector('.sheet-scale')
+      if (!sheet || !scaleBox) return
+      sheet.style.zoom = '1'
+      sheet.style.transform = 'none'
+      sheet.style.marginBottom = '0'
+      const avail = scaleBox.clientWidth || document.body.clientWidth || window.innerWidth
+      const needed = Math.max(sheet.scrollWidth, sheet.offsetWidth)
+      if (!avail || !needed) return
+      const scale = Math.min(1, avail / needed)
+      if (scale >= 0.999) return
+      if ('zoom' in sheet.style) {
+        sheet.style.zoom = String(scale)
+      } else {
+        sheet.style.transform = 'scale(' + scale + ')'
+        sheet.style.marginBottom = (-(1 - scale) * sheet.scrollHeight) + 'px'
+      }
+    }
+    window.addEventListener('load', () => {
+      fitSheetToPage()
+      setTimeout(() => {
+        fitSheetToPage()
+        window.print()
+      }, 400)
+    })
+    window.addEventListener('resize', fitSheetToPage)
+  </script>
 </body>
 </html>`
 
-  const win = window.open('', '_blank')
+  // Janela em proporção retrato. Não usar noopener: em Chrome/Edge
+  // window.open(..., 'noopener') devolve null e o PDF deixa de abrir.
+  const win = window.open('', '_blank', 'width=900,height=1200,left=40,top=20')
   if (!win) {
     alert('O navegador bloqueou a janela de PDF. Permita pop-ups para exportar.')
     return
   }
+  try {
+    win.opener = null
+  } catch {
+    /* ignore */
+  }
   win.document.open()
   win.document.write(html)
   win.document.close()
+  try {
+    win.focus()
+  } catch {
+    /* ignore */
+  }
 }
 
 function escapeHtml(value: string): string {
