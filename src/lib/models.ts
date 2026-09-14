@@ -92,63 +92,6 @@ function icmsField(): FieldDef {
   }
 }
 
-/** Ordem: ACE MTS/MTO, FIL IND, AÇOS PRIME, IMG, CSA, TETTO (cada um MTS depois MTO). */
-function supplierFields(): FieldDef[] {
-  const groups: {
-    key: (suffix: string) => string
-    label: string
-    alias: (suffix: string) => string[]
-  }[] = [
-    {
-      key: (suffix) => `ace_${suffix}`,
-      label: 'ACE',
-      alias: (suffix) => [`ace ${suffix}`],
-    },
-    {
-      key: (suffix) => `filial_industria_${suffix}`,
-      label: 'FIL IND',
-      alias: (suffix) => [
-        `filial industria ${suffix}`,
-        `filial indústria ${suffix}`,
-        `fil ind ${suffix}`,
-      ],
-    },
-    {
-      key: (suffix) => `acos_prime_${suffix}`,
-      label: 'AÇOS PRIME',
-      alias: (suffix) => [`acos prime ${suffix}`, `aços prime ${suffix}`],
-    },
-    {
-      key: (suffix) => `img_${suffix}`,
-      label: 'IMG',
-      alias: (suffix) => [`img ${suffix}`],
-    },
-    {
-      key: (suffix) => `csa_${suffix}`,
-      label: 'CSA',
-      alias: (suffix) => [`csa ${suffix}`],
-    },
-    {
-      key: (suffix) => `tetto_${suffix}`,
-      label: 'TETTO',
-      alias: (suffix) => [`tetto ${suffix}`],
-    },
-  ]
-
-  const fields: FieldDef[] = []
-  for (const group of groups) {
-    for (const suffix of ['mts', 'mto'] as const) {
-      fields.push({
-        key: group.key(suffix),
-        label: `${group.label}\n${suffix.toUpperCase()}`,
-        aliases: group.alias(suffix),
-        type: 'boolean',
-      })
-    }
-  }
-  return fields
-}
-
 export const MODELS: ModelDef[] = [
   {
     id: 'chapas',
@@ -172,7 +115,6 @@ export const MODELS: ModelDef[] = [
       { key: 'descricao_servico', label: 'Descrição\nserviço', aliases: ['descricao servico', 'descrição serviço'] },
       calcField('_preco_total', 'Preço\ntotal', 'currency', 'precoTotal'),
       calcField('_preco_sem_ipi', 'Preço\nsem IPI', 'currency', 'precoSemIpi'),
-      ...supplierFields(),
       ...footerFieldsModule(),
     ],
   },
@@ -217,6 +159,3 @@ export const HIDDEN_FROM_CLIENT = new Set([
   '_preco_total',
 ])
 
-export function isSupplierKey(key: string): boolean {
-  return /^(ace_|filial_industria_|acos_prime_|img_|csa_|tetto_)/.test(key)
-}
