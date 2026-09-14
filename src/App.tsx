@@ -458,11 +458,11 @@ export default function App() {
     setStatus({ text: `Orçamento ${number} excluído.`, kind: 'ok' })
   }
 
-  async function openSavedPdfCliente(item: BudgetListItem) {
+  async function openSavedPdfCliente(item: BudgetListItem, kind: 'cliente18' | 'cliente4') {
     const record = await resolveSavedRecord(item)
     if (!record) return
     exportPdf(
-      'cliente',
+      kind,
       getModel(record.modelId),
       record.client,
       record.rows,
@@ -480,13 +480,14 @@ export default function App() {
     })
   }
 
-  async function handlePdfCliente() {
+  async function handlePdfCliente(kind: 'cliente18' | 'cliente4') {
     if (!rows.length) {
       setStatus({ text: 'Adicione ao menos um item.', kind: 'error' })
       return
     }
     const number = editingBudget?.number || localPrintNumber()
     const createdAt = editingBudget?.createdAt || new Date().toISOString()
+    const regime = kind === 'cliente18' ? '18%' : '4%'
     const record: BudgetRecord = {
       id: editingBudget?.id || number,
       createdAt,
@@ -499,7 +500,7 @@ export default function App() {
       summary,
       number,
       name: number,
-      source: 'pdf-cliente',
+      source: `pdf-${regime}`,
     }
     upsertSavedBudget(record)
     pushSavedBudget(record)
@@ -509,10 +510,10 @@ export default function App() {
         setStatus({ text: remote.error || 'Falha ao sincronizar o orçamento.', kind: 'error' })
       }
     }
-    exportPdf('cliente', model, client, rows, conditions, summary, { number })
+    exportPdf(kind, model, client, rows, conditions, summary, { number })
     await refreshSavedBudgetsList()
     setEditingBudget({ id: record.id, number, createdAt })
-    setStatus({ text: `PDF cliente ${number} gerado.`, kind: 'ok' })
+    setStatus({ text: `PDF ${regime} ${number} gerado.`, kind: 'ok' })
   }
 
   return (
@@ -648,27 +649,27 @@ export default function App() {
         <h2>Totais</h2>
         <div className="summary-grid">
           <div className="summary-item">
-            <span>Subtotal SP</span>
+            <span>Subtotal 18%</span>
             <strong>{formatCurrency(summary.subtotalSp)}</strong>
           </div>
           <div className="summary-item">
-            <span>Subtotal CE</span>
+            <span>Subtotal 4%</span>
             <strong>{formatCurrency(summary.subtotalCe)}</strong>
           </div>
           <div className="summary-item">
-            <span>IPI SP</span>
+            <span>IPI 18%</span>
             <strong>{formatCurrency(summary.ipiSp)}</strong>
           </div>
           <div className="summary-item">
-            <span>IPI CE</span>
+            <span>IPI 4%</span>
             <strong>{formatCurrency(summary.ipiCe)}</strong>
           </div>
           <div className="summary-item">
-            <span>Total SP</span>
+            <span>Total 18%</span>
             <strong>{formatCurrency(summary.totalSp)}</strong>
           </div>
           <div className="summary-item">
-            <span>Total CE</span>
+            <span>Total 4%</span>
             <strong>{formatCurrency(summary.totalCe)}</strong>
           </div>
         </div>
@@ -687,8 +688,19 @@ export default function App() {
           ))}
         </div>
         <div className="actions" style={{ marginTop: 16 }}>
-          <button type="button" className="btn btn-dark" onClick={() => void handlePdfCliente()}>
-            {editingBudget ? `Atualizar PDF ${editingBudget.number}` : 'PDF cliente'}
+          <button
+            type="button"
+            className="btn btn-dark"
+            onClick={() => void handlePdfCliente('cliente18')}
+          >
+            {editingBudget ? `Atualizar PDF 18% ${editingBudget.number}` : 'PDF 18%'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-dark"
+            onClick={() => void handlePdfCliente('cliente4')}
+          >
+            {editingBudget ? `Atualizar PDF 4% ${editingBudget.number}` : 'PDF 4%'}
           </button>
           <button
             type="button"
@@ -709,7 +721,7 @@ export default function App() {
         <h2>Orçamentos salvos</h2>
         {editingBudget ? (
           <p className="editing-banner">
-            Editando orçamento <strong>{editingBudget.number}</strong>. Ao gerar o PDF cliente, este
+            Editando orçamento <strong>{editingBudget.number}</strong>. Ao gerar PDF 18% ou PDF 4%, este
             número será atualizado.
           </p>
         ) : null}
@@ -742,9 +754,16 @@ export default function App() {
                           <button
                             type="button"
                             className="btn btn-secondary btn-compact"
-                            onClick={() => void openSavedPdfCliente(item)}
+                            onClick={() => void openSavedPdfCliente(item, 'cliente18')}
                           >
-                            PDF
+                            PDF 18%
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-compact"
+                            onClick={() => void openSavedPdfCliente(item, 'cliente4')}
+                          >
+                            PDF 4%
                           </button>
                           <button
                             type="button"
@@ -776,7 +795,7 @@ export default function App() {
             </table>
           </div>
         ) : (
-          <p className="muted-note">Nenhum orçamento salvo ainda. Use PDF cliente.</p>
+          <p className="muted-note">Nenhum orçamento salvo ainda. Use PDF 18% ou PDF 4%.</p>
         )}
       </section>
 

@@ -144,8 +144,8 @@ export const MODELS: ModelDef[] = [
         useGrouping: true,
         locked: true,
       },
-      calcField('_subtotal_sp', 'Subtotal\nSP', 'currency', 'subtotalSp'),
-      calcField('_subtotal_ce', 'Subtotal\nCE', 'currency', 'subtotalCe'),
+      calcField('_subtotal_sp', 'Subtotal\n18%', 'currency', 'subtotalSp'),
+      calcField('_subtotal_ce', 'Subtotal\n4%', 'currency', 'subtotalCe'),
       { key: 'observacao', label: 'Observação', aliases: ['observacao', 'observação', 'obs'] },
       {
         key: 'fator_maximo',
@@ -263,3 +263,9 @@ export const HIDDEN_FROM_CLIENT = new Set([
   'icms',
   '_subtotal',
 ])
+
+/** Colunas só do regime ICMS 4% (omitidas no PDF 18%). */
+export const PDF_4_ONLY_KEYS = new Set(['preco_ce', '_subtotal_ce'])
+
+/** Colunas só do regime ICMS 18% (omitidas no PDF 4%). */
+export const PDF_18_ONLY_KEYS = new Set(['preco_sp', '_subtotal_sp'])
