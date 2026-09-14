@@ -586,6 +586,63 @@ select:disabled {
   font-size: 0.9rem;
 }
 
+.muted-note code {
+  font-size: 0.85em;
+}
+
+.material-column {
+  min-width: 280px;
+}
+
+.material-search {
+  position: relative;
+  min-width: 260px;
+}
+
+.material-search-list {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+
+.material-search-list button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+}
+
+.material-search-list button:hover,
+.material-search-list button:focus-visible {
+  background: var(--accent-light);
+}
+
+.material-search-name {
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.material-search-meta {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 .btn-compact {
   padding: 6px 10px;
   font-size: 0.8rem;
@@ -613,5 +670,10 @@ select:disabled {
 
   .voice-panel {
     grid-template-columns: 1fr;
+  }
+
+  .material-column,
+  .material-search {
+    min-width: 220px;
   }
 }

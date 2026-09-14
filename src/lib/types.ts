@@ -7,6 +7,8 @@ export type FieldDef = {
   type?: FieldType
   options?: string[]
   customOptionLabel?: string
+  /** Campo de texto com busca no catálogo (typeahead), em vez de select. */
+  searchable?: boolean
   default?: string | number | boolean
   locked?: boolean
   hiddenInApp?: boolean
@@ -14,8 +16,6 @@ export type FieldDef = {
   section?: 'Rodapé'
   virtual?: boolean
   calculated?: boolean
-  /** Peso unitário: calculado/bloqueado para Chapa, editável para Bobina inteira/reduzida */
-  weightByMaterial?: boolean
   /** Casas decimais na exibição (padrão 2). Use 0 para inteiros. */
   fractionDigits?: number
   /** Separador de milhar (padrão true). */
@@ -58,7 +58,7 @@ export type RowCalculation = {
   perdaPercentual: number
   acrescimoPerdaPercentual: number
   acrescimoPerdaValor: number
-  /** Alíquota ICMS da planilha (ex.: 0.04 = 4%). */
+  /** Alíquota ICMS (ex.: 0.04 = 4%). */
   icms: number
 }
 

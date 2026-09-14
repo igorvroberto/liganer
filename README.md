@@ -30,26 +30,24 @@ npm run build
 npm run preview
 ```
 
-O `prebuild` regenera o JSON de fallback a partir da planilha compartilhada
-(`/orcamento/tabelas/precos-chapas-bobinas.xlsx`). Em produção o app lê esse Excel
-direto no host (fora da pasta deste app), para outros repositórios usarem a mesma fonte.
+O `prebuild` regenera o JSON de fallback a partir da planilha ACE
+(`/orcamento/tabelas/precos-ace.xlsx`). Em produção o app lê esse Excel
+direto no host (fora da pasta deste app).
 
 ## Atualizar preços
 
-1. Substitua no HostGator: `/vendas.liganer.com.br/orcamento/tabelas/precos-chapas-bobinas.xlsx`
+1. Substitua no HostGator: `/vendas.liganer.com.br/orcamento/tabelas/precos-ace.xlsx`
 2. Hard-refresh no navegador — sem rebuild. (Opcional: `npm run sync:prices` para atualizar o JSON de fallback no repo.)
 
-As opções de **Tipo**, **Acabamento**, **PVC** e **Espessura** também vêm dessa planilha.
-Acabamento é filtrado pelo tipo; espessura pelo par tipo+acabamento (como em blanks-slitters).
+O material é pesquisável a partir da descrição dessa planilha (orientação de colunas em evolução).
 
 ## Funcionalidades
 
-- Orçamento ACE (persistência/PDF/lista no padrão chapas-bobinas)
+- Orçamento ACE (persistência/PDF/lista)
 - Cliente (nome / CNPJ), itens, condições (pagamento, frete CIF/FOB, expedição SP/CE…)
-- Preço fator 100 e ICMS pela planilha Excel
-- Peso, fator utilizado, frete %, IPI 3,25%
-- Ditado por voz (Web Speech API)
-- Exportação: PDF cliente, PDF Liganer, Excel, CSV
+- Material pesquisável + preço fator 100 pela planilha `precos-ace.xlsx`
+- Fator utilizado, frete %, IPI 3,25%
+- Exportação: PDF cliente, PDF Liganer, Excel
 - PDF cliente salva o orçamento (nome = número; localStorage + API com `syncSecret`)
 
 ## Deploy

@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx'
-import { calculateRow, usesManualUnitWeight } from './calc'
-import { displayFieldValue, formatCurrency, formatNumber } from './format'
+import { calculateRow } from './calc'
+import { displayFieldValue, formatCurrency } from './format'
 import {
   HIDDEN_FROM_CLIENT,
   fieldLabel,
@@ -20,9 +20,6 @@ function valueForField(
 ): unknown {
   if (field.key === '_item') return index + 1
   const calc = calculateRow(modelId, row, conditions)
-  if (field.weightByMaterial && field.calc && field.calc in calc) {
-    return usesManualUnitWeight(modelId, row) ? row[field.key] : calc[field.calc]
-  }
   if (field.calculated && field.calc && field.calc in calc) {
     return calc[field.calc]
   }
@@ -38,13 +35,13 @@ function exportableFields(model: ModelDef, kind: 'cliente' | 'liganer'): FieldDe
   return orderClientePdfFields(visible)
 }
 
-/** PDF cliente: ICMS após peso total; preço sem IPI antes do subtotal. */
+/** PDF cliente: ICMS após UM; preço sem IPI antes do subtotal. */
 function orderClientePdfFields(fields: FieldDef[]): FieldDef[] {
   const byKey = new Map(fields.map((field) => [field.key, field]))
   const result: FieldDef[] = []
   for (const field of fields) {
     if (field.key === 'icms' || field.key === '_preco_sem_ipi') continue
-    if (field.key === '_peso_total') {
+    if (field.key === 'um') {
       result.push(field)
       const icms = byKey.get('icms')
       if (icms) result.push(icms)
@@ -138,7 +135,6 @@ export function exportPdf(
     .join('')
 
   const summaryRows = [
-    ['Total (Kg)', `${formatNumber(summary.totalKg, 0)} Kg`],
     ['Subtotal', formatCurrency(summary.subtotal)],
     ['IPI 3,25%', formatCurrency(summary.ipi)],
     ['Total', formatCurrency(summary.total)],

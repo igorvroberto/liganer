@@ -1,18 +1,6 @@
 import type { FieldDef, ModelDef } from './types'
-import type { CatalogSelectOptions } from './priceCatalog'
 
-/** Fallbacks usados só até o catálogo Excel/JSON preencher as opções. */
-export const TYPE_OPTIONS = ['304', '430', 'J4', '410S', '316L', '410D', '201', 'QN1803', '439']
-export const FINISH_OPTIONS = ['2B', 'BA', 'BQ', 'ESCOVADO']
-export const PVC_OPTIONS = ['NÃO', 'AZUL', 'PRETO E BRANCO', 'PRETO', 'NITTO FIBER']
-export const WIDTH_OPTIONS = ['1250', '1500', '1219']
-export const LENGTH_OPTIONS = ['3000', '2000']
-export const THICKNESS_OPTIONS = [
-  '0,35', '0,40', '0,50', '0,60', '0,80', '1,00', '1,20', '1,50',
-  '2,00', '2,50', '3,00', '3,50', '4,00', '4,50', '5,00', '6,00', '8,00',
-]
 export const COMMISSION_OPTIONS = ['Bonificada', 'Normal', 'Reduzida']
-export const MATERIAL_OPTIONS = ['BOBINA INTEIRA', 'BOBINA REDUZIDA', 'CHAPA']
 
 function calcField(
   key: string,
@@ -72,54 +60,6 @@ function footerFieldsModule(): FieldDef[] {
   ]
 }
 
-function alloyFields(
-  materialDefault: string,
-  { selectableMaterial = false }: { selectableMaterial?: boolean } = {},
-): FieldDef[] {
-  const materialField: FieldDef = selectableMaterial
-    ? {
-        key: 'material',
-        label: 'Material',
-        aliases: ['material', 'produto'],
-        options: MATERIAL_OPTIONS,
-        default: materialDefault,
-        askWhenNew: true,
-      }
-    : {
-        key: 'material',
-        label: 'Material',
-        aliases: ['material', 'produto'],
-        default: materialDefault,
-        locked: true,
-      }
-  return [
-    materialField,
-    { key: 'tipo', label: 'Tipo', aliases: ['tipo', 'liga', 'aco', 'aço'], options: TYPE_OPTIONS, askWhenNew: true },
-    { key: 'acabamento', label: 'Acabamento', aliases: ['acabamento'], options: FINISH_OPTIONS, askWhenNew: true },
-    { key: 'pvc', label: 'PVC', aliases: ['pvc', 'plastico', 'plástico'], options: PVC_OPTIONS, askWhenNew: true, default: 'NÃO' },
-    {
-      key: 'espessura',
-      label: 'Espessura',
-      aliases: ['espessura', 'esp'],
-      type: 'number',
-      options: THICKNESS_OPTIONS,
-      askWhenNew: true,
-    },
-  ]
-}
-
-function pesoUnitarioField(): FieldDef {
-  return {
-    key: 'peso_unitario',
-    label: 'Peso\nunitário',
-    aliases: ['peso unitario', 'peso unitário'],
-    type: 'number',
-    weightByMaterial: true,
-    calc: 'pesoUnitario',
-    fractionDigits: 0,
-  }
-}
-
 function commercialFields(): FieldDef[] {
   return [
     { key: 'observacao', label: 'Observação', aliases: ['observacao', 'observação', 'obs'] },
@@ -148,9 +88,6 @@ function icmsField(): FieldDef {
     label: 'ICMS',
     aliases: ['icms'],
     type: 'percent',
-    calculated: true,
-    virtual: true,
-    calc: 'icms',
     fractionDigits: 0,
   }
 }
@@ -220,31 +157,14 @@ export const MODELS: ModelDef[] = [
     sheet: 'Orçamento',
     rowRange: '3 a 12',
     fields: [
-      ...alloyFields('CHAPA', { selectableMaterial: true }),
       {
-        key: 'largura',
-        label: 'Largura',
-        aliases: ['largura', 'larg'],
-        type: 'number',
-        options: WIDTH_OPTIONS,
-        customOptionLabel: 'OUTRA',
-        fractionDigits: 0,
-        useGrouping: false,
+        key: 'material',
+        label: 'Material',
+        aliases: ['material', 'produto', 'descricao', 'descrição'],
+        searchable: true,
+        askWhenNew: true,
       },
-      {
-        key: 'comprimento',
-        label: 'Comprimento',
-        aliases: ['comprimento', 'comp'],
-        type: 'number',
-        options: LENGTH_OPTIONS,
-        customOptionLabel: 'OUTRO',
-        fractionDigits: 0,
-        useGrouping: false,
-      },
-      { key: 'unidade', label: 'Quantidade', aliases: ['unidade', 'quantidade', 'qtd', 'peças', 'pecas'], type: 'number', fractionDigits: 0, useGrouping: true },
-      pesoUnitarioField(),
-      calcField('_peso_total', 'Peso\ntotal', 'number', 'pesoTotal', { fractionDigits: 0, useGrouping: true }),
-      { key: 'um', label: 'UM', aliases: ['um', 'unidade medida'], default: 'KG', hiddenInApp: true },
+      { key: 'um', label: 'UM', aliases: ['um', 'unidade medida'], default: 'KG' },
       icmsField(),
       calcField('_subtotal', 'Subtotal', 'currency', 'subtotal'),
       ...commercialFields(),
@@ -264,28 +184,6 @@ export function getModel(id: string): ModelDef {
 
 export function itemFields(model: ModelDef): FieldDef[] {
   return model.fields.filter((f) => f.section !== 'Rodapé' && !f.hiddenInApp)
-}
-
-/** Sobrescreve opções de tipo/acabamento/PVC/espessura com as da planilha. */
-export function withCatalogFieldOptions(
-  fields: FieldDef[],
-  options: CatalogSelectOptions,
-): FieldDef[] {
-  return fields.map((field) => {
-    if (field.key === 'tipo') {
-      return { ...field, options: options.tipo.length ? options.tipo : field.options }
-    }
-    if (field.key === 'acabamento') {
-      return { ...field, options: options.acabamento }
-    }
-    if (field.key === 'pvc') {
-      return { ...field, options: options.pvc.length ? options.pvc : field.options }
-    }
-    if (field.key === 'espessura') {
-      return { ...field, options: options.espessura }
-    }
-    return field
-  })
 }
 
 export function footerFields(model: ModelDef): FieldDef[] {
