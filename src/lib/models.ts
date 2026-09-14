@@ -123,8 +123,9 @@ export const MODELS: ModelDef[] = [
         label: 'IPI',
         aliases: ['ipi'],
         type: 'percent',
-        default: 5,
-        fractionDigits: 0,
+        options: ['3,25%', '5%'],
+        default: '5%',
+        fractionDigits: 2,
       },
       calcField('_estoque_total', 'Estoque\ntotal', 'number', 'estoqueTotal', {
         fractionDigits: 0,
