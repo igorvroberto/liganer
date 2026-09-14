@@ -11,7 +11,7 @@ import {
 } from "../lib/blankSync";
 import {
   fmtCurrency,
-  fmtMm,
+  fmtDecimal2,
   fmtNumber,
   fmtPct,
   fmtThickness,
@@ -617,15 +617,15 @@ export default function SlitterItemsTable({
                           className="cell-control"
                           type="number"
                           min={0}
-                          step={0.001}
-                          value={unitKg > 0 ? Number(unitKg.toFixed(3)) : ""}
+                          step={0.01}
+                          value={unitKg > 0 ? Number(unitKg.toFixed(2)) : ""}
                           title="Altera comprimento e peso total (quantidade × peso unitário)"
                           onChange={(e) => updateUnitWeight(item.id, e.target.value)}
                           aria-label="Peso unitário"
                         />
                       ) : (
                         <span className="calculated-cell">
-                          {unitKg > 0 ? `${fmtNumber(unitKg, 3)} Kg` : "—"}
+                          {unitKg > 0 ? fmtDecimal2(unitKg) : "—"}
                         </span>
                       )}
                     </td>
@@ -770,7 +770,7 @@ export default function SlitterItemsTable({
                     </td>
                     <td className="formula-cell">
                       <span className="calculated-cell" title="Sobra longitudinal (largura)">
-                        {commercial.perdaMm != null ? fmtMm(commercial.perdaMm) : "—"}
+                        {commercial.perdaMm != null ? fmtNumber(commercial.perdaMm, 2) : "—"}
                       </span>
                     </td>
                     <td className="formula-cell">
