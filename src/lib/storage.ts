@@ -59,20 +59,24 @@ export function budgetDisplayName(record: {
 
 export function loadSavedBudgets(): BudgetRecord[] {
   try {
-    return JSON.parse(getItem(SAVED_KEY, '[]')) as BudgetRecord[]
+    const list = JSON.parse(getItem(SAVED_KEY, '[]')) as BudgetRecord[]
+    const deduped = dedupeSavedBudgets(list)
+    if (deduped.length !== list.length) {
+      setItem(SAVED_KEY, JSON.stringify(deduped))
+    }
+    return deduped
   } catch {
     return []
   }
 }
 
 export function pushSavedBudget(record: BudgetRecord): void {
-  const list = loadSavedBudgets()
-  list.push(record)
-  setItem(SAVED_KEY, JSON.stringify(list))
+  // Mantém compatibilidade: nunca duplica — mesmo comportamento do upsert.
+  upsertSavedBudget(record)
 }
 
 export function upsertSavedBudget(record: BudgetRecord): void {
-  const list = loadSavedBudgets()
+  const list = dedupeSavedBudgets(loadSavedBudgets())
   const index = list.findIndex(
     (item) =>
       item.id === record.id ||
@@ -81,7 +85,24 @@ export function upsertSavedBudget(record: BudgetRecord): void {
   )
   if (index >= 0) list[index] = { ...list[index], ...record }
   else list.push(record)
-  setItem(SAVED_KEY, JSON.stringify(list))
+  setItem(SAVED_KEY, JSON.stringify(dedupeSavedBudgets(list)))
+}
+
+/** Remove entradas locais duplicadas pelo mesmo número/id. */
+function dedupeSavedBudgets(records: BudgetRecord[]): BudgetRecord[] {
+  const byKey = new Map<string, BudgetRecord>()
+  for (const item of records) {
+    const key = item.number ? `n:${item.number}` : `id:${item.id}`
+    const prev = byKey.get(key)
+    if (!prev) {
+      byKey.set(key, item)
+      continue
+    }
+    const prevTime = String(prev.savedAt ?? prev.createdAt ?? '')
+    const nextTime = String(item.savedAt ?? item.createdAt ?? '')
+    byKey.set(key, nextTime >= prevTime ? { ...prev, ...item } : { ...item, ...prev })
+  }
+  return [...byKey.values()]
 }
 
 export function removeSavedBudget(idOrNumber: string): void {

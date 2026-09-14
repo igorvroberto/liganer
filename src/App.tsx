@@ -24,7 +24,6 @@ import {
   loadDraft,
   localPrintNumber,
   mergeBudgetLists,
-  pushSavedBudget,
   removeSavedBudget,
   saveBudgetRemote,
   saveDraft,
@@ -528,7 +527,6 @@ export default function App() {
       source: 'salvar',
     }
     upsertSavedBudget(record)
-    pushSavedBudget(record)
     if (config.syncSecret) {
       const remote = await saveBudgetRemote(record, config)
       if (!remote.ok) {
