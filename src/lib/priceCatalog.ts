@@ -52,7 +52,11 @@ function normalizeSearch(value: unknown): string {
     .toLowerCase()
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
-    .replace(/[^a-z0-9]+/g, ' ')
+    // Separa número de unidade: 50mm → 50 mm (preserva vírgula decimal: 1,20mm → 1,20 mm)
+    .replace(/([a-z])(\d)/g, '$1 $2')
+    .replace(/(\d)([a-z])/g, '$1 $2')
+    .replace(/[^a-z0-9,]+/g, ' ')
+    .replace(/(?<!\d),(?!\d)/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -60,7 +64,16 @@ function normalizeSearch(value: unknown): string {
 function searchTokens(query: string): string[] {
   return normalizeSearch(query)
     .split(' ')
-    .filter((token) => token.length > 0)
+    .filter((token) => token.length > 0 && token !== ',')
+}
+
+/** Ignora conectores de dimensão (x) e tokens de 1 letra sem dígito. */
+function meaningfulSearchTokens(query: string): string[] {
+  return searchTokens(query).filter((token) => {
+    if (/^\d+([.,]\d+)?$/.test(token)) return true
+    if (token === 'x') return false
+    return token.length >= 2
+  })
 }
 
 function roundPrice(value: unknown): number {
@@ -71,33 +84,39 @@ function roundPrice(value: unknown): number {
 /** Quantidade mínima de caracteres alfanuméricos antes de sugerir. */
 const MIN_SEARCH_CHARS = 3
 
-/** Materiais do catálogo filtrados por texto digitado (todos os termos, AND). */
+function tokenSet(value: unknown): Set<string> {
+  return new Set(searchTokens(String(value ?? '')))
+}
+
+/** Materiais do catálogo: todos os termos digitados como tokens inteiros (AND). */
 export function searchCatalogMaterials(query: string, limit = 20): PriceCatalogRow[] {
   const q = normalizeSearch(query)
   const compact = q.replace(/\s+/g, '')
   // Sem termo suficiente → lista vazia (não sugere “qualquer coisa”).
   if (!compact || compact.length < MIN_SEARCH_CHARS) return []
 
-  const tokens = searchTokens(query).filter(
-    (token) => token.length >= 2 || /^\d+$/.test(token),
-  )
+  const tokens = meaningfulSearchTokens(query)
   if (!tokens.length) return []
 
   const scored: { row: PriceCatalogRow; score: number }[] = []
   for (const row of catalogRows) {
+    const materialTokens = tokenSet(row.material)
+    const codigoTokens = tokenSet(row.codigo)
+    const hayTokens = new Set([...materialTokens, ...codigoTokens])
+    // Match por token inteiro — evita "30" em "304" e "20" em "2000".
+    if (!tokens.every((token) => hayTokens.has(token))) continue
+
     const hayMaterial = normalizeSearch(row.material)
     const hayCodigo = normalizeSearch(row.codigo)
-    const hay = `${hayMaterial} ${hayCodigo}`.trim()
-    if (!tokens.every((token) => hay.includes(token))) continue
-
     const starts = hayMaterial.startsWith(q) || hayCodigo.startsWith(q) ? 0 : 2
-    const exactCode = hayCodigo === q ? 0 : 1
+    const exactCode = hayCodigo === q || codigoTokens.has(q) ? 0 : 1
     const first = tokens[0]
-    const early = Math.min(
-      hayMaterial.indexOf(first) >= 0 ? hayMaterial.indexOf(first) : 999,
-      hayCodigo.indexOf(first) >= 0 ? hayCodigo.indexOf(first) : 999,
-    )
-    scored.push({ row, score: exactCode * 100 + starts * 1000 + early })
+    const materialList = [...materialTokens]
+    const early = materialList.indexOf(first)
+    scored.push({
+      row,
+      score: exactCode * 100 + starts * 1000 + (early >= 0 ? early : 999),
+    })
   }
   scored.sort((a, b) => a.score - b.score || a.row.material.localeCompare(b.row.material, 'pt-BR'))
   return scored.slice(0, limit).map((item) => item.row)
