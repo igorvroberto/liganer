@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import QuoteClientFields from "../components/QuoteClientFields";
 import QuoteConditions from "../components/QuoteConditions";
 import QuoteTotals from "../components/QuoteTotals";
+import SavedBudgetsList from "../components/SavedBudgetsList";
 import SlitterItemsTable from "../components/SlitterItemsTable";
 import { fmtDim, fmtInt, fmtKg, fmtMeters, fmtMm, fmtNumber, fmtPct, fmtPlainInt, fmtPlainMm } from "../lib/format";
 import { blankSpecCitation, blankSpecCitationLine } from "../lib/materialGroups";
@@ -11,6 +12,8 @@ import {
   optimizeCutting,
   productIndicesInProgram,
 } from "../lib/optimize";
+import type { BudgetListItem, BudgetRecord } from "../lib/budgetTypes";
+import { newBudgetId } from "../lib/budgetTypes";
 import { EMPTY_QUOTE_CLIENT, type QuoteClientInfo } from "../lib/quoteClient";
 import { exportQuotePdf } from "../lib/quotePdfExport";
 import { loadPriceTable } from "../lib/priceTable";
@@ -19,8 +22,26 @@ import {
   itemLossFromPlan,
   quoteSummary,
   type QuoteConditions as QuoteConditionsState,
+  type QuoteSummary,
 } from "../lib/quoteSummary";
-import { loadDraft, saveDraft } from "../lib/storage";
+import {
+  deleteBudgetRemote,
+  fetchBudgetRemote,
+  findSavedBudget,
+  hasRemoteSync,
+  listBudgetsRemote,
+  loadAppConfig,
+  loadDraft,
+  loadSavedBudgets,
+  localPrintNumber,
+  mergeBudgetLists,
+  removeSavedBudget,
+  saveBudgetRemote,
+  saveDraft,
+  savedBudgetsAsListItems,
+  upsertSavedBudget,
+  type AppConfig,
+} from "../lib/storage";
 import { coilForProgram, coilFromSlitterItems } from "../lib/slitterCoil";
 import {
   BLANK_COLORS,
@@ -229,6 +250,11 @@ export default function SlitterCalculator() {
     text: "",
     kind: "",
   });
+  const [editingBudget, setEditingBudget] = useState<BudgetRecord | null>(null);
+  const [budgetList, setBudgetList] = useState<BudgetListItem[]>([]);
+  const [budgetsLoading, setBudgetsLoading] = useState(true);
+  const [pdfClienteBusy, setPdfClienteBusy] = useState(false);
+  const [appConfig, setAppConfig] = useState<AppConfig>({});
 
   useEffect(() => {
     saveDraft({ client, items, conditions, demandModes, allowOvershoot });
@@ -243,6 +269,43 @@ export default function SlitterCalculator() {
       cancelled = true;
     };
   }, []);
+
+  const refreshBudgetList = useCallback(async (config?: AppConfig) => {
+    const cfg = config ?? (await loadAppConfig());
+    const local = savedBudgetsAsListItems(loadSavedBudgets());
+    if (!hasRemoteSync(cfg)) {
+      setBudgetList(local);
+      return { config: cfg, remote: false as const };
+    }
+    try {
+      const remote = await listBudgetsRemote(cfg);
+      setBudgetList(mergeBudgetLists(local, remote));
+      return { config: cfg, remote: true as const };
+    } catch (err) {
+      setBudgetList(local);
+      throw err;
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setBudgetsLoading(true);
+    void (async () => {
+      try {
+        const cfg = await loadAppConfig();
+        if (cancelled) return;
+        setAppConfig(cfg);
+        await refreshBudgetList(cfg);
+      } catch {
+        if (!cancelled) setBudgetList(savedBudgetsAsListItems());
+      } finally {
+        if (!cancelled) setBudgetsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshBudgetList]);
 
   const coil = useMemo(
     () => coilFromSlitterItems(items, allowOvershoot),
@@ -268,17 +331,107 @@ export default function SlitterCalculator() {
     setConditions((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
+  const applyBudgetToForm = (budget: BudgetRecord) => {
+    setClient({ ...EMPTY_QUOTE_CLIENT, ...budget.client });
+    setItems(budget.items.length ? budget.items : EMPTY_ITEMS);
+    setConditions({ ...EMPTY_QUOTE_CONDITIONS, ...budget.conditions });
+    setDemandModes(
+      Object.keys(budget.demandModes).length
+        ? budget.demandModes
+        : Object.fromEntries((budget.items.length ? budget.items : EMPTY_ITEMS).map((item) => [item.id, "weight" as const])),
+    );
+    setAllowOvershoot(budget.allowOvershoot !== false);
+    setSelectedAlt(0);
+  };
+
+  const resetForm = () => {
+    setClient({ ...EMPTY_QUOTE_CLIENT });
+    setItems(EMPTY_ITEMS);
+    setConditions({ ...EMPTY_QUOTE_CONDITIONS });
+    setDemandModes(EMPTY_MODES);
+    setAllowOvershoot(true);
+    setSelectedAlt(0);
+    setEditingBudget(null);
+  };
+
+  const buildBudgetPayload = (number: string, summaryValue: QuoteSummary): BudgetRecord => {
+    const now = new Date().toISOString();
+    return {
+      id: editingBudget?.id || newBudgetId(),
+      number,
+      name: number,
+      client,
+      items,
+      conditions,
+      demandModes,
+      allowOvershoot,
+      summary: summaryValue,
+      createdAt: editingBudget?.createdAt || now,
+      savedAt: now,
+      source: hasRemoteSync(appConfig) ? "remote" : "local",
+    };
+  };
+
+  const handlePdfCliente = async () => {
+    if (!items.length) {
+      setStatus({ text: "Informe ao menos um item antes de gerar o PDF.", kind: "error" });
+      return;
+    }
+    setPdfClienteBusy(true);
     try {
-      saveDraft({ client, items, conditions, demandModes, allowOvershoot });
-      setStatus({ text: "Orçamento salvo neste navegador.", kind: "ok" });
-    } catch {
-      setStatus({ text: "Não foi possível salvar.", kind: "error" });
+      const cfg = await loadAppConfig();
+      setAppConfig(cfg);
+      const remote = hasRemoteSync(cfg);
+      let number = editingBudget?.number?.trim() || "";
+      if (!number && !remote) number = localPrintNumber();
+
+      let record = buildBudgetPayload(number || "00000000", summary);
+      if (!remote) {
+        record = upsertSavedBudget({ ...record, number, name: number, source: "local" });
+      } else {
+        const toRemote: BudgetRecord = { ...record, number: number || "" };
+        const remoteRes = await saveBudgetRemote(toRemote, cfg);
+        number = remoteRes.number;
+        record = upsertSavedBudget({
+          ...record,
+          number,
+          name: number,
+          source: "remote",
+        });
+      }
+
+      exportQuotePdf({
+        kind: "cliente",
+        items,
+        conditions,
+        summary,
+        lossByItemId: itemLossById,
+        plan: null,
+        coil,
+        client,
+        number: record.number,
+      });
+
+      await refreshBudgetList(cfg);
+      setEditingBudget(record);
+      setStatus({
+        text: remote
+          ? `Orçamento ${record.number} salvo e PDF cliente gerado.`
+          : `Orçamento ${record.number} salvo só neste navegador (sem syncSecret) e PDF gerado.`,
+        kind: "ok",
+      });
+    } catch (err) {
+      setStatus({
+        text: err instanceof Error ? err.message : "Não foi possível salvar o orçamento.",
+        kind: "error",
+      });
+    } finally {
+      setPdfClienteBusy(false);
     }
   };
 
-  const handlePdf = (variant: "cliente" | "liganer" | "gestao") => {
-    if ((variant === "liganer" || variant === "gestao") && !plan) {
+  const handlePdf = (variant: "liganer" | "gestao") => {
+    if (!plan) {
       setStatus({
         text:
           variant === "gestao"
@@ -299,18 +452,108 @@ export default function SlitterCalculator() {
       client,
     });
     setStatus({
-      text:
-        variant === "cliente"
-          ? "PDF cliente gerado."
-          : variant === "gestao"
-            ? "PDF gestão gerado."
-            : "PDF Liganer gerado.",
+      text: variant === "gestao" ? "PDF gestão gerado." : "PDF Liganer gerado.",
       kind: "ok",
     });
   };
 
+  const loadBudgetByNumber = async (number: string): Promise<BudgetRecord | null> => {
+    const cfg = appConfig.saveUrl ? appConfig : await loadAppConfig();
+    if (hasRemoteSync(cfg)) {
+      try {
+        const remote = await fetchBudgetRemote(number, cfg);
+        upsertSavedBudget(remote);
+        return remote;
+      } catch {
+        // fallback local
+      }
+    }
+    return findSavedBudget(number);
+  };
+
+  const handleSavedPdf = async (number: string) => {
+    try {
+      const budget = await loadBudgetByNumber(number);
+      if (!budget) {
+        setStatus({ text: `Orçamento ${number} não encontrado.`, kind: "error" });
+        return;
+      }
+      const budgetSummary = budget.summary ?? quoteSummary(budget.items, {}, budget.conditions.frete);
+      exportQuotePdf({
+        kind: "cliente",
+        items: budget.items,
+        conditions: budget.conditions,
+        summary: budgetSummary,
+        client: budget.client,
+        number: budget.number,
+      });
+      setStatus({ text: `PDF do orçamento ${budget.number} gerado.`, kind: "ok" });
+    } catch (err) {
+      setStatus({
+        text: err instanceof Error ? err.message : "Falha ao abrir PDF do orçamento.",
+        kind: "error",
+      });
+    }
+  };
+
+  const handleSavedEdit = async (number: string) => {
+    try {
+      const budget = await loadBudgetByNumber(number);
+      if (!budget) {
+        setStatus({ text: `Orçamento ${number} não encontrado.`, kind: "error" });
+        return;
+      }
+      applyBudgetToForm(budget);
+      setEditingBudget(budget);
+      setStatus({ text: `Editando orçamento ${budget.number}.`, kind: "ok" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setStatus({
+        text: err instanceof Error ? err.message : "Falha ao carregar orçamento.",
+        kind: "error",
+      });
+    }
+  };
+
+  const handleSavedDelete = async (number: string) => {
+    if (!window.confirm(`Excluir o orçamento ${number}?`)) return;
+    try {
+      const cfg = appConfig.saveUrl ? appConfig : await loadAppConfig();
+      removeSavedBudget(number);
+      if (hasRemoteSync(cfg)) {
+        await deleteBudgetRemote(number, cfg);
+      }
+      if (editingBudget?.number === number) {
+        setEditingBudget(null);
+      }
+      await refreshBudgetList(cfg);
+      setStatus({
+        text: hasRemoteSync(cfg)
+          ? `Orçamento ${number} excluído.`
+          : `Orçamento ${number} excluído neste navegador.`,
+        kind: "ok",
+      });
+    } catch (err) {
+      setStatus({
+        text: err instanceof Error ? err.message : "Falha ao excluir orçamento.",
+        kind: "error",
+      });
+    }
+  };
+
   return (
     <div className="calculator-model" data-model="slitters">
+      {editingBudget ? (
+        <div className="editing-banner">
+          <span>
+            Editando orçamento <strong>{editingBudget.number}</strong>
+          </span>
+          <button type="button" className="btn btn-ghost" onClick={resetForm}>
+            Cancelar edição
+          </button>
+        </div>
+      ) : null}
+
       <QuoteClientFields client={client} onChange={setClient} />
 
       <SlitterItemsTable
@@ -339,12 +582,20 @@ export default function SlitterCalculator() {
       <QuoteConditions
         conditions={conditions}
         onChange={updateCondition}
-        onSave={handleSave}
-        onPdfCliente={() => handlePdf("cliente")}
+        onPdfCliente={() => void handlePdfCliente()}
         onPdfLiganer={() => handlePdf("liganer")}
         onPdfGestao={() => handlePdf("gestao")}
         statusText={status.text}
         statusKind={status.kind}
+        pdfClienteBusy={pdfClienteBusy}
+      />
+
+      <SavedBudgetsList
+        items={budgetList}
+        loading={budgetsLoading}
+        onPdf={(n) => void handleSavedPdf(n)}
+        onEdit={(n) => void handleSavedEdit(n)}
+        onDelete={(n) => void handleSavedDelete(n)}
       />
 
       <div className="grid results-grid">

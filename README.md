@@ -41,6 +41,13 @@ Testes do motor de corte:
 npm test
 ```
 
+## Orçamentos salvos
+
+- O botão **PDF cliente** salva o orçamento (localStorage) e abre o PDF com o número `AAMMDD##`.
+- Com `config.json` no host (`saveUrl` + `syncSecret`), também sincroniza via `api/budgets.php`.
+- Use `public/config.example.json` como modelo; **não** versionar o `config.json` real nem a pasta `data/`.
+- PDF Liganer / gestão não salvam orçamento.
+
 Peso da peça (kg):
 
 `largura(mm) × comprimento(mm) × espessura(mm) × densidade(g/cm³) / 1.000.000`

@@ -61,6 +61,8 @@ export type QuotePdfExportInput = {
   coil?: CoilInput;
   /** Opcional — layout chapas (cards Cliente / CNPJ). */
   client?: { name?: string; cnpj?: string };
+  /** Número fixo do orçamento (ex.: salvo). Se omitido, gera um novo. */
+  number?: string;
 };
 
 /** Colunas do PDF cliente — ordem fixa pedida (Item é a 1ª coluna à parte). */
@@ -486,6 +488,7 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
     plan = null,
     coil,
     client = {},
+    number: numberOpt,
   } = input;
   if (!items.length) return "";
 
@@ -497,7 +500,7 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
     if (!isInternalPdf(kind) && f.key === "frete") return false;
     return true;
   });
-  const number = localPrintNumber();
+  const number = String(numberOpt ?? "").trim() || localPrintNumber();
   const now = new Date().toLocaleString("pt-BR");
   const pdfClass = isInternalPdf(kind) ? "pdf-liganer" : "pdf-cliente";
   const logo =

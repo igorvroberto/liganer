@@ -39,6 +39,7 @@ describe("quotePdfExport (layout chapas)", () => {
       conditions: { ...EMPTY_QUOTE_CONDITIONS, pagamento: "30 dias" },
       summary: { totalKg: 2000, subtotal: 1000, ipi: 32.5, total: 1032.5, frete: 0 },
       client: { name: "Cliente Teste", cnpj: "00.000.000/0001-00" },
+      number: "26091401",
     });
     expect(html).toContain('class="pdf-cliente"');
     expect(html).toContain("Salvar em PDF");
@@ -46,8 +47,9 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).toContain("Condições");
     expect(html).toContain("30 dias");
     expect(html).toContain("Cliente Teste");
-    expect(html).toMatch(/<title>\d{8}<\/title>/);
-    expect(html).toMatch(/Nº \d{8}/);
+    expect(html).toContain("<title>26091401</title>");
+    expect(html).toContain("Nº 26091401");
+    expect(html).not.toContain("Orçamento Nº");
     expect(html).toContain("#c60000");
     expect(html).not.toContain("Resultado do corte");
     expect(html).not.toContain("Fator\nutilizado");
