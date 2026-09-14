@@ -41,21 +41,9 @@ function exportableFields(model: ModelDef, kind: PdfKind): FieldDef[] {
   return orderClientePdfFields(visible)
 }
 
-/** PDF cliente: preço sem IPI legado antes do subtotal legado, se ainda existir. */
+/** PDF cliente: ordem padrão dos campos visíveis. */
 function orderClientePdfFields(fields: FieldDef[]): FieldDef[] {
-  const byKey = new Map(fields.map((field) => [field.key, field]))
-  const result: FieldDef[] = []
-  for (const field of fields) {
-    if (field.key === '_preco_sem_ipi') continue
-    if (field.key === '_subtotal') {
-      const precoSemIpi = byKey.get('_preco_sem_ipi')
-      if (precoSemIpi) result.push(precoSemIpi)
-      result.push(field)
-      continue
-    }
-    result.push(field)
-  }
-  return result
+  return fields
 }
 
 export function exportExcel(
