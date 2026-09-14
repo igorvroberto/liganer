@@ -4,7 +4,7 @@ import type { Conditions, ItemRow, RowCalculation, Summary } from './types'
 export function numericValue(value: unknown): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0
   if (value === undefined || value === null || value === '') return 0
-  const text = String(value).trim()
+  const text = String(value).trim().replace(/%/g, '').trim()
   if (!text) return 0
   // 1.000 / 12.345.678 (pt-BR milhar sem decimal)
   if (!text.includes(',') && /^\d{1,3}(\.\d{3})+$/.test(text)) {

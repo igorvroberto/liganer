@@ -176,11 +176,15 @@ function CellControl({
   }
 
   if (Array.isArray(field.options)) {
-    const normalizedValue = value == null ? '' : String(value)
+    const raw = value == null ? '' : String(value).trim()
+    const normalizedValue =
+      field.options.find((opt) => opt === raw) ||
+      field.options.find((opt) => numericValue(opt) === numericValue(raw) && numericValue(raw) !== 0) ||
+      raw
     return (
       <select
         className="cell-control"
-        value={normalizedValue}
+        value={field.options.includes(normalizedValue) ? normalizedValue : ''}
         onChange={(e) => onChange(e.target.value)}
         aria-label={fieldLabel(field.label)}
       >
