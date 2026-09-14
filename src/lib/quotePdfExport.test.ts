@@ -56,7 +56,8 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).toContain("fitSheetToPage");
     expect(html).toContain('class="sheet-scale"');
     expect(html).not.toContain("Resultado do corte");
-    expect(html).not.toContain("Fator utilizado");
+    expect(html).not.toContain(">Fator<");
+    expect(html).not.toContain("Fator máximo");
     expect(html).not.toContain("Material");
     expect(html).not.toContain("Peso total");
     expect(html).not.toContain("Sobra mm");
@@ -205,10 +206,11 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).not.toContain("Sobra total");
     expect(html).not.toContain("desconsiderando o refile");
     expect(html).toContain("Peso necessário");
-    expect(html).toContain("Fator utilizado");
+    expect(html).toContain(">Fator<");
     expect(html).not.toContain("Observação");
     expect(html).not.toContain("Preço fator 100");
     expect(html).not.toContain("Fator máximo");
+    expect(html).not.toContain("Fator utilizado");
     expect(html).not.toContain(">Comissão<");
     expect(html).not.toContain("FIL IND MTO");
     expect(html).not.toContain("AÇOS PRIME MTO");
