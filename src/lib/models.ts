@@ -76,6 +76,7 @@ export const MODELS: ModelDef[] = [
         key: 'referencia',
         label: 'Referência',
         aliases: ['referencia', 'referência', 'codigo', 'código', 'ref'],
+        locked: true,
       },
       {
         key: 'material',
@@ -100,7 +101,7 @@ export const MODELS: ModelDef[] = [
         fractionDigits: 2,
         useGrouping: true,
       },
-      { key: 'um', label: 'UM', aliases: ['um', 'unidade medida'], default: 'KG' },
+      { key: 'um', label: 'UM', aliases: ['um', 'unidade medida'], default: 'KG', locked: true },
       {
         key: 'preco_sp',
         label: 'SP para SP\n(ICMS 18%)',
@@ -132,6 +133,7 @@ export const MODELS: ModelDef[] = [
         type: 'number',
         fractionDigits: 0,
         useGrouping: true,
+        locked: true,
       },
       {
         key: 'estoque_ce',
@@ -140,6 +142,7 @@ export const MODELS: ModelDef[] = [
         type: 'number',
         fractionDigits: 0,
         useGrouping: true,
+        locked: true,
       },
       calcField('_subtotal_sp', 'Subtotal\nSP', 'currency', 'subtotalSp'),
       calcField('_subtotal_ce', 'Subtotal\nCE', 'currency', 'subtotalCe'),
@@ -203,6 +206,21 @@ export const MODELS: ModelDef[] = [
       },
       calcField('_preco_total', 'Preço\ntotal', 'currency', 'precoTotal'),
       calcField('_preco_sem_ipi', 'Preço\nsem IPI', 'currency', 'precoSemIpi'),
+      // Por último, como no Excel exemplo (origem: catálogo do produto)
+      {
+        key: 'fator_real_18',
+        label: 'Fator real\n18%',
+        aliases: ['fator real 18', 'fator real 18%'],
+        type: 'number',
+        fractionDigits: 0,
+      },
+      {
+        key: 'fator_real_4',
+        label: 'Fator real\n4%',
+        aliases: ['fator real 4', 'fator real 4%'],
+        type: 'number',
+        fractionDigits: 0,
+      },
       ...footerFieldsModule(),
     ],
   },
@@ -233,6 +251,8 @@ export function itemHeaderLabel(label: string): string {
 export const HIDDEN_FROM_CLIENT = new Set([
   'fator_maximo',
   'fator_utilizado',
+  'fator_real_18',
+  'fator_real_4',
   'comissao',
   'preco_fator_100',
   '_preco_fator_utilizado',
