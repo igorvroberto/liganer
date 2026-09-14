@@ -4,16 +4,16 @@ import type { ItemRow } from './types'
 
 /**
  * Linha do catálogo ACE (planilha precos-ace.xlsx).
- * Layout atual observado (sem cabeçalhos nomeados):
- *   A código | B material | C UM | D preço | E/F reservados (orientação posterior)
+ * Layout posicional:
+ *   A código | B material | C UM | D preço | E estoque CE | F estoque SP
  */
 export type PriceCatalogRow = {
   codigo: string
   material: string
   um: string
   preco: number
-  estoque: number
-  valor: number
+  estoqueCe: number
+  estoqueSp: number
   icms: number
 }
 
@@ -154,8 +154,8 @@ function rowFromCells(
   material: unknown,
   um: unknown,
   preco: unknown,
-  estoque: unknown,
-  valor: unknown,
+  estoqueCe: unknown,
+  estoqueSp: unknown,
   icms: unknown,
 ): PriceCatalogRow | null {
   const materialText = String(material ?? '').trim()
@@ -168,8 +168,8 @@ function rowFromCells(
     material: materialText,
     um: String(um ?? '').trim().toUpperCase() || 'KG',
     preco: roundPrice(preco),
-    estoque: numericValue(estoque),
-    valor: roundPrice(valor),
+    estoqueCe: numericValue(estoqueCe),
+    estoqueSp: numericValue(estoqueSp),
     icms: numericValue(icms),
   }
 }
@@ -196,8 +196,8 @@ export function parsePriceWorkbook(buffer: ArrayBuffer | Uint8Array): ParsedPric
     const colUm = findHeaderColumn(headers, ['um', 'unidade', 'unidade medida'])
     const colPreco = findHeaderColumn(headers, ['preco', 'preço', 'preco fator 100', 'valor unitario'])
     const colCodigo = findHeaderColumn(headers, ['codigo', 'código', 'cod', 'sku', 'id'])
-    const colEstoque = findHeaderColumn(headers, ['estoque', 'saldo', 'qtd estoque'])
-    const colValor = findHeaderColumn(headers, ['valor', 'valor total'])
+    const colEstoqueCe = findHeaderColumn(headers, ['estoque ce', 'ce'])
+    const colEstoqueSp = findHeaderColumn(headers, ['estoque sp', 'sp'])
     const colIcms = findHeaderColumn(headers, ['icms'])
     if (colMaterial < 0) return { rows: [] }
 
@@ -208,8 +208,8 @@ export function parsePriceWorkbook(buffer: ArrayBuffer | Uint8Array): ParsedPric
         line[colMaterial],
         colUm >= 0 ? line[colUm] : 'KG',
         colPreco >= 0 ? line[colPreco] : 0,
-        colEstoque >= 0 ? line[colEstoque] : 0,
-        colValor >= 0 ? line[colValor] : 0,
+        colEstoqueCe >= 0 ? line[colEstoqueCe] : 0,
+        colEstoqueSp >= 0 ? line[colEstoqueSp] : 0,
         colIcms >= 0 ? line[colIcms] : 0,
       )
       if (parsed) rows.push(parsed)
@@ -217,7 +217,7 @@ export function parsePriceWorkbook(buffer: ArrayBuffer | Uint8Array): ParsedPric
     return { rows }
   }
 
-  // Layout posicional atual do HostGator (Column1…Column6 ou dados desde a 1ª linha).
+  // Layout posicional: A código | B material | C UM | D preço | E estoque CE | F estoque SP
   const start = looksLikePlaceholderHeader(headers) ? 1 : 0
   for (let r = start; r < matrix.length; r += 1) {
     const line = matrix[r] || []
@@ -331,14 +331,15 @@ export function usesPriceCatalog(modelId: string): boolean {
   return modelId === 'chapas'
 }
 
-/** Ao escolher um material do catálogo, preenche referência, UM, estoque e preços. */
+/** Ao escolher um material do catálogo, preenche referência, UM, estoques e preços. */
 export function applyCatalogMaterial(row: ItemRow, material: string): ItemRow {
   const next: ItemRow = { ...row, material }
   const match = findPriceRow(next)
   if (!match) return next
   if (match.codigo) next.referencia = match.codigo
   if (match.um) next.um = match.um
-  if (match.estoque) next.estoque_total = match.estoque
+  next.estoque_ce = match.estoqueCe || 0
+  next.estoque_sp = match.estoqueSp || 0
   // precos-ace.xlsx ainda tem um preço só — replica em SP e CE até haver colunas dual.
   if (match.preco) {
     next.preco_sp = match.preco

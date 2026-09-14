@@ -53,6 +53,7 @@ export function calculateRow(
   const calculoIpiCe = subtotalCe * ipiRate
   const precoComIpiSp = precoSp ? precoSp * (1 + ipiRate) : 0
   const precoComIpiCe = precoCe ? precoCe * (1 + ipiRate) : 0
+  const estoqueTotal = numericValue(row.estoque_ce) + numericValue(row.estoque_sp)
 
   const precoFatorUtilizado = fatorUtilizado ? precoFator100 / (fatorUtilizado / 100) : 0
   const precoBobinaFatorUtilizado = fatorUtilizado
@@ -81,6 +82,7 @@ export function calculateRow(
     calculoIpiCe,
     precoComIpiSp,
     precoComIpiCe,
+    estoqueTotal,
     pesoNecessario: 0,
     quantidadeCortes: 0,
     perdaMm: 0,

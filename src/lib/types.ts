@@ -60,6 +60,7 @@ export type RowCalculation = {
   calculoIpiCe: number
   precoComIpiSp: number
   precoComIpiCe: number
+  estoqueTotal: number
   pesoNecessario: number
   quantidadeCortes: number
   perdaMm: number

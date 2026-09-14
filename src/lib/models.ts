@@ -121,14 +121,10 @@ export const MODELS: ModelDef[] = [
         default: 5,
         fractionDigits: 0,
       },
-      {
-        key: 'estoque_total',
-        label: 'Estoque\ntotal',
-        aliases: ['estoque total', 'estoque'],
-        type: 'number',
+      calcField('_estoque_total', 'Estoque\ntotal', 'number', 'estoqueTotal', {
         fractionDigits: 0,
         useGrouping: true,
-      },
+      }),
       {
         key: 'estoque_sp',
         label: 'Estoque\nSP',
@@ -250,6 +246,7 @@ export const HIDDEN_FROM_CLIENT = new Set([
   '_acrescimo_perda_valor',
   '_preco_total',
   'estoque_total',
+  '_estoque_total',
   'estoque_sp',
   'estoque_ce',
   '_calculo_ipi_sp',
