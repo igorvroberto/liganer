@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { applyFatorRules, calculateRow, calculateSummary, materialHasImp, numericValue, resolveFatorReal4 } from './lib/calc'
+import { applyFatorRules, calculateRow, calculateSummary, materialHasImp, numericValue, resolveFatorUtilizado } from './lib/calc'
 import { exportExcel, exportPdf } from './lib/export'
 import {
   displayFieldValue,
@@ -150,10 +150,12 @@ function CellControl({
   row: ItemRow
   onChange: (value: string | number | boolean) => void
 }) {
-  const lockFatorReal4 = field.key === 'fator_real_4' && !materialHasImp(row.material)
-  if (isCalculatedForRow(field) || field.locked || lockFatorReal4) {
+  const lockFatorUtilizado = field.key === 'fator_utilizado' && !materialHasImp(row.material)
+  if (isCalculatedForRow(field) || field.locked || lockFatorUtilizado) {
     const displayValue =
-      field.key === 'fator_real_4' && !materialHasImp(row.material) ? resolveFatorReal4(row) : value
+      field.key === 'fator_utilizado' && !materialHasImp(row.material)
+        ? resolveFatorUtilizado(row)
+        : value
     return <span className="calculated-cell">{displayFieldValue(displayValue, field)}</span>
   }
 
@@ -620,13 +622,13 @@ export default function App() {
                         ? field.calc
                           ? calc[field.calc]
                           : row[field.key]
-                        : field.key === 'fator_real_4' && !materialHasImp(row.material)
-                          ? resolveFatorReal4(row)
+                        : field.key === 'fator_utilizado' && !materialHasImp(row.material)
+                          ? resolveFatorUtilizado(row)
                           : row[field.key]
                       const lockedCell =
                         isCalculatedForRow(field) ||
                         field.locked ||
-                        (field.key === 'fator_real_4' && !materialHasImp(row.material))
+                        (field.key === 'fator_utilizado' && !materialHasImp(row.material))
                       return (
                         <td
                           key={field.key}

@@ -25,16 +25,21 @@ export function percentRate(value: unknown): number {
   return n >= 1 ? n / 100 : n
 }
 
-/** Itens sem "IMP" na descrição: fator real 4% fixo em 170. */
+/** Itens sem "IMP" na descrição: fator utilizado / fator real 4% fixos em 170. */
 export function materialHasImp(material: unknown): boolean {
   return /\bIMP\b/i.test(String(material ?? ''))
 }
 
 const FATOR_REAL_4_SEM_IMP = 170
 
-export function resolveFatorReal4(row: ItemRow): number {
+/** Fator real 4% = fator utilizado (sem IMP → 170). */
+export function resolveFatorUtilizado(row: ItemRow): number {
   if (!materialHasImp(row.material)) return FATOR_REAL_4_SEM_IMP
-  return numericValue(row.fator_real_4)
+  return numericValue(row.fator_utilizado)
+}
+
+export function resolveFatorReal4(row: ItemRow): number {
+  return resolveFatorUtilizado(row)
 }
 
 /** Fator real 18% = fator real 4% − 25. */
@@ -43,21 +48,24 @@ export function resolveFatorReal18(row: ItemRow): number {
   return fator4 ? fator4 - 25 : 0
 }
 
-/** Aplica teto de fator e fator real 4% quando o material não tem IMP. */
+/**
+ * Sincroniza fatores:
+ * - fator real 4% = fator utilizado
+ * - fator real 18% = fator real 4% − 25
+ * - sem IMP: fator utilizado = 170 (e teto em fator máximo)
+ */
 export function applyFatorRules(row: ItemRow): ItemRow {
   const next: ItemRow = { ...row }
-  if (materialHasImp(next.material)) {
-    const fator4 = numericValue(next.fator_real_4)
-    next.fator_real_18 = fator4 ? fator4 - 25 : 0
-    return next
+
+  if (!materialHasImp(next.material)) {
+    next.fator_utilizado = FATOR_REAL_4_SEM_IMP
+    const max = numericValue(next.fator_maximo)
+    if (max > FATOR_REAL_4_SEM_IMP) next.fator_maximo = FATOR_REAL_4_SEM_IMP
   }
 
-  next.fator_real_4 = FATOR_REAL_4_SEM_IMP
-  next.fator_real_18 = FATOR_REAL_4_SEM_IMP - 25
-  const max = numericValue(next.fator_maximo)
-  const used = numericValue(next.fator_utilizado)
-  if (max > FATOR_REAL_4_SEM_IMP) next.fator_maximo = FATOR_REAL_4_SEM_IMP
-  if (used > FATOR_REAL_4_SEM_IMP) next.fator_utilizado = FATOR_REAL_4_SEM_IMP
+  const fatorUtilizado = resolveFatorUtilizado(next)
+  next.fator_real_4 = fatorUtilizado || 0
+  next.fator_real_18 = fatorUtilizado ? fatorUtilizado - 25 : 0
   return next
 }
 
@@ -87,10 +95,9 @@ export function calculateRow(
   const fatorReal18 = resolveFatorReal18(row)
   const fatorReal4 = resolveFatorReal4(row)
   let fatorMaximo = numericValue(row.fator_maximo)
-  let fatorUtilizado = numericValue(row.fator_utilizado)
-  if (!materialHasImp(row.material)) {
-    if (fatorMaximo > FATOR_REAL_4_SEM_IMP) fatorMaximo = FATOR_REAL_4_SEM_IMP
-    if (fatorUtilizado > FATOR_REAL_4_SEM_IMP) fatorUtilizado = FATOR_REAL_4_SEM_IMP
+  const fatorUtilizado = resolveFatorUtilizado(row)
+  if (!materialHasImp(row.material) && fatorMaximo > FATOR_REAL_4_SEM_IMP) {
+    fatorMaximo = FATOR_REAL_4_SEM_IMP
   }
 
   const precoSp = priceFromFatorReal(precoFator100, fatorReal18)
@@ -133,6 +140,7 @@ export function calculateRow(
     precoComIpiSp,
     precoComIpiCe,
     estoqueTotal,
+    fatorReal4,
     fatorReal18,
     pesoNecessario: 0,
     quantidadeCortes: 0,
