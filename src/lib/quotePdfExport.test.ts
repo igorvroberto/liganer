@@ -51,16 +51,20 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).toContain("Nº 26091401");
     expect(html).not.toContain("Orçamento Nº");
     expect(html).toContain("#c60000");
+    expect(html).toContain("size: 210mm 297mm");
+    expect(html).toContain("Orientação: retrato");
+    expect(html).toContain("fitSheetToPage");
+    expect(html).toContain('class="sheet-scale"');
     expect(html).not.toContain("Resultado do corte");
-    expect(html).not.toContain("Fator\nutilizado");
+    expect(html).not.toContain("Fator utilizado");
     expect(html).not.toContain("Material");
-    expect(html).not.toContain("Peso\ntotal");
-    expect(html).not.toContain("Sobra\nmm");
-    // Colunas do PDF cliente na ordem pedida (Item + campos).
+    expect(html).not.toContain("Peso total");
+    expect(html).not.toContain("Sobra mm");
+    // Colunas do PDF cliente na ordem pedida (Item + campos) — cabeçalhos em uma linha.
     const headMatch = html.match(/<table class="items">[\s\S]*?<thead>[\s\S]*?<tr>([\s\S]*?)<\/tr>[\s\S]*?<\/thead>/);
     expect(headMatch).toBeTruthy();
     const headers = [...(headMatch?.[1].matchAll(/<th[^>]*>([\s\S]*?)<\/th>/g) ?? [])].map((m) =>
-      m[1].replace(/<br\s*\/?>/gi, "\n").replace(/&nbsp;/g, " ").trim(),
+      m[1].replace(/<br\s*\/?>/gi, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim(),
     );
     expect(headers).toEqual([
       "Item",
@@ -71,9 +75,9 @@ describe("quotePdfExport (layout chapas)", () => {
       "Largura",
       "Comprimento",
       "Quantidade",
-      "Peso\nunitário",
+      "Peso unitário",
       "ICMS",
-      "Preço\nsem\nIPI",
+      "Preço sem IPI",
       "Subtotal",
       "Observação",
     ]);
@@ -201,16 +205,16 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).not.toContain("Sobra total");
     expect(html).not.toContain("desconsiderando o refile");
     expect(html).toContain("Peso necessário");
-    expect(html).toContain("Fator\nutilizado");
+    expect(html).toContain("Fator utilizado");
     expect(html).not.toContain("Observação");
-    expect(html).not.toContain("Preço\nfator\n100");
-    expect(html).not.toContain("Fator\nmáximo");
+    expect(html).not.toContain("Preço fator 100");
+    expect(html).not.toContain("Fator máximo");
     expect(html).not.toContain(">Comissão<");
-    expect(html).not.toContain("FIL\nIND\nMTO");
-    expect(html).not.toContain("AÇOS\nPRIME\nMTO");
-    expect(html).not.toContain("IMG\nMTO");
-    expect(html).not.toContain("CSA\nMTO");
-    expect(html).not.toContain("TETTO\nMTO");
+    expect(html).not.toContain("FIL IND MTO");
+    expect(html).not.toContain("AÇOS PRIME MTO");
+    expect(html).not.toContain("IMG MTO");
+    expect(html).not.toContain("CSA MTO");
+    expect(html).not.toContain("TETTO MTO");
   });
 
 
@@ -264,7 +268,7 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(onlyCnpj).toContain("client-card--single");
   });
 
-  it("colunas do PDF seguem o conteúdo, sem esticar pela página/cabeçalho", () => {
+  it("colunas do PDF seguem o conteúdo e a folha escala em retrato", () => {
     const html = buildQuotePdfHtml({
       kind: "cliente",
       items: blanks,
@@ -276,8 +280,11 @@ describe("quotePdfExport (layout chapas)", () => {
     expect(html).not.toContain("table-layout: fixed");
     expect(html).toContain("width: max-content");
     expect(html).toContain("overflow: visible");
+    expect(html).toContain("white-space: nowrap");
+    expect(html).toContain("word-break: keep-all");
     expect(html).not.toContain("text-overflow: clip");
-    expect(html).not.toContain("width: 1%");
+    expect(html).toContain("size: 210mm 297mm");
+    expect(html).toContain("fitSheetToPage");
     expect(html).toMatch(/table\.items\s*\{[^}]*width:\s*max-content/);
   });
 
