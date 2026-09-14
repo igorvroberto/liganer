@@ -41,9 +41,19 @@ function exportableFields(model: ModelDef, kind: PdfKind): FieldDef[] {
   return orderClientePdfFields(visible)
 }
 
-/** PDF cliente: ordem padrão dos campos visíveis. */
+/** PDF cliente: após Subtotal → Estoque total, Estoque SP, Estoque CE. */
 function orderClientePdfFields(fields: FieldDef[]): FieldDef[] {
-  return fields
+  const stockOrder = ['_estoque_total', 'estoque_sp', 'estoque_ce']
+  const stockKeys = new Set(stockOrder)
+  const stock = stockOrder
+    .map((key) => fields.find((f) => f.key === key))
+    .filter((f): f is FieldDef => Boolean(f))
+  const rest = fields.filter((f) => !stockKeys.has(f.key))
+  const subtotalIdx = rest.findIndex(
+    (f) => f.key === '_subtotal_sp' || f.key === '_subtotal_ce',
+  )
+  if (subtotalIdx < 0) return [...rest, ...stock]
+  return [...rest.slice(0, subtotalIdx + 1), ...stock, ...rest.slice(subtotalIdx + 1)]
 }
 
 export function exportExcel(
