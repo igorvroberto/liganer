@@ -23,7 +23,8 @@ async function main() {
     localStorage.removeItem('liganer-comparador-preco-saved-v1')
   })
   await page.reload({ waitUntil: 'networkidle' })
-  await page.getByRole('button', { name: 'Recarregar exemplo' }).click()
+  await page.evaluate(() => { localStorage.removeItem('liganer-comparador-preco-draft-v1'); localStorage.removeItem('liganer-comparador-preco-saved-v1'); })
+  await page.reload({ waitUntil: 'networkidle' })
   await page.waitForTimeout(400)
 
   // 1) No subtitle

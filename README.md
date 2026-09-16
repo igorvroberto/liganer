@@ -13,7 +13,7 @@ https://vendas.liganer.com.br/orcamento/chapas-bobinas/
 - Vite + React + TypeScript
 - Base path `/comparador-preco/`
 - Persistência local (`localStorage`)
-- Exportação Excel / CSV (`xlsx`)
+- Exportação PDF das comparações salvas
 
 ## Desenvolvimento
 

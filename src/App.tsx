@@ -1,20 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { calculateRow, createEmptyRow, numericValue } from './lib/calc'
-import {
-  downloadTextFile,
-  exportComparisonCsv,
-  exportComparisonExcel,
-  exportComparisonPdf,
-} from './lib/export'
+import { exportComparisonPdf } from './lib/export'
 import {
   formatDecimalInput,
   formatNullableCurrency,
   formatNullableNumber,
   formatNullablePercent,
-  formatPercent,
 } from './lib/format'
 import {
-  clearDraft,
   defaultSession,
   findSavedComparison,
   loadDraft,
@@ -230,40 +223,6 @@ export default function App() {
     }))
   }
 
-  function resetSample() {
-    clearDraft()
-    setEditing(null)
-    setDraftInputs({})
-    setPisDraft(null)
-    setSession(defaultSession())
-    setStatus({ kind: 'ok', text: 'Dados de exemplo da planilha recarregados.' })
-  }
-
-  function handleExportExcel() {
-    try {
-      exportComparisonExcel(session.rows, session.pisCofins, {
-        clientName: session.clientName,
-        number: editing?.number,
-      })
-      setStatus({ kind: 'ok', text: 'Excel exportado.' })
-    } catch (error) {
-      setStatus({
-        kind: 'error',
-        text: error instanceof Error ? error.message : 'Falha ao exportar Excel.',
-      })
-    }
-  }
-
-  function handleExportCsv() {
-    const csv = exportComparisonCsv(session.rows, session.pisCofins)
-    downloadTextFile(
-      `liganer-comparador-preco-${new Date().toISOString().slice(0, 10)}.csv`,
-      csv,
-      'text/csv;charset=utf-8',
-    )
-    setStatus({ kind: 'ok', text: 'CSV exportado.' })
-  }
-
   function handleSave() {
     if (!session.rows.length) {
       setStatus({ kind: 'error', text: 'Adicione ao menos um item antes de salvar.' })
@@ -383,15 +342,6 @@ export default function App() {
             <button type="button" className="btn btn-primary" onClick={addRow}>
               + Item
             </button>
-            <button type="button" className="btn btn-secondary" onClick={resetSample}>
-              Recarregar exemplo
-            </button>
-            <button type="button" className="btn btn-dark" onClick={handleExportExcel}>
-              Excel
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={handleExportCsv}>
-              CSV
-            </button>
           </div>
         </div>
 
@@ -401,14 +351,6 @@ export default function App() {
             atualizar.
           </p>
         ) : null}
-
-        <div className="notice">
-          Campos em destaque vermelho-claro são calculados: nosso preço = preço fator 100 ÷
-          fator × 100; preço equivalente ajusta ICMS/PIS; diferença = equivalente ÷ preço
-          cliente − 1; preço alvo e fator-alvo fecham a conta para empatar com o
-          concorrente. PIS+COFINS atual: {formatPercent(session.pisCofins)}. Use vírgula para
-          decimais.
-        </div>
 
         <div className="table-scroll">
           <table className="items-table">
