@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateRow, createEmptyRow } from './calc'
+import { calculateRow, createEmptyRow, numericValue } from './calc'
 
 describe('calculateRow (planilha Diferença preço e ICMS)', () => {
   it('reproduz a linha do tubo 5/8 com ICMS iguais', () => {
@@ -50,5 +50,11 @@ describe('calculateRow (planilha Diferença preço e ICMS)', () => {
     expect(result.ourPrice).toBeNull()
     expect(result.equivalentPrice).toBeNull()
     expect(result.priceDiff).toBeNull()
+  })
+
+  it('interpreta decimal com ponto sem tratar como milhar', () => {
+    expect(numericValue('14.50')).toBeCloseTo(14.5, 6)
+    expect(numericValue('26.07810689')).toBeCloseTo(26.07810689, 8)
+    expect(numericValue('1.234,56')).toBeCloseTo(1234.56, 6)
   })
 })

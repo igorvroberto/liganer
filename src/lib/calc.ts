@@ -4,11 +4,12 @@ export function numericValue(value: unknown): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0
   if (typeof value === 'boolean') return value ? 1 : 0
   if (value == null || value === '') return 0
-  const normalized = String(value)
-    .trim()
-    .replace(/\s/g, '')
-    .replace(/\./g, '')
-    .replace(',', '.')
+  const raw = String(value).trim().replace(/\s/g, '')
+  // Aceita pt-BR (1.234,56) e decimal com ponto (14.50 / 26.078).
+  let normalized = raw
+  if (raw.includes(',')) {
+    normalized = raw.replace(/\./g, '').replace(',', '.')
+  }
   const n = Number(normalized)
   return Number.isFinite(n) ? n : 0
 }
