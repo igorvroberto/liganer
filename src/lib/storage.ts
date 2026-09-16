@@ -29,9 +29,12 @@ function setItem(key: string, value: string): void {
   }
 }
 
-function stripLegacyReference(row: CompareRowInput & { reference?: string }): CompareRowInput {
+function normalizeRow(row: CompareRowInput & { reference?: string }): CompareRowInput {
   const { reference: _reference, ...rest } = row
-  return rest
+  return {
+    ...rest,
+    observation: rest.observation ?? '',
+  }
 }
 
 export function loadDraft(): CompareSession | null {
@@ -42,7 +45,7 @@ export function loadDraft(): CompareSession | null {
     if (!parsed || !Array.isArray(parsed.rows)) return null
     return {
       ...parsed,
-      rows: parsed.rows.map((row) => stripLegacyReference(row)),
+      rows: parsed.rows.map((row) => normalizeRow(row)),
     }
   } catch {
     return null
@@ -95,7 +98,7 @@ export function loadSavedComparisons(): SavedComparison[] {
     const list = JSON.parse(getItem(SAVED_KEY, '[]')) as SavedComparison[]
     return list.map((item) => ({
       ...item,
-      rows: (item.rows ?? []).map((row) => stripLegacyReference(row)),
+      rows: (item.rows ?? []).map((row) => normalizeRow(row)),
     }))
   } catch {
     return []

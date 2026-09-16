@@ -3,6 +3,7 @@ import { calculateRow, createEmptyRow, numericValue } from './lib/calc'
 import { exportComparisonPdf } from './lib/export'
 import {
   formatDecimalInput,
+  formatNumber,
   formatNullableCurrency,
   formatNullableNumber,
   formatNullablePercent,
@@ -32,6 +33,7 @@ type EditableKey = keyof Pick<
   | 'ourProduct'
   | 'ourIcms'
   | 'factorUsed'
+  | 'observation'
   | 'competitor'
   | 'clientProduct'
   | 'clientPrice'
@@ -57,6 +59,10 @@ function parseCellValue(key: EditableKey, raw: string): string | number | '' {
   if (!NUMBER_KEYS.has(key)) return raw
   const trimmed = raw.trim()
   if (trimmed === '' || trimmed === ',' || trimmed === '-' || trimmed === '-,') return ''
+  if (key === 'qty') {
+    const digits = trimmed.replace(/\D/g, '')
+    return digits === '' ? '' : Number(digits)
+  }
   const n = numericValue(trimmed)
   if (PERCENT_KEYS.has(key) && n > 1) return n / 100
   return n
@@ -64,6 +70,9 @@ function parseCellValue(key: EditableKey, raw: string): string | number | '' {
 
 function displayStoredValue(key: EditableKey, value: string | number | ''): string {
   if (value === '' || value == null) return ''
+  if (key === 'qty' && typeof value === 'number') {
+    return formatNumber(value, 0, true)
+  }
   if (PERCENT_KEYS.has(key) && typeof value === 'number') {
     return String(Number((value * 100).toFixed(4))).replace('.', ',')
   }
@@ -145,6 +154,21 @@ export default function App() {
   }
 
   function updateRow(id: string, key: EditableKey, raw: string) {
+    if (key === 'qty') {
+      const digits = raw.replace(/\D/g, '')
+      const parsed: number | '' = digits === '' ? '' : Number(digits)
+      setDraftInputs((prev) => {
+        const next = { ...prev }
+        delete next[draftKey(id, key)]
+        return next
+      })
+      setSession((prev) => ({
+        ...prev,
+        rows: prev.rows.map((row) => (row.id === id ? { ...row, qty: parsed } : row)),
+      }))
+      return
+    }
+
     const dk = draftKey(id, key)
     if (NUMBER_KEYS.has(key)) {
       setDraftInputs((prev) => ({ ...prev, [dk]: raw }))
@@ -357,13 +381,14 @@ export default function App() {
             <thead>
               <tr>
                 <th className="delete-column" />
-                <th className="item-number-column">#</th>
+                <th className="item-number-column">ITEM</th>
                 <th>Qde</th>
                 <th>UM</th>
                 <th>Nosso produto</th>
                 <th>Nosso{'\n'}preço</th>
                 <th>Nosso{'\n'}ICMS %</th>
                 <th>Fator</th>
+                <th>Observação</th>
                 <th>Concorrente</th>
                 <th>Produto cliente</th>
                 <th>Preço{'\n'}cliente</th>
@@ -371,7 +396,7 @@ export default function App() {
                 <th>Preço{'\n'}equivalente</th>
                 <th>Diferença{'\n'}preço</th>
                 <th>Preço{'\n'}alvo</th>
-                <th>Fator-alvo</th>
+                <th className="highlight-factor">Fator-alvo</th>
                 <th>Preço{'\n'}fator 100</th>
                 <th>Origem</th>
                 <th>Destino</th>
@@ -445,6 +470,14 @@ export default function App() {
                   <td>
                     <input
                       className="cell-control"
+                      value={row.observation ?? ''}
+                      onChange={(e) => updateRow(row.id, 'observation', e.target.value)}
+                      aria-label={`Observação linha ${index + 1}`}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      className="cell-control"
                       value={row.competitor}
                       onChange={(e) => updateRow(row.id, 'competitor', e.target.value)}
                       aria-label={`Concorrente linha ${index + 1}`}
@@ -491,7 +524,7 @@ export default function App() {
                       {formatNullableCurrency(calc.targetPrice)}
                     </span>
                   </td>
-                  <td className="formula-cell">
+                  <td className="formula-cell highlight-factor">
                     <span className="calculated-cell">
                       {formatNullableNumber(calc.targetFactor, 2)}
                     </span>

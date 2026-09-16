@@ -88,6 +88,7 @@ export function createEmptyRow(partial?: Partial<CompareRowInput>): CompareRowIn
     ourProduct: '',
     ourIcms: 0.18,
     factorUsed: 157,
+    observation: '',
     competitor: '',
     clientProduct: '',
     clientPrice: '',

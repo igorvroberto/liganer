@@ -9,6 +9,7 @@ export type CompareRowInput = {
   ourProduct: string
   ourIcms: number | ''
   factorUsed: number | ''
+  observation: string
   competitor: string
   clientProduct: string
   clientPrice: number | ''
