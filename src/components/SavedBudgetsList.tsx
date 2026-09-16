@@ -3,7 +3,9 @@ import type { BudgetListItem } from "../lib/budgetTypes";
 type Props = {
   items: BudgetListItem[];
   loading?: boolean;
-  onPdf: (number: string) => void;
+  onPdfCliente: (number: string) => void;
+  onPdfLiganer: (number: string) => void;
+  onPdfGestao: (number: string) => void;
   onXlsx: (number: string) => void;
   onEdit: (number: string) => void;
   onDelete: (number: string) => void;
@@ -19,7 +21,9 @@ function formatWhen(iso: string): string {
 export default function SavedBudgetsList({
   items,
   loading = false,
-  onPdf,
+  onPdfCliente,
+  onPdfLiganer,
+  onPdfGestao,
   onXlsx,
   onEdit,
   onDelete,
@@ -31,11 +35,11 @@ export default function SavedBudgetsList({
       </div>
       {loading ? <p className="note">Carregando orçamentos…</p> : null}
       {!loading && items.length === 0 ? (
-        <p className="note">Nenhum orçamento salvo ainda. Gere um PDF cliente para salvar.</p>
+        <p className="note">Nenhum orçamento salvo ainda. Use Salvar nas Condições.</p>
       ) : null}
       {items.length > 0 ? (
-        <div className="table-scroll">
-          <table className="items-table saved-budgets-table">
+        <div className="table-scroll saved-budgets-scroll">
+          <table className="saved-budgets-table">
             <thead>
               <tr>
                 <th>Nome do orçamento</th>
@@ -48,24 +52,52 @@ export default function SavedBudgetsList({
             <tbody>
               {items.map((row) => (
                 <tr key={`${row.source}-${row.number}`}>
-                  <td>
-                    <strong>{row.number}</strong>
-                  </td>
+                  <td>{row.number}</td>
                   <td>{row.client || "—"}</td>
                   <td>{row.cnpj || "—"}</td>
                   <td>{formatWhen(row.savedAt || row.createdAt)}</td>
                   <td>
                     <div className="saved-budget-actions">
-                      <button type="button" className="btn btn-secondary" onClick={() => onPdf(row.number)}>
-                        PDF
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-compact"
+                        onClick={() => onPdfCliente(row.number)}
+                      >
+                        PDF cliente
                       </button>
-                      <button type="button" className="btn btn-secondary" onClick={() => onXlsx(row.number)}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-compact"
+                        onClick={() => onPdfLiganer(row.number)}
+                      >
+                        PDF Liganer
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-compact"
+                        onClick={() => onPdfGestao(row.number)}
+                      >
+                        PDF gestão
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-compact"
+                        onClick={() => onXlsx(row.number)}
+                      >
                         XLSX
                       </button>
-                      <button type="button" className="btn btn-secondary" onClick={() => onEdit(row.number)}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-compact"
+                        onClick={() => onEdit(row.number)}
+                      >
                         Editar
                       </button>
-                      <button type="button" className="btn btn-ghost" onClick={() => onDelete(row.number)}>
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-compact"
+                        onClick={() => onDelete(row.number)}
+                      >
                         Excluir
                       </button>
                     </div>

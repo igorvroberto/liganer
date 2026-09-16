@@ -6,24 +6,20 @@ import {
 type Props = {
   conditions: QuoteConditions;
   onChange: (key: keyof QuoteConditions, value: string) => void;
-  onPdfCliente: () => void;
-  onPdfLiganer: () => void;
-  onPdfGestao: () => void;
+  onSave: () => void;
   statusText?: string;
   statusKind?: "" | "ok" | "error";
-  pdfClienteBusy?: boolean;
+  saveBusy?: boolean;
 };
 
-/** Condições + ações de PDF (salvamento ocorre ao gerar PDF cliente). */
+/** Condições + ação Salvar (PDF/XLSX ficam em Orçamentos salvos). */
 export default function QuoteConditions({
   conditions,
   onChange,
-  onPdfCliente,
-  onPdfLiganer,
-  onPdfGestao,
+  onSave,
   statusText,
   statusKind = "",
-  pdfClienteBusy = false,
+  saveBusy = false,
 }: Props) {
   return (
     <section className="card">
@@ -58,16 +54,10 @@ export default function QuoteConditions({
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={onPdfCliente}
-          disabled={pdfClienteBusy}
+          onClick={onSave}
+          disabled={saveBusy}
         >
-          {pdfClienteBusy ? "Salvando…" : "PDF cliente"}
-        </button>
-        <button type="button" className="btn btn-secondary" onClick={onPdfLiganer}>
-          PDF Liganer
-        </button>
-        <button type="button" className="btn btn-secondary" onClick={onPdfGestao}>
-          PDF gestão
+          {saveBusy ? "Salvando…" : "Salvar"}
         </button>
       </div>
       {statusText ? <p className={`status ${statusKind}`}>{statusText}</p> : null}

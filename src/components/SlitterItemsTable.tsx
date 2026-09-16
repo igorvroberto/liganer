@@ -11,7 +11,7 @@ import {
 } from "../lib/blankSync";
 import {
   fmtCurrency,
-  fmtMm,
+  fmtDecimal2,
   fmtNumber,
   fmtPct,
   fmtThickness,
@@ -386,8 +386,7 @@ export default function SlitterItemsTable({
                 <th>Subtotal</th>
                 <th>Observação</th>
                 <th>{"Preço\nfator\n100"}</th>
-                <th>{"Fator\nmáximo"}</th>
-                <th>{"Fator\nutilizado"}</th>
+                <th>Fator</th>
                 <th>{"Preço\nfator\nutilizado"}</th>
                 <th>Comissão</th>
                 <th>{"Preço\nserviço"}</th>
@@ -618,15 +617,15 @@ export default function SlitterItemsTable({
                           className="cell-control"
                           type="number"
                           min={0}
-                          step={0.001}
-                          value={unitKg > 0 ? Number(unitKg.toFixed(3)) : ""}
+                          step={0.01}
+                          value={unitKg > 0 ? Number(unitKg.toFixed(2)) : ""}
                           title="Altera comprimento e peso total (quantidade × peso unitário)"
                           onChange={(e) => updateUnitWeight(item.id, e.target.value)}
                           aria-label="Peso unitário"
                         />
                       ) : (
                         <span className="calculated-cell">
-                          {unitKg > 0 ? `${fmtNumber(unitKg, 3)} Kg` : "—"}
+                          {unitKg > 0 ? fmtDecimal2(unitKg) : "—"}
                         </span>
                       )}
                     </td>
@@ -685,28 +684,16 @@ export default function SlitterItemsTable({
                       <input
                         className="cell-control"
                         inputMode="decimal"
-                        value={item.maxFactor != null ? String(item.maxFactor).replace(".", ",") : ""}
-                        onChange={(e) => {
-                          const v = parseDecimalBr(e.target.value);
-                          updateItem(item.id, { maxFactor: v ?? undefined });
-                        }}
-                        aria-label="Fator máximo"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        className="cell-control"
-                        inputMode="decimal"
                         value={item.usedFactor != null ? String(item.usedFactor).replace(".", ",") : ""}
                         onChange={(e) => {
                           const v = parseDecimalBr(e.target.value);
                           updateItem(item.id, { usedFactor: v ?? undefined });
                         }}
-                        aria-label="Fator utilizado"
+                        aria-label="Fator"
                       />
                     </td>
                     <td className="formula-cell">
-                      <span className="calculated-cell" title="Preço fator 100 ÷ (fator utilizado / 100)">
+                      <span className="calculated-cell" title="Preço fator 100 ÷ (fator / 100)">
                         {commercial.usedPrice != null ? fmtCurrency(commercial.usedPrice) : "—"}
                       </span>
                     </td>
@@ -783,7 +770,7 @@ export default function SlitterItemsTable({
                     </td>
                     <td className="formula-cell">
                       <span className="calculated-cell" title="Sobra longitudinal (largura)">
-                        {commercial.perdaMm != null ? fmtMm(commercial.perdaMm) : "—"}
+                        {commercial.perdaMm != null ? fmtNumber(commercial.perdaMm, 2) : "—"}
                       </span>
                     </td>
                     <td className="formula-cell">

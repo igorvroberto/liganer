@@ -46,7 +46,6 @@ function isInternalPdf(kind: PdfKind): boolean {
 const GESTAO_EXCLUDED_COLUMNS = new Set([
   "observation",
   "priceFactor100",
-  "maxFactor",
   "commission",
   ...MTO_FIELDS.map((f) => f.key),
 ]);
@@ -105,8 +104,13 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/** Cabeçalho em uma linha (espaços no lugar de \\n), como fieldLabel do chapas. */
 function itemHeaderLabel(label: string): string {
-  return label;
+  return String(label ?? "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function logoUrl(): string {
@@ -159,7 +163,7 @@ function allColumns(): PdfColumn[] {
     {
       key: "unitKg",
       label: "Peso\nunitário",
-      value: ({ unitKg }) => (unitKg > 0 ? fmtNumber(unitKg, 3) : "—"),
+      value: ({ unitKg }) => (unitKg > 0 ? fmtDecimal2(unitKg) : "—"),
     },
     {
       key: "minKg",
@@ -196,13 +200,8 @@ function allColumns(): PdfColumn[] {
         item.priceFactor100 != null ? fmtCurrency(item.priceFactor100) : "—",
     },
     {
-      key: "maxFactor",
-      label: "Fator\nmáximo",
-      value: ({ item }) => (item.maxFactor != null ? fmtNumber(item.maxFactor, 2) : "—"),
-    },
-    {
       key: "usedFactor",
-      label: "Fator\nutilizado",
+      label: "Fator",
       value: ({ item }) => (item.usedFactor != null ? fmtNumber(item.usedFactor, 2) : "—"),
     },
     {
@@ -596,7 +595,11 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
   <meta charset="utf-8" />
   <title>${escapeHtml(number)}</title>
   <style>
-    @page { size: A4 landscape; margin: 8mm; }
+    /* A4 retrato (210×297mm). */
+    @page {
+      size: 210mm 297mm;
+      margin: 8mm;
+    }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
@@ -609,12 +612,18 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       print-color-adjust: exact;
       color-adjust: exact;
     }
+    body {
+      min-width: 210mm;
+      max-width: 210mm;
+    }
     body.pdf-liganer { font-size: 7px; }
 
     .print-actions {
       display: flex;
+      flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 8px;
+      align-items: center;
+      gap: 8px 12px;
       margin-bottom: 10px;
     }
     .print-actions button {
@@ -626,8 +635,21 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       font-weight: 700;
       cursor: pointer;
     }
+    .print-actions .print-hint {
+      color: #56635d;
+      font-size: 11px;
+    }
     @media print {
       .print-actions { display: none; }
+      @page {
+        size: 210mm 297mm;
+        margin: 8mm;
+      }
+      html, body {
+        width: 210mm;
+        min-height: 297mm;
+        max-width: none;
+      }
       html, body, body * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
@@ -707,42 +729,42 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
 
     table.items {
       width: max-content;
-      max-width: 100%;
+      max-width: none;
       border-collapse: collapse;
       table-layout: auto;
     }
     table.items th,
     table.items td {
       border: 1px solid #d8dfd9;
-      padding: 5px 4px;
+      padding: 4px 5px;
       vertical-align: middle;
       text-align: center;
       overflow: visible;
-      /* Largura pelo conteúdo (cabeçalho e dados juntos), sem esticar pela página. */
       width: auto;
+      max-width: none;
       white-space: nowrap;
+      word-break: keep-all;
+      overflow-wrap: normal;
     }
     table.items th {
       background: #c60000;
       color: #fff;
-      font-size: 7.5px;
+      font-size: 7px;
       font-weight: 800;
       text-transform: uppercase;
       line-height: 1.15;
-      /* Rótulo em uma linha — largura pela célula, não pela página. */
-      white-space: nowrap;
       letter-spacing: 0.01em;
     }
     table.items td {
-      white-space: nowrap;
+      font-size: 7.5px;
     }
     table.items td.item-no {
-      width: 28px;
+      width: 1%;
       font-weight: 700;
       color: #56635d;
     }
     table.items th.item-no {
-      width: 28px;
+      width: 1%;
     }
     body.pdf-liganer table.items th {
       font-size: 5px;
@@ -752,6 +774,16 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
       font-size: 5.4px;
       padding: 2px 1px;
       line-height: 1.12;
+    }
+
+    .sheet-scale {
+      width: 100%;
+      overflow: hidden;
+    }
+    .sheet {
+      display: inline-block;
+      min-width: 100%;
+      transform-origin: top left;
     }
 
     .bottom {
@@ -970,9 +1002,12 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
 </head>
 <body class="${pdfClass}">
   <div class="print-actions">
+    <span class="print-hint">Orientação: retrato (vertical)</span>
     <button type="button" onclick="window.print()">Salvar em PDF</button>
   </div>
 
+  <div class="sheet-scale">
+  <div class="sheet">
   <header class="banner">
     <div class="brand">
       <img src="${escapeHtml(logo)}" alt="Liganer" width="40" height="40" />
@@ -1007,8 +1042,38 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
   </div>
 
   ${cutting}
+  </div>
+  </div>
 
-  <script>window.addEventListener('load', () => setTimeout(() => window.print(), 350))</script>
+  <script>
+    function fitSheetToPage() {
+      const sheet = document.querySelector('.sheet');
+      const scaleBox = document.querySelector('.sheet-scale');
+      if (!sheet || !scaleBox) return;
+      sheet.style.zoom = '1';
+      sheet.style.transform = 'none';
+      sheet.style.marginBottom = '0';
+      const avail = scaleBox.clientWidth || document.body.clientWidth || window.innerWidth;
+      const needed = Math.max(sheet.scrollWidth, sheet.offsetWidth);
+      if (!avail || !needed) return;
+      const scale = Math.min(1, avail / needed);
+      if (scale >= 0.999) return;
+      if ('zoom' in sheet.style) {
+        sheet.style.zoom = String(scale);
+      } else {
+        sheet.style.transform = 'scale(' + scale + ')';
+        sheet.style.marginBottom = (-(1 - scale) * sheet.scrollHeight) + 'px';
+      }
+    }
+    window.addEventListener('load', () => {
+      fitSheetToPage();
+      setTimeout(() => {
+        fitSheetToPage();
+        window.print();
+      }, 400);
+    });
+    window.addEventListener('resize', fitSheetToPage);
+  </script>
 </body>
 </html>`;
 }
@@ -1017,12 +1082,24 @@ export function buildQuotePdfHtml(input: QuotePdfExportInput): string {
 export function exportQuotePdf(input: QuotePdfExportInput): void {
   if (!input.items.length) return;
   const html = buildQuotePdfHtml(input);
-  const win = window.open("", "_blank");
+  // Janela em proporção retrato. Não usar noopener: em Chrome/Edge
+  // window.open(..., "noopener") devolve null e o PDF deixa de abrir.
+  const win = window.open("", "_blank", "width=900,height=1200,left=40,top=20");
   if (!win) {
     alert("O navegador bloqueou a janela de PDF. Permita pop-ups para exportar.");
     return;
   }
+  try {
+    win.opener = null;
+  } catch {
+    /* ignore */
+  }
   win.document.open();
   win.document.write(html);
   win.document.close();
+  try {
+    win.focus();
+  } catch {
+    /* ignore */
+  }
 }

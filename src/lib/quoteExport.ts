@@ -25,7 +25,7 @@ function itemExportRows(items: BlankInput[], freteRaw: string) {
       Subtotal: commercial.subtotal ?? "",
       Observação: item.observation ?? "",
       "Preço fator 100": item.priceFactor100 ?? "",
-      "Fator utilizado": item.usedFactor ?? "",
+      "Fator": item.usedFactor ?? "",
       "Preço fator utilizado": commercial.usedPrice ?? "",
       Comissão: item.commission ?? "",
       "Preço serviço": item.servicePrice ?? "",

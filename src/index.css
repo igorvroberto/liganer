@@ -267,12 +267,12 @@ h1 {
   vertical-align: middle;
   white-space: nowrap;
   padding: 8px 10px;
-  width: 1%;
+  width: auto;
   overflow: visible;
 }
 
 .items-table th {
-  background: #fce8e8;
+  background: var(--accent-light);
   color: #24312c;
   text-transform: uppercase;
   text-align: center;
@@ -288,10 +288,9 @@ h1 {
 
 .items-table .delete-column,
 .items-table .item-number-column {
+  width: 1%;
+  white-space: nowrap;
   text-align: center;
-  width: 56px;
-  min-width: 56px;
-  max-width: 56px;
 }
 
 .item-number-cell,
@@ -302,14 +301,13 @@ h1 {
 }
 
 .items-table td.formula-cell {
-  background: #fce8e8;
+  background: var(--accent-light);
 }
 
 .items-table th.boolean-column,
 .items-table td.boolean-column {
+  width: 1%;
   text-align: center;
-  width: 74px;
-  min-width: 74px;
 }
 
 .cell-check {
@@ -325,21 +323,21 @@ h1 {
 
 .cell-control {
   border: 1px solid var(--line);
-  width: 100%;
-  min-width: 3.25rem;
   min-height: 34px;
+  min-width: 4.5ch;
+  width: auto;
+  max-width: none;
   color: var(--ink);
   background: #fff;
   border-radius: 8px;
   padding: 6px 8px;
   font-size: 0.86rem;
-  box-sizing: border-box;
   field-sizing: content;
 }
 
 .cell-control:disabled {
   color: #66726d;
-  background: #ebebeb;
+  background: #f2f2f2;
   opacity: 1;
   cursor: not-allowed;
 }
@@ -351,8 +349,7 @@ h1 {
 }
 
 .calculated-cell {
-  min-width: 0;
-  color: #8a1a1a;
+  color: var(--accent-dark);
   font-size: 0.86rem;
   font-weight: 800;
   display: inline-block;
@@ -593,15 +590,60 @@ select:focus {
   margin-top: 4px;
 }
 
+.saved-budgets-scroll {
+  margin-top: 4px;
+}
+
 .saved-budgets-table {
-  min-width: 720px;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  table-layout: auto;
+}
+
+.saved-budgets-table th,
+.saved-budgets-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: auto;
+  overflow: visible;
+}
+
+.saved-budgets-table th {
+  background: var(--accent-light);
+  color: #24312c;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.saved-budgets-table td {
+  font-size: 0.9rem;
+  color: var(--ink);
+  line-height: 1.25;
 }
 
 .saved-budget-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+}
+
+.saved-budget-actions .btn {
+  flex: 0 0 auto;
+}
+
+.btn-compact {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .summary-grid {
