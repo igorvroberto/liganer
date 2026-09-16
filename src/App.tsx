@@ -393,7 +393,7 @@ export default function App() {
                   <td className="item-number-cell">{index + 1}</td>
                   <td>
                     <input
-                      className="cell-control narrow-control"
+                      className="cell-control"
                       inputMode="decimal"
                       value={inputDisplay(row, 'qty')}
                       onChange={(e) => updateRow(row.id, 'qty', e.target.value)}
@@ -403,7 +403,7 @@ export default function App() {
                   </td>
                   <td>
                     <input
-                      className="cell-control narrow-control"
+                      className="cell-control"
                       value={row.unit}
                       onChange={(e) => updateRow(row.id, 'unit', e.target.value)}
                       aria-label={`Unidade linha ${index + 1}`}
@@ -411,7 +411,7 @@ export default function App() {
                   </td>
                   <td>
                     <input
-                      className="cell-control wide-control"
+                      className="cell-control"
                       value={row.ourProduct}
                       onChange={(e) => updateRow(row.id, 'ourProduct', e.target.value)}
                       aria-label={`Nosso produto linha ${index + 1}`}
@@ -424,7 +424,7 @@ export default function App() {
                   </td>
                   <td>
                     <input
-                      className="cell-control narrow-control"
+                      className="cell-control"
                       inputMode="decimal"
                       value={inputDisplay(row, 'ourIcms')}
                       onChange={(e) => updateRow(row.id, 'ourIcms', e.target.value)}
@@ -434,7 +434,7 @@ export default function App() {
                   </td>
                   <td>
                     <input
-                      className="cell-control narrow-control"
+                      className="cell-control"
                       inputMode="decimal"
                       value={inputDisplay(row, 'factorUsed')}
                       onChange={(e) => updateRow(row.id, 'factorUsed', e.target.value)}
@@ -452,7 +452,7 @@ export default function App() {
                   </td>
                   <td>
                     <input
-                      className="cell-control wide-control"
+                      className="cell-control"
                       value={row.clientProduct}
                       onChange={(e) => updateRow(row.id, 'clientProduct', e.target.value)}
                       aria-label={`Produto cliente linha ${index + 1}`}
@@ -460,7 +460,7 @@ export default function App() {
                   </td>
                   <td>
                     <input
-                      className="cell-control narrow-control"
+                      className="cell-control"
                       inputMode="decimal"
                       value={inputDisplay(row, 'clientPrice')}
                       onChange={(e) => updateRow(row.id, 'clientPrice', e.target.value)}
@@ -470,7 +470,7 @@ export default function App() {
                   </td>
                   <td>
                     <input
-                      className="cell-control narrow-control"
+                      className="cell-control"
                       inputMode="decimal"
                       value={inputDisplay(row, 'clientIcms')}
                       onChange={(e) => updateRow(row.id, 'clientIcms', e.target.value)}
@@ -498,7 +498,7 @@ export default function App() {
                   </td>
                   <td>
                     <input
-                      className="cell-control narrow-control"
+                      className="cell-control"
                       inputMode="decimal"
                       value={inputDisplay(row, 'priceFactor100')}
                       onChange={(e) => updateRow(row.id, 'priceFactor100', e.target.value)}
