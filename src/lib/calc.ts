@@ -25,7 +25,7 @@ function hasNumber(value: number | '' | undefined | null): value is number {
  * - Q = 1-(PIS+J)        (destino)
  * - K = D*P/Q            (preço equivalente)
  * - L = K/I - 1          (diferença de preço)
- * - M = D*I/K            (preço alvo)
+ * - M = D*I/K            (preço-alvo)
  * - N = O/M*100          (fator-alvo)
  */
 export function calculateRow(

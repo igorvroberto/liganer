@@ -395,7 +395,7 @@ export default function App() {
                 <th>ICMS{'\n'}cliente %</th>
                 <th>Preço{'\n'}equivalente</th>
                 <th>Diferença{'\n'}preço</th>
-                <th>Preço{'\n'}alvo</th>
+                <th>Preço-alvo</th>
                 <th className="highlight-factor">Fator-alvo</th>
                 <th>Preço{'\n'}fator 100</th>
                 <th>Origem</th>

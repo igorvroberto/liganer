@@ -43,8 +43,8 @@ Com `PIS+COFINS` global (padrão `9,25%`):
 - **Destino** = 1 − (PIS+COFINS + ICMS cliente)
 - **Preço equivalente** = Nosso preço × Origem ÷ Destino
 - **Diferença preço** = Preço equivalente ÷ Preço cliente − 1
-- **Preço alvo** = Nosso preço × Preço cliente ÷ Preço equivalente
-- **Fator-alvo** = Preço fator 100 ÷ Preço alvo × 100
+- **Preço-alvo** = Nosso preço × Preço cliente ÷ Preço equivalente
+- **Fator-alvo** = Preço fator 100 ÷ Preço-alvo × 100
 
 ## Deploy
 
