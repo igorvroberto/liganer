@@ -29,13 +29,24 @@ function logoUrl(): string {
   return `${window.location.origin}${base}liganer_favicon.webp`
 }
 
+function summaryFromRows(rows: CompareRowInput[], pisCofins: number) {
+  const diffs = rows
+    .map((row) => calculateRow(row, pisCofins).priceDiff)
+    .filter((value): value is number => value != null && Number.isFinite(value))
+  const avgDiff =
+    diffs.length === 0 ? null : diffs.reduce((sum, value) => sum + value, 0) / diffs.length
+  const above = diffs.filter((value) => value > 0).length
+  const below = diffs.filter((value) => value < 0).length
+  return { avgDiff, above, below }
+}
+
 const EXPORT_HEADERS = [
   'Qde',
   'UM',
   'Nosso produto',
   'Nosso preço',
   'Nosso ICMS',
-  'Fator utilizado',
+  'Fator',
   'Concorrente',
   'Produto cliente',
   'Preço cliente',
@@ -75,13 +86,12 @@ function rowExportValues(row: CompareRowInput, pisCofins: number): (string | num
 export function exportComparisonExcel(
   rows: CompareRowInput[],
   pisCofins: number,
-  meta: { clientName: string; notes: string; number?: string },
+  meta: { clientName: string; number?: string },
 ): void {
   const body = rows.map((row) => rowExportValues(row, pisCofins))
   const sheet = XLSX.utils.aoa_to_sheet([
     ['PIS + COFINS', pisCofins],
     ['Cliente', meta.clientName],
-    ['Observações', meta.notes],
     [],
     [...EXPORT_HEADERS],
     ...body,
@@ -135,7 +145,7 @@ export function downloadTextFile(filename: string, content: string, mime: string
 export function exportComparisonPdf(
   rows: CompareRowInput[],
   pisCofins: number,
-  meta: { clientName: string; notes: string; number?: string },
+  meta: { clientName: string; number?: string },
 ): void {
   if (!rows.length) return
 
@@ -143,7 +153,7 @@ export function exportComparisonPdf(
   const now = new Date().toLocaleString('pt-BR')
   const logo = logoUrl()
   const clientName = String(meta.clientName ?? '').trim()
-  const notes = String(meta.notes ?? '').trim()
+  const summary = summaryFromRows(rows, pisCofins)
 
   const headers = [
     '#',
@@ -161,7 +171,6 @@ export function exportComparisonPdf(
     'Diferença',
     'Preço alvo',
     'Fator-alvo',
-    'Preço fator 100',
   ]
 
   const itemRows = rows
@@ -183,25 +192,26 @@ export function exportComparisonPdf(
         formatNullablePercent(c.priceDiff),
         formatNullableCurrency(c.targetPrice),
         formatNullableNumber(c.targetFactor, 2),
-        row.priceFactor100 === ''
-          ? '—'
-          : formatNumber(Number(row.priceFactor100), 4, false),
       ]
       return `<tr>${cells.map((text) => `<td>${escapeHtml(text)}</td>`).join('')}</tr>`
     })
     .join('')
 
-  const metaArticles = [
-    clientName
-      ? `<article><span>Cliente</span><strong>${escapeHtml(clientName)}</strong></article>`
-      : '',
-    `<article><span>PIS + COFINS</span><strong>${escapeHtml(formatPercent(pisCofins))}</strong></article>`,
-    notes
-      ? `<article><span>Observações</span><strong>${escapeHtml(notes)}</strong></article>`
-      : '',
-  ]
-    .filter(Boolean)
-    .join('\n')
+  const metaArticles = clientName
+    ? `<article><span>Cliente</span><strong>${escapeHtml(clientName)}</strong></article>`
+    : ''
+
+  const summaryHtml = `
+  <section class="summary-card">
+    <article>
+      <span>Diferença média</span>
+      <strong>${escapeHtml(formatNullablePercent(summary.avgDiff))}</strong>
+    </article>
+    <article>
+      <span>Acima / abaixo</span>
+      <strong>${summary.above} / ${summary.below}</strong>
+    </article>
+  </section>`
 
   const html = `<!doctype html>
 <html lang="pt-BR">
@@ -257,13 +267,27 @@ export function exportComparisonPdf(
       gap: 8px;
       margin-bottom: 12px;
     }
-    .meta-card article {
+    .meta-card article,
+    .summary-card article {
       background: #f7f7f7;
       border-radius: 8px;
       padding: 8px 10px;
     }
-    .meta-card span { display: block; color: #5c5c5c; font-size: 8px; font-weight: 700; }
-    .meta-card strong { font-size: 11px; }
+    .meta-card span,
+    .summary-card span {
+      display: block;
+      color: #5c5c5c;
+      font-size: 8px;
+      font-weight: 700;
+    }
+    .meta-card strong,
+    .summary-card strong { font-size: 11px; }
+    .summary-card {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
     table.items {
       width: 100%;
       border-collapse: collapse;
@@ -294,16 +318,16 @@ export function exportComparisonPdf(
     <div class="banner-meta">
       <div><strong>Nº ${escapeHtml(number)}</strong></div>
       <div>${escapeHtml(now)}</div>
-      <div>${rows.length} item(ns)</div>
     </div>
   </header>
-  <section class="meta-card">${metaArticles}</section>
+  ${metaArticles ? `<section class="meta-card">${metaArticles}</section>` : ''}
   <table class="items">
     <thead>
       <tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr>
     </thead>
     <tbody>${itemRows}</tbody>
   </table>
+  ${summaryHtml}
   <script>
     window.addEventListener('load', () => {
       setTimeout(() => window.print(), 400)

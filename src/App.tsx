@@ -103,6 +103,7 @@ export default function App() {
   )
   const [editing, setEditing] = useState<EditingMeta | null>(null)
   const [draftInputs, setDraftInputs] = useState<Record<string, string>>({})
+  const [pisDraft, setPisDraft] = useState<string | null>(null)
   const [status, setStatus] = useState<{ kind: 'ok' | 'error' | ''; text: string }>({
     kind: '',
     text: '',
@@ -129,14 +130,8 @@ export default function App() {
         : withDiff.reduce((sum, r) => sum + (r.calc.priceDiff ?? 0), 0) / withDiff.length
     const above = withDiff.filter((r) => (r.calc.priceDiff ?? 0) > 0).length
     const below = withDiff.filter((r) => (r.calc.priceDiff ?? 0) < 0).length
-    return {
-      items: session.rows.length,
-      compared: withDiff.length,
-      avgDiff,
-      above,
-      below,
-    }
-  }, [computedRows, session.rows.length])
+    return { avgDiff, above, below }
+  }, [computedRows])
 
   function refreshSavedList() {
     setSavedList(savedComparisonsAsListItems())
@@ -159,7 +154,6 @@ export default function App() {
   function updateRow(id: string, key: EditableKey, raw: string) {
     const dk = draftKey(id, key)
     if (NUMBER_KEYS.has(key)) {
-      // Mantém o texto digitado (com vírgula) enquanto edita.
       setDraftInputs((prev) => ({ ...prev, [dk]: raw }))
       const trimmed = raw.trim()
       if (trimmed === '' || /[.,]$/.test(trimmed)) {
@@ -196,6 +190,31 @@ export default function App() {
     })
   }
 
+  function pisDisplay(): string {
+    if (pisDraft != null) return pisDraft
+    return formatDecimalInput(Number((session.pisCofins * 100).toFixed(4)))
+  }
+
+  function updatePis(raw: string) {
+    setPisDraft(raw)
+    const trimmed = raw.trim()
+    if (trimmed === '' || /[.,]$/.test(trimmed)) return
+    const n = numericValue(trimmed)
+    updateMeta('pisCofins', n > 1 ? n / 100 : n)
+  }
+
+  function commitPis() {
+    if (pisDraft == null) return
+    const trimmed = pisDraft.trim()
+    if (trimmed === '' || trimmed === ',' || trimmed === '-') {
+      setPisDraft(null)
+      return
+    }
+    const n = numericValue(trimmed)
+    updateMeta('pisCofins', n > 1 ? n / 100 : n)
+    setPisDraft(null)
+  }
+
   function addRow() {
     setSession((prev) => ({
       ...prev,
@@ -215,6 +234,7 @@ export default function App() {
     clearDraft()
     setEditing(null)
     setDraftInputs({})
+    setPisDraft(null)
     setSession(defaultSession())
     setStatus({ kind: 'ok', text: 'Dados de exemplo da planilha recarregados.' })
   }
@@ -223,7 +243,6 @@ export default function App() {
     try {
       exportComparisonExcel(session.rows, session.pisCofins, {
         clientName: session.clientName,
-        notes: session.notes,
         number: editing?.number,
       })
       setStatus({ kind: 'ok', text: 'Excel exportado.' })
@@ -281,7 +300,6 @@ export default function App() {
     }
     exportComparisonPdf(record.rows, record.pisCofins, {
       clientName: record.clientName,
-      notes: record.notes,
       number: record.number,
     })
     setStatus({ kind: 'ok', text: `PDF da comparação ${record.number} aberto.` })
@@ -295,6 +313,7 @@ export default function App() {
     }
     setEditing({ id: record.id, number: record.number, createdAt: record.createdAt })
     setDraftInputs({})
+    setPisDraft(null)
     setSession({
       clientName: record.clientName,
       notes: record.notes,
@@ -348,56 +367,12 @@ export default function App() {
             <span>PIS + COFINS</span>
             <input
               inputMode="decimal"
-              value={String(Number((session.pisCofins * 100).toFixed(4))).replace('.', ',')}
-              onChange={(e) => {
-                const n = numericValue(e.target.value)
-                updateMeta('pisCofins', n > 1 ? n / 100 : n)
-              }}
+              value={pisDisplay()}
+              onChange={(e) => updatePis(e.target.value)}
+              onBlur={commitPis}
               aria-label="PIS + COFINS em percentual"
             />
           </label>
-        </div>
-        <label className="field" style={{ marginTop: 12 }}>
-          <span>Observações</span>
-          <textarea
-            rows={2}
-            value={session.notes}
-            onChange={(e) => updateMeta('notes', e.target.value)}
-            placeholder="Concorrente, praça, validade…"
-          />
-        </label>
-        <div className="actions" style={{ marginTop: 16 }}>
-          <button type="button" className="btn btn-dark" onClick={handleSave}>
-            {editing ? `Atualizar ${editing.number}` : 'Salvar'}
-          </button>
-          {editing ? (
-            <button type="button" className="btn btn-secondary" onClick={cancelEditing}>
-              Cancelar edição
-            </button>
-          ) : null}
-        </div>
-      </section>
-
-      <section className="card">
-        <div className="kpi-grid">
-          <div className="summary-item">
-            <span>Itens</span>
-            <strong>{kpis.items}</strong>
-          </div>
-          <div className="summary-item">
-            <span>Com comparação</span>
-            <strong>{kpis.compared}</strong>
-          </div>
-          <div className="summary-item">
-            <span>Diferença média</span>
-            <strong>{formatNullablePercent(kpis.avgDiff)}</strong>
-          </div>
-          <div className="summary-item">
-            <span>Acima / abaixo</span>
-            <strong>
-              {kpis.above} / {kpis.below}
-            </strong>
-          </div>
         </div>
       </section>
 
@@ -432,20 +407,21 @@ export default function App() {
           fator × 100; preço equivalente ajusta ICMS/PIS; diferença = equivalente ÷ preço
           cliente − 1; preço alvo e fator-alvo fecham a conta para empatar com o
           concorrente. PIS+COFINS atual: {formatPercent(session.pisCofins)}. Use vírgula para
-          decimais em preço cliente e preço fator 100.
+          decimais.
         </div>
 
         <div className="table-scroll">
           <table className="items-table">
             <thead>
               <tr>
+                <th className="delete-column" />
                 <th className="item-number-column">#</th>
                 <th>Qde</th>
                 <th>UM</th>
                 <th>Nosso produto</th>
                 <th>Nosso{'\n'}preço</th>
                 <th>Nosso{'\n'}ICMS %</th>
-                <th>Fator{'\n'}utilizado</th>
+                <th>Fator</th>
                 <th>Concorrente</th>
                 <th>Produto cliente</th>
                 <th>Preço{'\n'}cliente</th>
@@ -457,12 +433,21 @@ export default function App() {
                 <th>Preço{'\n'}fator 100</th>
                 <th>Origem</th>
                 <th>Destino</th>
-                <th className="delete-column" />
               </tr>
             </thead>
             <tbody>
               {computedRows.map(({ row, calc }, index) => (
                 <tr key={row.id}>
+                  <td className="delete-column">
+                    <button
+                      type="button"
+                      className="trash-button"
+                      onClick={() => removeRow(row.id)}
+                      aria-label={`Remover linha ${index + 1}`}
+                    >
+                      ×
+                    </button>
+                  </td>
                   <td className="item-number-cell">{index + 1}</td>
                   <td>
                     <input
@@ -512,7 +497,7 @@ export default function App() {
                       value={inputDisplay(row, 'factorUsed')}
                       onChange={(e) => updateRow(row.id, 'factorUsed', e.target.value)}
                       onBlur={() => commitRowInput(row.id, 'factorUsed')}
-                      aria-label={`Fator utilizado linha ${index + 1}`}
+                      aria-label={`Fator linha ${index + 1}`}
                     />
                   </td>
                   <td>
@@ -589,20 +574,34 @@ export default function App() {
                       {formatNullableNumber(calc.destination, 4)}
                     </span>
                   </td>
-                  <td className="delete-column">
-                    <button
-                      type="button"
-                      className="trash-button"
-                      onClick={() => removeRow(row.id)}
-                      aria-label={`Remover linha ${index + 1}`}
-                    >
-                      ×
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="kpi-grid" style={{ marginTop: 14 }}>
+          <div className="summary-item">
+            <span>Diferença média</span>
+            <strong>{formatNullablePercent(kpis.avgDiff)}</strong>
+          </div>
+          <div className="summary-item">
+            <span>Acima / abaixo</span>
+            <strong>
+              {kpis.above} / {kpis.below}
+            </strong>
+          </div>
+        </div>
+
+        <div className="actions" style={{ marginTop: 16 }}>
+          <button type="button" className="btn btn-dark" onClick={handleSave}>
+            {editing ? `Atualizar ${editing.number}` : 'Salvar'}
+          </button>
+          {editing ? (
+            <button type="button" className="btn btn-secondary" onClick={cancelEditing}>
+              Cancelar edição
+            </button>
+          ) : null}
         </div>
       </section>
 
