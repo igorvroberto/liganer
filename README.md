@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Liganer · Comparador de preço
 
 App interno para comparar nosso preço com o do concorrente, com ajuste de ICMS e
@@ -50,6 +49,3 @@ Com `PIS+COFINS` global (padrão `9,25%`):
 ## Deploy
 
 Ver [deploy/README.md](deploy/README.md).
-=======
-# liganer-comparador-preco
->>>>>>> origin/main
