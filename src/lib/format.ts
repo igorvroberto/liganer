@@ -39,3 +39,11 @@ export function formatNullableNumber(value: number | null, digits = 2): string {
   if (value == null || !Number.isFinite(value)) return '—'
   return formatNumber(value, digits)
 }
+
+/** Exibe número com vírgula decimal (pt-BR), sem milhar — para inputs editáveis. */
+export function formatDecimalInput(value: number | '', maxFractionDigits = 8): string {
+  if (value === '' || value == null) return ''
+  if (!Number.isFinite(value)) return ''
+  const fixed = Number(value.toFixed(maxFractionDigits))
+  return String(fixed).replace('.', ',')
+}

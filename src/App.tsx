@@ -4,15 +4,33 @@ import {
   downloadTextFile,
   exportComparisonCsv,
   exportComparisonExcel,
+  exportComparisonPdf,
 } from './lib/export'
 import {
+  formatDecimalInput,
   formatNullableCurrency,
   formatNullableNumber,
   formatNullablePercent,
   formatPercent,
 } from './lib/format'
-import { clearDraft, defaultSession, loadDraft, saveDraft } from './lib/storage'
-import type { CompareRowInput, CompareSession } from './lib/types'
+import {
+  clearDraft,
+  defaultSession,
+  findSavedComparison,
+  loadDraft,
+  localPrintNumber,
+  pushSavedComparison,
+  removeSavedComparison,
+  saveDraft,
+  savedComparisonsAsListItems,
+  upsertSavedComparison,
+} from './lib/storage'
+import type {
+  CompareRowInput,
+  CompareSession,
+  SavedComparison,
+  SavedComparisonListItem,
+} from './lib/types'
 
 type EditableKey = keyof Pick<
   CompareRowInput,
@@ -26,7 +44,6 @@ type EditableKey = keyof Pick<
   | 'clientPrice'
   | 'clientIcms'
   | 'priceFactor100'
-  | 'reference'
 >
 
 const NUMBER_KEYS = new Set<EditableKey>([
@@ -40,19 +57,28 @@ const NUMBER_KEYS = new Set<EditableKey>([
 
 const PERCENT_KEYS = new Set<EditableKey>(['ourIcms', 'clientIcms'])
 
+/** Campos com vírgula decimal na UI (pt-BR). */
+const DECIMAL_COMMA_KEYS = new Set<EditableKey>(['clientPrice', 'priceFactor100'])
+
 function parseCellValue(key: EditableKey, raw: string): string | number | '' {
   if (!NUMBER_KEYS.has(key)) return raw
   const trimmed = raw.trim()
-  if (trimmed === '') return ''
+  if (trimmed === '' || trimmed === ',' || trimmed === '-' || trimmed === '-,') return ''
   const n = numericValue(trimmed)
   if (PERCENT_KEYS.has(key) && n > 1) return n / 100
   return n
 }
 
-function displayInputValue(key: EditableKey, value: string | number | ''): string {
+function displayStoredValue(key: EditableKey, value: string | number | ''): string {
   if (value === '' || value == null) return ''
   if (PERCENT_KEYS.has(key) && typeof value === 'number') {
-    return String(Number((value * 100).toFixed(4)))
+    return String(Number((value * 100).toFixed(4))).replace('.', ',')
+  }
+  if (DECIMAL_COMMA_KEYS.has(key) && typeof value === 'number') {
+    return formatDecimalInput(value)
+  }
+  if (typeof value === 'number') {
+    return String(value).replace('.', ',')
   }
   return String(value)
 }
@@ -64,8 +90,19 @@ function DiffBadge({ value }: { value: number | null }) {
   return <span className={`calculated-cell ${cls}`}>{formatNullablePercent(value)}</span>
 }
 
+type EditingMeta = {
+  id: string
+  number: string
+  createdAt: string
+}
+
 export default function App() {
   const [session, setSession] = useState<CompareSession>(() => loadDraft() ?? defaultSession())
+  const [savedList, setSavedList] = useState<SavedComparisonListItem[]>(() =>
+    savedComparisonsAsListItems(),
+  )
+  const [editing, setEditing] = useState<EditingMeta | null>(null)
+  const [draftInputs, setDraftInputs] = useState<Record<string, string>>({})
   const [status, setStatus] = useState<{ kind: 'ok' | 'error' | ''; text: string }>({
     kind: '',
     text: '',
@@ -101,17 +138,62 @@ export default function App() {
     }
   }, [computedRows, session.rows.length])
 
+  function refreshSavedList() {
+    setSavedList(savedComparisonsAsListItems())
+  }
+
   function updateMeta<K extends keyof CompareSession>(key: K, value: CompareSession[K]) {
     setSession((prev) => ({ ...prev, [key]: value }))
   }
 
+  function draftKey(rowId: string, key: EditableKey): string {
+    return `${rowId}:${key}`
+  }
+
+  function inputDisplay(row: CompareRowInput, key: EditableKey): string {
+    const dk = draftKey(row.id, key)
+    if (Object.prototype.hasOwnProperty.call(draftInputs, dk)) return draftInputs[dk]
+    return displayStoredValue(key, row[key] as string | number | '')
+  }
+
   function updateRow(id: string, key: EditableKey, raw: string) {
+    const dk = draftKey(id, key)
+    if (NUMBER_KEYS.has(key)) {
+      // Mantém o texto digitado (com vírgula) enquanto edita.
+      setDraftInputs((prev) => ({ ...prev, [dk]: raw }))
+      const trimmed = raw.trim()
+      if (trimmed === '' || /[.,]$/.test(trimmed)) {
+        if (trimmed === '') {
+          setSession((prev) => ({
+            ...prev,
+            rows: prev.rows.map((row) => (row.id === id ? { ...row, [key]: '' } : row)),
+          }))
+        }
+        return
+      }
+    }
+
+    const parsed = parseCellValue(key, raw)
     setSession((prev) => ({
       ...prev,
-      rows: prev.rows.map((row) =>
-        row.id === id ? { ...row, [key]: parseCellValue(key, raw) } : row,
-      ),
+      rows: prev.rows.map((row) => (row.id === id ? { ...row, [key]: parsed } : row)),
     }))
+  }
+
+  function commitRowInput(id: string, key: EditableKey) {
+    const dk = draftKey(id, key)
+    const raw = draftInputs[dk]
+    if (raw == null) return
+    const parsed = parseCellValue(key, raw)
+    setSession((prev) => ({
+      ...prev,
+      rows: prev.rows.map((row) => (row.id === id ? { ...row, [key]: parsed } : row)),
+    }))
+    setDraftInputs((prev) => {
+      const next = { ...prev }
+      delete next[dk]
+      return next
+    })
   }
 
   function addRow() {
@@ -131,6 +213,8 @@ export default function App() {
 
   function resetSample() {
     clearDraft()
+    setEditing(null)
+    setDraftInputs({})
     setSession(defaultSession())
     setStatus({ kind: 'ok', text: 'Dados de exemplo da planilha recarregados.' })
   }
@@ -140,6 +224,7 @@ export default function App() {
       exportComparisonExcel(session.rows, session.pisCofins, {
         clientName: session.clientName,
         notes: session.notes,
+        number: editing?.number,
       })
       setStatus({ kind: 'ok', text: 'Excel exportado.' })
     } catch (error) {
@@ -160,6 +245,80 @@ export default function App() {
     setStatus({ kind: 'ok', text: 'CSV exportado.' })
   }
 
+  function handleSave() {
+    if (!session.rows.length) {
+      setStatus({ kind: 'error', text: 'Adicione ao menos um item antes de salvar.' })
+      return
+    }
+    const nowIso = new Date().toISOString()
+    const number = editing?.number || localPrintNumber()
+    const record: SavedComparison = {
+      id: editing?.id || `comparacao-${Date.now()}`,
+      number,
+      name: number,
+      clientName: session.clientName,
+      notes: session.notes,
+      pisCofins: session.pisCofins,
+      rows: session.rows,
+      createdAt: editing?.createdAt || nowIso,
+      savedAt: nowIso,
+    }
+    if (editing) upsertSavedComparison(record)
+    else pushSavedComparison(record)
+    setEditing(null)
+    refreshSavedList()
+    setStatus({
+      kind: 'ok',
+      text: editing ? `Comparação ${number} atualizada.` : `Comparação salva: ${number}.`,
+    })
+  }
+
+  function openSavedPdf(item: SavedComparisonListItem) {
+    const record = findSavedComparison(item.id) || findSavedComparison(item.number)
+    if (!record?.rows?.length) {
+      setStatus({ kind: 'error', text: 'Comparação sem itens para gerar o PDF.' })
+      return
+    }
+    exportComparisonPdf(record.rows, record.pisCofins, {
+      clientName: record.clientName,
+      notes: record.notes,
+      number: record.number,
+    })
+    setStatus({ kind: 'ok', text: `PDF da comparação ${record.number} aberto.` })
+  }
+
+  function editSaved(item: SavedComparisonListItem) {
+    const record = findSavedComparison(item.id) || findSavedComparison(item.number)
+    if (!record?.rows?.length) {
+      setStatus({ kind: 'error', text: 'Comparação sem itens para editar.' })
+      return
+    }
+    setEditing({ id: record.id, number: record.number, createdAt: record.createdAt })
+    setDraftInputs({})
+    setSession({
+      clientName: record.clientName,
+      notes: record.notes,
+      pisCofins: record.pisCofins,
+      rows: record.rows.map((row) => ({ ...row, id: row.id || crypto.randomUUID() })),
+      updatedAt: new Date().toISOString(),
+    })
+    setStatus({ kind: 'ok', text: `Editando comparação ${record.number}.` })
+  }
+
+  function deleteSaved(item: SavedComparisonListItem) {
+    removeSavedComparison(item.id)
+    if (editing && (editing.id === item.id || editing.number === item.number)) {
+      setEditing(null)
+    }
+    refreshSavedList()
+    setStatus({ kind: 'ok', text: `Comparação ${item.number} excluída.` })
+  }
+
+  function cancelEditing() {
+    setEditing(null)
+    setStatus({ kind: 'ok', text: 'Edição cancelada.' })
+  }
+
   return (
     <div className="app-shell">
       <div className="brand-row">
@@ -173,10 +332,6 @@ export default function App() {
           <h1>Comparador de preço</h1>
         </div>
       </div>
-      <p className="lede">
-        Compare nosso preço com o do concorrente considerando ICMS, PIS/COFINS e fator —
-        mesma lógica da planilha <em>Diferença preço e ICMS</em>.
-      </p>
 
       <section className="card">
         <h2>Cliente e parâmetros</h2>
@@ -193,7 +348,7 @@ export default function App() {
             <span>PIS + COFINS</span>
             <input
               inputMode="decimal"
-              value={String(Number((session.pisCofins * 100).toFixed(4)))}
+              value={String(Number((session.pisCofins * 100).toFixed(4))).replace('.', ',')}
               onChange={(e) => {
                 const n = numericValue(e.target.value)
                 updateMeta('pisCofins', n > 1 ? n / 100 : n)
@@ -211,6 +366,16 @@ export default function App() {
             placeholder="Concorrente, praça, validade…"
           />
         </label>
+        <div className="actions" style={{ marginTop: 16 }}>
+          <button type="button" className="btn btn-dark" onClick={handleSave}>
+            {editing ? `Atualizar ${editing.number}` : 'Salvar'}
+          </button>
+          {editing ? (
+            <button type="button" className="btn btn-secondary" onClick={cancelEditing}>
+              Cancelar edição
+            </button>
+          ) : null}
+        </div>
       </section>
 
       <section className="card">
@@ -255,11 +420,19 @@ export default function App() {
           </div>
         </div>
 
+        {editing ? (
+          <p className="editing-banner">
+            Editando comparação <strong>{editing.number}</strong>. Clique em Salvar para
+            atualizar.
+          </p>
+        ) : null}
+
         <div className="notice">
           Campos em destaque vermelho-claro são calculados: nosso preço = preço fator 100 ÷
           fator × 100; preço equivalente ajusta ICMS/PIS; diferença = equivalente ÷ preço
           cliente − 1; preço alvo e fator-alvo fecham a conta para empatar com o
-          concorrente. PIS+COFINS atual: {formatPercent(session.pisCofins)}.
+          concorrente. PIS+COFINS atual: {formatPercent(session.pisCofins)}. Use vírgula para
+          decimais em preço cliente e preço fator 100.
         </div>
 
         <div className="table-scroll">
@@ -284,7 +457,6 @@ export default function App() {
                 <th>Preço{'\n'}fator 100</th>
                 <th>Origem</th>
                 <th>Destino</th>
-                <th>Referência</th>
                 <th className="delete-column" />
               </tr>
             </thead>
@@ -296,8 +468,9 @@ export default function App() {
                     <input
                       className="cell-control narrow-control"
                       inputMode="decimal"
-                      value={displayInputValue('qty', row.qty)}
+                      value={inputDisplay(row, 'qty')}
                       onChange={(e) => updateRow(row.id, 'qty', e.target.value)}
+                      onBlur={() => commitRowInput(row.id, 'qty')}
                       aria-label={`Quantidade linha ${index + 1}`}
                     />
                   </td>
@@ -326,8 +499,9 @@ export default function App() {
                     <input
                       className="cell-control narrow-control"
                       inputMode="decimal"
-                      value={displayInputValue('ourIcms', row.ourIcms)}
+                      value={inputDisplay(row, 'ourIcms')}
                       onChange={(e) => updateRow(row.id, 'ourIcms', e.target.value)}
+                      onBlur={() => commitRowInput(row.id, 'ourIcms')}
                       aria-label={`Nosso ICMS % linha ${index + 1}`}
                     />
                   </td>
@@ -335,8 +509,9 @@ export default function App() {
                     <input
                       className="cell-control narrow-control"
                       inputMode="decimal"
-                      value={displayInputValue('factorUsed', row.factorUsed)}
+                      value={inputDisplay(row, 'factorUsed')}
                       onChange={(e) => updateRow(row.id, 'factorUsed', e.target.value)}
+                      onBlur={() => commitRowInput(row.id, 'factorUsed')}
                       aria-label={`Fator utilizado linha ${index + 1}`}
                     />
                   </td>
@@ -360,8 +535,9 @@ export default function App() {
                     <input
                       className="cell-control narrow-control"
                       inputMode="decimal"
-                      value={displayInputValue('clientPrice', row.clientPrice)}
+                      value={inputDisplay(row, 'clientPrice')}
                       onChange={(e) => updateRow(row.id, 'clientPrice', e.target.value)}
+                      onBlur={() => commitRowInput(row.id, 'clientPrice')}
                       aria-label={`Preço cliente linha ${index + 1}`}
                     />
                   </td>
@@ -369,8 +545,9 @@ export default function App() {
                     <input
                       className="cell-control narrow-control"
                       inputMode="decimal"
-                      value={displayInputValue('clientIcms', row.clientIcms)}
+                      value={inputDisplay(row, 'clientIcms')}
                       onChange={(e) => updateRow(row.id, 'clientIcms', e.target.value)}
+                      onBlur={() => commitRowInput(row.id, 'clientIcms')}
                       aria-label={`ICMS cliente % linha ${index + 1}`}
                     />
                   </td>
@@ -396,8 +573,9 @@ export default function App() {
                     <input
                       className="cell-control narrow-control"
                       inputMode="decimal"
-                      value={displayInputValue('priceFactor100', row.priceFactor100)}
+                      value={inputDisplay(row, 'priceFactor100')}
                       onChange={(e) => updateRow(row.id, 'priceFactor100', e.target.value)}
+                      onBlur={() => commitRowInput(row.id, 'priceFactor100')}
                       aria-label={`Preço fator 100 linha ${index + 1}`}
                     />
                   </td>
@@ -410,14 +588,6 @@ export default function App() {
                     <span className="calculated-cell">
                       {formatNullableNumber(calc.destination, 4)}
                     </span>
-                  </td>
-                  <td>
-                    <input
-                      className="cell-control narrow-control"
-                      value={row.reference}
-                      onChange={(e) => updateRow(row.id, 'reference', e.target.value)}
-                      aria-label={`Referência linha ${index + 1}`}
-                    />
                   </td>
                   <td className="delete-column">
                     <button
@@ -434,8 +604,73 @@ export default function App() {
             </tbody>
           </table>
         </div>
-        <p className={`status ${status.kind}`}>{status.text}</p>
       </section>
+
+      <section className="card">
+        <h2>Comparações salvas</h2>
+        {savedList.length ? (
+          <div className="table-scroll saved-budgets-scroll">
+            <table className="saved-budgets-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Cliente</th>
+                  <th>Itens</th>
+                  <th>Dia/horário</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {savedList.map((item) => {
+                  const isEditing =
+                    editing && (editing.id === item.id || editing.number === item.number)
+                  return (
+                    <tr key={item.id} className={isEditing ? 'is-editing' : undefined}>
+                      <td>{item.name}</td>
+                      <td>{item.clientName?.trim() || '—'}</td>
+                      <td>{item.itemCount}</td>
+                      <td>
+                        {item.savedAt
+                          ? new Date(item.savedAt).toLocaleString('pt-BR')
+                          : '—'}
+                      </td>
+                      <td>
+                        <div className="saved-budget-actions">
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-compact"
+                            onClick={() => openSavedPdf(item)}
+                          >
+                            PDF
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-compact"
+                            onClick={() => editSaved(item)}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-compact"
+                            onClick={() => deleteSaved(item)}
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="muted-note">Nenhuma comparação salva ainda. Use Salvar.</p>
+        )}
+      </section>
+
+      <p className={`status ${status.kind}`}>{status.text}</p>
     </div>
   )
 }

@@ -12,7 +12,6 @@ describe('calculateRow (planilha Diferença preço e ICMS)', () => {
       clientPrice: 15.65,
       clientIcms: 0.18,
       priceFactor100: 26.07810689,
-      reference: '960',
     })
 
     const result = calculateRow(row, 0.0925)
@@ -56,5 +55,6 @@ describe('calculateRow (planilha Diferença preço e ICMS)', () => {
     expect(numericValue('14.50')).toBeCloseTo(14.5, 6)
     expect(numericValue('26.07810689')).toBeCloseTo(26.07810689, 8)
     expect(numericValue('1.234,56')).toBeCloseTo(1234.56, 6)
+    expect(numericValue('14,50')).toBeCloseTo(14.5, 6)
   })
 })
