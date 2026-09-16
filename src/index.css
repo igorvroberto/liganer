@@ -11,6 +11,9 @@
   --accent: #c60000;
   --accent-light: #fce8e8;
   --accent-dark: #c60000;
+  /* Destaque da coluna fator-alvo (vermelho um pouco mais escuro). */
+  --accent-deeper: #9a0000;
+  --accent-deeper-bg: #f0c4c4;
   --good: #2d6a4f;
   --good-bg: #ebebeb;
   --warn: #4f3b00;
@@ -294,6 +297,19 @@ select:disabled {
 
 .items-table td.formula-cell {
   background: var(--accent-light);
+}
+
+.items-table th.highlight-factor,
+.items-table td.highlight-factor {
+  background: var(--accent-deeper-bg);
+}
+
+.items-table th.highlight-factor {
+  color: var(--accent-deeper);
+}
+
+.items-table td.highlight-factor .calculated-cell {
+  color: var(--accent-deeper);
 }
 
 .items-table .delete-column,

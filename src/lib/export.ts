@@ -47,6 +47,7 @@ const EXPORT_HEADERS = [
   'Nosso preço',
   'Nosso ICMS',
   'Fator',
+  'Observação',
   'Concorrente',
   'Produto cliente',
   'Preço cliente',
@@ -69,6 +70,7 @@ function rowExportValues(row: CompareRowInput, pisCofins: number): (string | num
     c.ourPrice == null ? '' : Number(c.ourPrice.toFixed(6)),
     row.ourIcms === '' ? '' : row.ourIcms,
     row.factorUsed === '' ? '' : row.factorUsed,
+    row.observation ?? '',
     row.competitor,
     row.clientProduct,
     row.clientPrice === '' ? '' : row.clientPrice,
@@ -115,6 +117,7 @@ export function exportComparisonCsv(rows: CompareRowInput[], pisCofins: number):
         c.ourPrice == null ? '' : formatNumber(c.ourPrice, 4),
         row.ourIcms === '' ? '' : formatPercent(Number(row.ourIcms)),
         cell(row.factorUsed),
+        row.observation ?? '',
         row.competitor,
         row.clientProduct,
         row.clientPrice === '' ? '' : formatCurrency(Number(row.clientPrice)),
@@ -156,13 +159,14 @@ export function exportComparisonPdf(
   const summary = summaryFromRows(rows, pisCofins)
 
   const headers = [
-    '#',
+    'ITEM',
     'Qde',
     'UM',
     'Nosso produto',
     'Nosso preço',
     'Nosso ICMS',
     'Fator',
+    'Observação',
     'Concorrente',
     'Produto cliente',
     'Preço cliente',
@@ -172,6 +176,7 @@ export function exportComparisonPdf(
     'Preço alvo',
     'Fator-alvo',
   ]
+  const highlightFactorIndex = headers.indexOf('Fator-alvo')
 
   const itemRows = rows
     .map((row, index) => {
@@ -184,6 +189,7 @@ export function exportComparisonPdf(
         formatNullableCurrency(c.ourPrice),
         row.ourIcms === '' ? '—' : formatPercent(Number(row.ourIcms)),
         row.factorUsed === '' ? '—' : formatNumber(Number(row.factorUsed), 0),
+        row.observation?.trim() ? row.observation : '—',
         row.competitor || '—',
         row.clientProduct || '—',
         row.clientPrice === '' ? '—' : formatCurrency(Number(row.clientPrice)),
@@ -194,10 +200,16 @@ export function exportComparisonPdf(
         formatNullableNumber(c.targetFactor, 2),
       ]
       return `<tr>${cells
-        .map(
-          (text, cellIndex) =>
-            `<td${cellIndex === 0 ? ' class="item-no"' : ''}>${escapeHtml(text)}</td>`,
-        )
+        .map((text, cellIndex) => {
+          const classes = [
+            cellIndex === 0 ? 'item-no' : '',
+            cellIndex === highlightFactorIndex ? 'highlight-factor' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+          const classAttr = classes ? ` class="${classes}"` : ''
+          return `<td${classAttr}>${escapeHtml(text)}</td>`
+        })
         .join('')}</tr>`
     })
     .join('')
@@ -377,6 +389,15 @@ export function exportComparisonPdf(
     table.items th.item-no {
       width: 1%;
     }
+    table.items th.highlight-factor {
+      background: #9a0000;
+      color: #fff;
+    }
+    table.items td.highlight-factor {
+      background: #f0c4c4;
+      color: #9a0000;
+      font-weight: 800;
+    }
   </style>
 </head>
 <body>
@@ -400,10 +421,16 @@ export function exportComparisonPdf(
   <table class="items">
     <thead>
       <tr>${headers
-        .map(
-          (h, index) =>
-            `<th${index === 0 ? ' class="item-no"' : ''}>${escapeHtml(h)}</th>`,
-        )
+        .map((h, index) => {
+          const classes = [
+            index === 0 ? 'item-no' : '',
+            index === highlightFactorIndex ? 'highlight-factor' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+          const classAttr = classes ? ` class="${classes}"` : ''
+          return `<th${classAttr}>${escapeHtml(h)}</th>`
+        })
         .join('')}</tr>
     </thead>
     <tbody>${itemRows}</tbody>
