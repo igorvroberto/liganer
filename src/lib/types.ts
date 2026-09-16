@@ -15,7 +15,6 @@ export type CompareRowInput = {
   clientIcms: number | ''
   /** Preço fator 100 (coluna O da planilha). */
   priceFactor100: number | ''
-  reference: string
 }
 
 export type CompareRowComputed = {
@@ -36,4 +35,26 @@ export type CompareSession = {
   pisCofins: number
   rows: CompareRowInput[]
   updatedAt: string
+}
+
+export type SavedComparison = {
+  id: string
+  number: string
+  name: string
+  clientName: string
+  notes: string
+  pisCofins: number
+  rows: CompareRowInput[]
+  createdAt: string
+  savedAt: string
+}
+
+export type SavedComparisonListItem = {
+  id: string
+  number: string
+  name: string
+  clientName: string
+  savedAt: string
+  createdAt: string
+  itemCount: number
 }

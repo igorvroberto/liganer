@@ -9,8 +9,7 @@
     "clientProduct": "",
     "clientPrice": 15.65,
     "clientIcms": 0.18,
-    "priceFactor100": 26.07810689,
-    "reference": "960"
+    "priceFactor100": 26.07810689
   },
   {
     "qty": 210,
@@ -22,8 +21,7 @@
     "clientProduct": "",
     "clientPrice": 31.58,
     "clientIcms": 0.18,
-    "priceFactor100": 56.31542359,
-    "reference": "1160"
+    "priceFactor100": 56.31542359
   },
   {
     "qty": 600,
@@ -35,8 +33,7 @@
     "clientProduct": "",
     "clientPrice": 29.9,
     "clientIcms": 0.18,
-    "priceFactor100": 53.08028843,
-    "reference": "891"
+    "priceFactor100": 53.08028843
   },
   {
     "qty": 150,
@@ -48,8 +45,7 @@
     "clientProduct": "",
     "clientPrice": 58.72,
     "clientIcms": 0.18,
-    "priceFactor100": 111.2538816,
-    "reference": "638"
+    "priceFactor100": 111.2538816
   },
   {
     "qty": 60,
@@ -61,8 +57,7 @@
     "clientProduct": "",
     "clientPrice": 53.55,
     "clientIcms": 0.18,
-    "priceFactor100": 143.8834382,
-    "reference": "972"
+    "priceFactor100": 143.8834382
   },
   {
     "qty": 300,
@@ -74,7 +69,6 @@
     "clientProduct": "",
     "clientPrice": 31.9,
     "clientIcms": 0.18,
-    "priceFactor100": 51.78588687,
-    "reference": "861"
+    "priceFactor100": 51.78588687
   }
 ]
