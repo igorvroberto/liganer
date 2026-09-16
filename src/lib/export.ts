@@ -373,10 +373,10 @@ export function exportComparisonPdf(
       text-transform: uppercase;
       line-height: 1.15;
       letter-spacing: 0.01em;
-      /* Cabeçalho pode quebrar; largura segue o conteúdo das células. */
-      white-space: normal;
-      overflow-wrap: anywhere;
-      max-width: 4.8rem;
+      /* Sem quebra de linha — igual chapas/bobinas. */
+      white-space: nowrap;
+      overflow-wrap: normal;
+      max-width: none;
     }
     table.items td {
       font-size: 7px;
