@@ -264,6 +264,7 @@ select:disabled {
   vertical-align: middle;
   white-space: nowrap;
   width: auto;
+  max-width: none;
   overflow: visible;
 }
 
@@ -278,7 +279,11 @@ select:disabled {
   position: sticky;
   top: 0;
   z-index: 1;
-  white-space: pre-line;
+  /* Cabeçalho pode quebrar; a largura da coluna segue o conteúdo das células. */
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  max-width: 9rem;
 }
 
 .items-table th.boolean-column,
@@ -495,14 +500,6 @@ select:disabled {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-}
-
-.narrow-control {
-  max-width: 7.5rem;
-}
-
-.wide-control {
-  min-width: 14rem;
 }
 
 .meta-row {

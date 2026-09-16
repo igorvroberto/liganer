@@ -20,7 +20,6 @@ async function main() {
     localStorage.removeItem('liganer-comparador-preco-saved-v1')
   })
   await page.reload({ waitUntil: 'networkidle' })
-  await page.getByRole('button', { name: 'Recarregar exemplo' }).click()
   await page.waitForTimeout(300)
 
   // Observações gone

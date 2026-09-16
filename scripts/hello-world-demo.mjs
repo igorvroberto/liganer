@@ -13,7 +13,8 @@ async function main() {
   await page.goto('http://127.0.0.1:5173/comparador-preco/', { waitUntil: 'networkidle' })
 
   // Reset draft from previous broken session
-  await page.getByRole('button', { name: 'Recarregar exemplo' }).click()
+  await page.evaluate(() => { localStorage.removeItem('liganer-comparador-preco-draft-v1'); localStorage.removeItem('liganer-comparador-preco-saved-v1'); })
+  await page.reload({ waitUntil: 'networkidle' })
   await page.waitForTimeout(400)
 
   await page.screenshot({ path: `${OUT}/comparador-01-inicial.png`, fullPage: true })

@@ -193,7 +193,12 @@ export function exportComparisonPdf(
         formatNullableCurrency(c.targetPrice),
         formatNullableNumber(c.targetFactor, 2),
       ]
-      return `<tr>${cells.map((text) => `<td>${escapeHtml(text)}</td>`).join('')}</tr>`
+      return `<tr>${cells
+        .map(
+          (text, cellIndex) =>
+            `<td${cellIndex === 0 ? ' class="item-no"' : ''}>${escapeHtml(text)}</td>`,
+        )
+        .join('')}</tr>`
     })
     .join('')
 
@@ -219,7 +224,11 @@ export function exportComparisonPdf(
   <meta charset="utf-8" />
   <title>${escapeHtml(number)}</title>
   <style>
-    @page { size: A4 landscape; margin: 8mm; }
+    /* A4 retrato (210×297mm), como chapas/bobinas. */
+    @page {
+      size: 210mm 297mm;
+      margin: 8mm;
+    }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
@@ -228,10 +237,16 @@ export function exportComparisonPdf(
       font-size: 9px;
       background: #fff;
     }
+    body {
+      min-width: 210mm;
+      max-width: 210mm;
+    }
     .print-actions {
       display: flex;
+      flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 8px;
+      align-items: center;
+      gap: 8px 12px;
       margin-bottom: 10px;
     }
     .print-actions button {
@@ -243,7 +258,22 @@ export function exportComparisonPdf(
       font-weight: 700;
       cursor: pointer;
     }
-    @media print { .print-actions { display: none; } }
+    .print-actions .print-hint {
+      color: #56635d;
+      font-size: 11px;
+    }
+    @media print {
+      .print-actions { display: none; }
+      @page {
+        size: 210mm 297mm;
+        margin: 8mm;
+      }
+      html, body {
+        width: 210mm;
+        min-height: 297mm;
+        max-width: none;
+      }
+    }
     .banner {
       display: flex;
       align-items: center;
@@ -255,12 +285,12 @@ export function exportComparisonPdf(
       border-radius: 8px;
       margin-bottom: 12px;
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
     .brand img {
-      width: 40px; height: 40px; border-radius: 8px; background: #fff; object-fit: contain;
+      width: 40px; height: 40px; border-radius: 8px; background: #fff; object-fit: contain; flex: none;
     }
-    .brand h1 { margin: 0; font-size: 18px; }
-    .banner-meta { text-align: right; }
+    .brand h1 { margin: 0; font-size: 16px; line-height: 1.1; font-weight: 800; }
+    .banner-meta { text-align: right; font-size: 10px; white-space: nowrap; }
     .meta-card {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -287,29 +317,75 @@ export function exportComparisonPdf(
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
       margin-top: 12px;
+      break-inside: avoid;
+    }
+    .sheet-scale {
+      width: 100%;
+      overflow: visible;
+    }
+    .sheet {
+      display: inline-block;
+      min-width: 100%;
+      transform-origin: top left;
+      padding-right: 1px;
+      padding-bottom: 1px;
     }
     table.items {
-      width: 100%;
+      width: max-content;
+      max-width: none;
       border-collapse: collapse;
+      table-layout: auto;
     }
-    table.items th, table.items td {
-      border: 1px solid #e0e0e0;
+    table.items th,
+    table.items td {
+      border: 1px solid #d8dfd9;
       padding: 4px 5px;
-      text-align: left;
-      vertical-align: top;
+      vertical-align: middle;
+      text-align: center;
+      overflow: visible;
+      width: auto;
+      max-width: none;
       white-space: nowrap;
+      word-break: keep-all;
+      overflow-wrap: normal;
+    }
+    table.items th:last-child,
+    table.items td:last-child {
+      box-shadow: inset -1px 0 0 #d8dfd9;
     }
     table.items th {
-      background: #fce8e8;
-      font-size: 7px;
+      background: #c60000;
+      color: #fff;
+      font-size: 6.5px;
+      font-weight: 800;
       text-transform: uppercase;
+      line-height: 1.15;
+      letter-spacing: 0.01em;
+      /* Cabeçalho pode quebrar; largura segue o conteúdo das células. */
+      white-space: normal;
+      overflow-wrap: anywhere;
+      max-width: 4.8rem;
+    }
+    table.items td {
+      font-size: 7px;
+    }
+    table.items td.item-no {
+      width: 1%;
+      font-weight: 700;
+      color: #56635d;
+    }
+    table.items th.item-no {
+      width: 1%;
     }
   </style>
 </head>
 <body>
   <div class="print-actions">
+    <span class="print-hint">Orientação: retrato (vertical)</span>
     <button type="button" onclick="window.print()">Salvar em PDF</button>
   </div>
+  <div class="sheet-scale">
+  <div class="sheet">
   <header class="banner">
     <div class="brand">
       <img src="${escapeHtml(logo)}" alt="Liganer" width="40" height="40" />
@@ -323,20 +399,51 @@ export function exportComparisonPdf(
   ${metaArticles ? `<section class="meta-card">${metaArticles}</section>` : ''}
   <table class="items">
     <thead>
-      <tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr>
+      <tr>${headers
+        .map(
+          (h, index) =>
+            `<th${index === 0 ? ' class="item-no"' : ''}>${escapeHtml(h)}</th>`,
+        )
+        .join('')}</tr>
     </thead>
     <tbody>${itemRows}</tbody>
   </table>
   ${summaryHtml}
+  </div>
+  </div>
   <script>
+    function fitSheetToPage() {
+      const sheet = document.querySelector('.sheet')
+      const scaleBox = document.querySelector('.sheet-scale')
+      if (!sheet || !scaleBox) return
+      sheet.style.zoom = '1'
+      sheet.style.transform = 'none'
+      sheet.style.marginBottom = '0'
+      const avail = scaleBox.clientWidth || document.body.clientWidth || window.innerWidth
+      const needed = Math.max(sheet.scrollWidth, sheet.offsetWidth)
+      if (!avail || !needed) return
+      const scale = Math.min(1, (avail - 2) / needed)
+      if (scale >= 0.999) return
+      if ('zoom' in sheet.style) {
+        sheet.style.zoom = String(scale)
+      } else {
+        sheet.style.transform = 'scale(' + scale + ')'
+        sheet.style.marginBottom = (-(1 - scale) * sheet.scrollHeight) + 'px'
+      }
+    }
     window.addEventListener('load', () => {
-      setTimeout(() => window.print(), 400)
+      fitSheetToPage()
+      setTimeout(() => {
+        fitSheetToPage()
+        window.print()
+      }, 400)
     })
+    window.addEventListener('resize', fitSheetToPage)
   </script>
 </body>
 </html>`
 
-  const win = window.open('', '_blank', 'width=1200,height=900,left=40,top=20')
+  const win = window.open('', '_blank', 'width=900,height=1200,left=40,top=20')
   if (!win) {
     alert('O navegador bloqueou a janela de PDF. Permita pop-ups para exportar.')
     return
@@ -355,3 +462,4 @@ export function exportComparisonPdf(
     /* ignore */
   }
 }
+
