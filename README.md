@@ -1,1 +1,1 @@
-# liganer-comparador.precos
+# liganer-comparador-preco
