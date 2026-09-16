@@ -88,6 +88,18 @@
         padding: 20px;
       }
 
+      .apps + .apps {
+        margin-top: 16px;
+      }
+
+      .section-title {
+        margin: 0 0 14px;
+        color: var(--ink);
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+
       .apps-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -114,16 +126,10 @@
       }
 
       .app-title {
-        margin: 0 0 8px;
+        margin: 0;
         color: var(--brand);
         font-size: 1.1rem;
         font-weight: 700;
-      }
-
-      .app-desc {
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.96rem;
       }
     </style>
   </head>
@@ -139,26 +145,32 @@
         <h1>Sistema de vendas</h1>
       </section>
 
-      <section class="apps" aria-label="Links dos sistemas">
+      <section class="apps" aria-labelledby="orcamento-title">
+        <h2 class="section-title" id="orcamento-title">Orçamento</h2>
         <div class="apps-grid">
           <a class="app-link" href="/orcamento/chapas-bobinas/">
-            <h2 class="app-title">Chapas e bobinas</h2>
-            <p class="app-desc">Orçamento</p>
+            <h3 class="app-title">Chapas e bobinas</h3>
           </a>
 
           <a class="app-link" href="/orcamento/blanks-slitters/">
-            <h2 class="app-title">Blanks e slitters</h2>
-            <p class="app-desc">Orçamento</p>
+            <h3 class="app-title">Blanks e slitters</h3>
           </a>
 
           <a class="app-link" href="/orcamento/ace/">
-            <h2 class="app-title">ACE</h2>
-            <p class="app-desc">Orçamento</p>
+            <h3 class="app-title">ACE</h3>
+          </a>
+        </div>
+      </section>
+
+      <section class="apps" aria-labelledby="ferramentas-title">
+        <h2 class="section-title" id="ferramentas-title">Ferramentas</h2>
+        <div class="apps-grid">
+          <a class="app-link" href="/comparador-preco/">
+            <h3 class="app-title">Comparador de preço</h3>
           </a>
 
           <a class="app-link" href="/prospeccao/">
-            <h2 class="app-title">Prospecção</h2>
-            <p class="app-desc">Clientes próximos a Araçatuba</p>
+            <h3 class="app-title">Prospecção</h3>
           </a>
         </div>
       </section>
@@ -166,4 +178,4 @@
   </body>
 </html>
 
-<!-- republish 2026-09-10T18:36Z -->
+<!-- republish 2026-09-16T16:16Z -->
