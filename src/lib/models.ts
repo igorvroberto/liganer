@@ -84,14 +84,6 @@ export const MODELS: ModelDef[] = [
         askWhenNew: true,
       },
       {
-        key: 'pecas',
-        label: 'Peças',
-        aliases: ['pecas', 'peças', 'peca', 'peça'],
-        type: 'number',
-        fractionDigits: 0,
-        useGrouping: true,
-      },
-      {
         key: 'quantidade',
         label: 'Qde.',
         aliases: ['qde', 'qtde', 'quantidade', 'qtd'],
