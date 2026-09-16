@@ -54,7 +54,7 @@ const EXPORT_HEADERS = [
   'ICMS cliente',
   'Preço equivalente',
   'Diferença preço',
-  'Preço alvo',
+  'Preço-alvo',
   'Fator-alvo',
   'Preço fator 100',
   'Origem',
@@ -173,7 +173,7 @@ export function exportComparisonPdf(
     'ICMS cliente',
     'Preço equiv.',
     'Diferença',
-    'Preço alvo',
+    'Preço-alvo',
     'Fator-alvo',
   ]
   const highlightFactorIndex = headers.indexOf('Fator-alvo')
