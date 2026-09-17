@@ -412,13 +412,6 @@ export default function App() {
           </div>
         </div>
 
-        {editing ? (
-          <p className="editing-banner">
-            Editando comparação <strong>{editing.number}</strong>. Clique em Salvar para
-            atualizar.
-          </p>
-        ) : null}
-
         <div className="table-scroll">
           <table className="items-table">
             <thead>
@@ -629,6 +622,12 @@ export default function App() {
 
       <section className="card">
         <h2>Comparações salvas</h2>
+        {editing ? (
+          <p className="editing-banner">
+            Editando comparação {editing.number}. Use <strong>Atualizar</strong> para gravar as
+            alterações
+          </p>
+        ) : null}
         {savedList.length ? (
           <div className="table-scroll saved-budgets-scroll">
             <table className="saved-budgets-table">
