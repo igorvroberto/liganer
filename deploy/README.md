@@ -43,6 +43,12 @@ Há um workflow separado: **Deploy root index to vendas.liganer.com.br**.
 
 Roda automaticamente no push da `main` quando `deploy/root-index/` (ou o próprio workflow) muda. Também dá para disparar em **Actions → Run workflow**.
 
+### Login compartilhado e dono do orçamento
+
+Auth na **raiz** do domínio (`/login.html`, `/auth/me.php`, cookie `LIGANER_VENDAS_SESS`). Docs no app chapas-bobinas: `deploy/root-index/AUTH.md`.
+
+Neste app: `src/lib/vendasAuth.ts`. Ao **Salvar** na equipe, o JSON inclui `owner: { id, email, name }`; a lista mostra a coluna **Dono**. Em edição, o dono original é preservado.
+
 ### Atualizar preços (planilha Excel)
 
 Fonte compartilhada (fora deste app):
