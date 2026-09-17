@@ -13,6 +13,7 @@ import {
   type QuoteSummary,
 } from "./quoteSummary";
 import type { BlankInput } from "./types";
+import { normalizeVendasUser } from "./vendasAuth";
 
 /** Chave própria — não reutilizar a do chapas-bobinas. */
 const STORAGE_KEY = "liganer-blanks-slitters-draft-v1";
@@ -156,6 +157,7 @@ function normalizeBudget(raw: Partial<BudgetRecord> | null | undefined): BudgetR
     createdAt: String(raw.createdAt ?? now),
     savedAt: String(raw.savedAt ?? now),
     source,
+    owner: normalizeVendasUser(raw.owner),
   };
 }
 
@@ -206,6 +208,7 @@ export function upsertSavedBudget(budget: BudgetRecord): BudgetRecord {
       ...normalized,
       id: existing[idx].id || normalized.id,
       createdAt: existing[idx].createdAt || normalized.createdAt,
+      owner: normalized.owner ?? existing[idx].owner ?? null,
     };
     const copy = [...existing];
     copy[idx] = merged;
@@ -231,6 +234,7 @@ export function savedBudgetsAsListItems(budgets: BudgetRecord[] = loadSavedBudge
     createdAt: b.createdAt,
     savedAt: b.savedAt,
     source: b.source,
+    owner: b.owner ?? null,
   }));
 }
 
@@ -336,6 +340,7 @@ export async function listBudgetsRemote(config: AppConfig): Promise<BudgetListIt
         createdAt: String(row.createdAt ?? ""),
         savedAt: String(row.savedAt ?? row.createdAt ?? ""),
         source: "remote",
+        owner: normalizeVendasUser(row.owner),
       };
     })
     .filter((row): row is BudgetListItem => row != null);

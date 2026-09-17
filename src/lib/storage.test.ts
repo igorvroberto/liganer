@@ -99,6 +99,21 @@ describe("saved budgets", () => {
     expect(loadSavedBudgets()).toHaveLength(1);
   });
 
+  it("grava owner e preserva na atualização sem owner", () => {
+    const owner = { id: "u1", email: "ana@liganer.com", name: "Ana" };
+    upsertSavedBudget(sampleBudget("26091403", { owner }));
+    expect(findSavedBudget("26091403")?.owner).toEqual(owner);
+    expect(savedBudgetsAsListItems().find((i) => i.number === "26091403")?.owner).toEqual(owner);
+    upsertSavedBudget(
+      sampleBudget("26091403", {
+        owner: null,
+        client: { name: "Editado", cnpj: "" },
+      }),
+    );
+    expect(findSavedBudget("26091403")?.owner).toEqual(owner);
+    expect(findSavedBudget("26091403")?.client.name).toBe("Editado");
+  });
+
   it("remove orçamento e monta lista", () => {
     upsertSavedBudget(sampleBudget("26091401"));
     upsertSavedBudget(sampleBudget("26091402", { client: { name: "B", cnpj: "" } }));

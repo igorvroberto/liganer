@@ -18,6 +18,14 @@ function formatWhen(iso: string): string {
   return d.toLocaleString("pt-BR");
 }
 
+function ownerLabel(item: BudgetListItem): string {
+  const name = item.owner?.name?.trim();
+  if (name) return name;
+  const email = item.owner?.email?.trim();
+  if (email) return email;
+  return "—";
+}
+
 export default function SavedBudgetsList({
   items,
   loading = false,
@@ -42,9 +50,10 @@ export default function SavedBudgetsList({
           <table className="saved-budgets-table">
             <thead>
               <tr>
-                <th>Nome do orçamento</th>
+                <th>Número</th>
                 <th>Cliente</th>
                 <th>CNPJ</th>
+                <th>Dono</th>
                 <th>Dia/horário</th>
                 <th>Ações</th>
               </tr>
@@ -55,6 +64,7 @@ export default function SavedBudgetsList({
                   <td>{row.number}</td>
                   <td>{row.client || "—"}</td>
                   <td>{row.cnpj || "—"}</td>
+                  <td>{ownerLabel(row)}</td>
                   <td>{formatWhen(row.savedAt || row.createdAt)}</td>
                   <td>
                     <div className="saved-budget-actions">
