@@ -98,6 +98,7 @@ function list_item_from_budget(array $budget, string $fallbackNumber): array
     $client = $budget['client'] ?? [];
     $clientName = is_array($client) ? (string)($client['name'] ?? '') : '';
     $cnpj = is_array($client) ? (string)($client['cnpj'] ?? '') : '';
+    $owner = is_array($budget['owner'] ?? null) ? $budget['owner'] : null;
     return [
         'id' => (string)($budget['id'] ?? $number),
         'number' => $number,
@@ -107,6 +108,11 @@ function list_item_from_budget(array $budget, string $fallbackNumber): array
         'createdAt' => (string)($budget['createdAt'] ?? ''),
         'savedAt' => (string)($budget['savedAt'] ?? $budget['createdAt'] ?? ''),
         'source' => 'remote',
+        'owner' => $owner ? [
+            'id' => (string)($owner['id'] ?? $owner['email'] ?? ''),
+            'email' => (string)($owner['email'] ?? ''),
+            'name' => (string)($owner['name'] ?? $owner['email'] ?? ''),
+        ] : null,
     ];
 }
 

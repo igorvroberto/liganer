@@ -1,6 +1,7 @@
 import type { QuoteClientInfo } from "./quoteClient";
 import type { QuoteConditions, QuoteSummary } from "./quoteSummary";
 import type { BlankInput } from "./types";
+import type { VendasUser } from "./vendasAuth";
 
 export type BudgetSource = "local" | "remote";
 
@@ -19,6 +20,8 @@ export type BudgetRecord = {
   createdAt: string;
   savedAt: string;
   source: BudgetSource;
+  /** Usuário que criou o orçamento (não muda na edição). */
+  owner?: VendasUser | null;
 };
 
 /** Linha da lista Orçamentos salvos. */
@@ -31,6 +34,7 @@ export type BudgetListItem = {
   createdAt: string;
   savedAt: string;
   source: BudgetSource;
+  owner?: VendasUser | null;
 };
 
 export type AppConfig = {

@@ -51,6 +51,16 @@ import {
   type ProgramResult,
   type RankedPlan,
 } from "../lib/types";
+import {
+  fetchVendasUser,
+  vendasLoginUrl,
+  type VendasUser,
+} from "../lib/vendasAuth";
+
+type Props = {
+  vendasUser: VendasUser | null;
+  onVendasUser: (user: VendasUser | null) => void;
+};
 
 const EMPTY_ITEMS: BlankInput[] = [
   {
@@ -222,7 +232,7 @@ function patternSummary(program: ProgramResult, products: RankedPlan["products"]
 }
 
 /** Calculadora do modelo Slitters — Itens unificados (como chapas/bobinas). */
-export default function SlitterCalculator() {
+export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
   const draft = useMemo(() => loadDraft(), []);
   const [items, setItems] = useState<BlankInput[]>(() =>
     draft?.items?.length ? draft.items : EMPTY_ITEMS,
@@ -355,7 +365,11 @@ export default function SlitterCalculator() {
     setEditingBudget(null);
   };
 
-  const buildBudgetPayload = (number: string, summaryValue: QuoteSummary): BudgetRecord => {
+  const buildBudgetPayload = (
+    number: string,
+    summaryValue: QuoteSummary,
+    owner: VendasUser | null,
+  ): BudgetRecord => {
     const now = new Date().toISOString();
     return {
       id: editingBudget?.id || newBudgetId(),
@@ -370,6 +384,7 @@ export default function SlitterCalculator() {
       createdAt: editingBudget?.createdAt || now,
       savedAt: now,
       source: hasRemoteSync(appConfig) ? "remote" : "local",
+      owner,
     };
   };
 
@@ -383,10 +398,28 @@ export default function SlitterCalculator() {
       const cfg = await loadAppConfig();
       setAppConfig(cfg);
       const remote = hasRemoteSync(cfg);
+
+      let user = vendasUser;
+      if (!user) {
+        user = await fetchVendasUser();
+        onVendasUser(user);
+      }
+      if (remote && !user) {
+        setStatus({
+          text: "Faça login em vendas.liganer.com.br para salvar na lista da equipe.",
+          kind: "error",
+        });
+        window.location.assign(vendasLoginUrl(`${import.meta.env.BASE_URL}`));
+        return;
+      }
+
       let number = editingBudget?.number?.trim() || "";
       if (!number && !remote) number = localPrintNumber();
 
-      let record = buildBudgetPayload(number || "00000000", summary);
+      const owner =
+        editingBudget?.owner?.email ? editingBudget.owner : user;
+
+      let record = buildBudgetPayload(number || "00000000", summary, owner);
       if (!remote) {
         record = upsertSavedBudget({ ...record, number, name: number, source: "local" });
       } else {
