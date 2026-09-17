@@ -38,6 +38,13 @@ export type CompareSession = {
   updatedAt: string
 }
 
+/** Usuário logado em vendas.liganer.com.br que salvou. */
+export type ComparisonOwner = {
+  id: string
+  email: string
+  name: string
+}
+
 export type SavedComparison = {
   id: string
   number: string
@@ -48,6 +55,7 @@ export type SavedComparison = {
   rows: CompareRowInput[]
   createdAt: string
   savedAt: string
+  owner?: ComparisonOwner | null
 }
 
 export type SavedComparisonListItem = {
@@ -58,4 +66,5 @@ export type SavedComparisonListItem = {
   savedAt: string
   createdAt: string
   itemCount: number
+  owner?: ComparisonOwner | null
 }

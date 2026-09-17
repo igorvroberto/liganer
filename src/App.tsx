@@ -22,9 +22,11 @@ import {
 import type {
   CompareRowInput,
   CompareSession,
+  ComparisonOwner,
   SavedComparison,
   SavedComparisonListItem,
 } from './lib/types'
+import { fetchVendasUser, vendasLoginUrl, type VendasUser } from './lib/vendasAuth'
 
 type EditableKey = keyof Pick<
   CompareRowInput,
@@ -96,6 +98,7 @@ type EditingMeta = {
   id: string
   number: string
   createdAt: string
+  owner?: ComparisonOwner | null
 }
 
 export default function App() {
@@ -106,6 +109,7 @@ export default function App() {
   const [editing, setEditing] = useState<EditingMeta | null>(null)
   const [draftInputs, setDraftInputs] = useState<Record<string, string>>({})
   const [pisDraft, setPisDraft] = useState<string | null>(null)
+  const [vendasUser, setVendasUser] = useState<VendasUser | null>(null)
   const [status, setStatus] = useState<{ kind: 'ok' | 'error' | ''; text: string }>({
     kind: '',
     text: '',
@@ -114,6 +118,10 @@ export default function App() {
   useEffect(() => {
     saveDraft({ ...session, updatedAt: new Date().toISOString() })
   }, [session])
+
+  useEffect(() => {
+    void fetchVendasUser().then(setVendasUser)
+  }, [])
 
   const computedRows = useMemo(
     () =>
@@ -247,13 +255,27 @@ export default function App() {
     }))
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!session.rows.length) {
       setStatus({ kind: 'error', text: 'Adicione ao menos um item antes de salvar.' })
       return
     }
+    let user = vendasUser
+    if (!user) {
+      user = await fetchVendasUser()
+      setVendasUser(user)
+    }
+    if (!user) {
+      setStatus({
+        kind: 'error',
+        text: 'Faça login em vendas.liganer.com.br para salvar na lista da equipe.',
+      })
+      window.location.assign(vendasLoginUrl(`${import.meta.env.BASE_URL}`))
+      return
+    }
     const nowIso = new Date().toISOString()
     const number = editing?.number || localPrintNumber()
+    const owner = editing?.owner?.email ? editing.owner : user
     const record: SavedComparison = {
       id: editing?.id || `comparacao-${Date.now()}`,
       number,
@@ -264,6 +286,7 @@ export default function App() {
       rows: session.rows,
       createdAt: editing?.createdAt || nowIso,
       savedAt: nowIso,
+      owner,
     }
     if (editing) upsertSavedComparison(record)
     else pushSavedComparison(record)
@@ -294,7 +317,12 @@ export default function App() {
       setStatus({ kind: 'error', text: 'Comparação sem itens para editar.' })
       return
     }
-    setEditing({ id: record.id, number: record.number, createdAt: record.createdAt })
+    setEditing({
+      id: record.id,
+      number: record.number,
+      createdAt: record.createdAt,
+      owner: record.owner || item.owner || null,
+    })
     setDraftInputs({})
     setPisDraft(null)
     setSession({
@@ -332,6 +360,21 @@ export default function App() {
         <div>
           <p className="eyebrow">Vendas · Liganer</p>
           <h1>Comparador de preço</h1>
+        </div>
+        <div className="session-chip">
+          {vendasUser ? (
+            <>
+              <strong>{vendasUser.name}</strong>
+              <span>{vendasUser.email}</span>
+            </>
+          ) : (
+            <a
+              className="btn btn-secondary btn-compact"
+              href={vendasLoginUrl(`${import.meta.env.BASE_URL}`)}
+            >
+              Entrar
+            </a>
+          )}
         </div>
       </div>
 
@@ -569,7 +612,11 @@ export default function App() {
         </div>
 
         <div className="actions" style={{ marginTop: 16 }}>
-          <button type="button" className="btn btn-dark" onClick={handleSave}>
+          <button
+            type="button"
+            className="btn btn-dark"
+            onClick={() => void handleSave()}
+          >
             {editing ? `Atualizar ${editing.number}` : 'Salvar'}
           </button>
           {editing ? (
@@ -587,9 +634,10 @@ export default function App() {
             <table className="saved-budgets-table">
               <thead>
                 <tr>
-                  <th>Nome</th>
+                  <th>Número</th>
                   <th>Cliente</th>
                   <th>Itens</th>
+                  <th>Dono</th>
                   <th>Dia/horário</th>
                   <th>Ações</th>
                 </tr>
@@ -603,6 +651,7 @@ export default function App() {
                       <td>{item.name}</td>
                       <td>{item.clientName?.trim() || '—'}</td>
                       <td>{item.itemCount}</td>
+                      <td>{item.owner?.name?.trim() || item.owner?.email?.trim() || '—'}</td>
                       <td>
                         {item.savedAt
                           ? new Date(item.savedAt).toLocaleString('pt-BR')

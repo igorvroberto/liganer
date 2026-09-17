@@ -150,6 +150,13 @@ export function savedComparisonsAsListItems(
       savedAt: record.savedAt ?? record.createdAt,
       createdAt: record.createdAt,
       itemCount: record.rows?.length ?? 0,
+      owner: record.owner
+        ? {
+            id: record.owner.id,
+            email: record.owner.email,
+            name: record.owner.name,
+          }
+        : null,
     }))
     .sort((a, b) => String(b.savedAt ?? '').localeCompare(String(a.savedAt ?? '')))
 }
