@@ -773,7 +773,7 @@ export default function App() {
         {editingBudget ? (
           <p className="editing-banner">
             Editando orçamento <strong>{editingBudget.number}</strong>. Use <strong>Atualizar</strong> para
-            gravar as alterações; exporte PDF/XLSX pelos botões da lista.
+            gravar as alterações
           </p>
         ) : null}
         {savedBudgets.length ? (
