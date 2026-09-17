@@ -598,7 +598,7 @@ select:focus {
 }
 
 .editing-banner strong {
-  color: var(--accent-dark);
+  color: inherit;
   font-weight: 800;
 }
 
