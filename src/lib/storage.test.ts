@@ -119,9 +119,11 @@ describe("saved budgets", () => {
     upsertSavedBudget(sampleBudget("26091402", { client: { name: "B", cnpj: "" } }));
     const list = savedBudgetsAsListItems();
     expect(list.map((i) => i.number).sort()).toEqual(["26091401", "26091402"]);
-    removeSavedBudget("26091401");
+    removeSavedBudget("id-26091401");
     expect(findSavedBudget("26091401")).toBeNull();
     expect(loadSavedBudgets()).toHaveLength(1);
+    removeSavedBudget("26091402");
+    expect(loadSavedBudgets()).toHaveLength(0);
   });
 
   it("merge prioriza remoto no mesmo número", () => {

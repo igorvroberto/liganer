@@ -218,10 +218,12 @@ export function upsertSavedBudget(budget: BudgetRecord): BudgetRecord {
   return pushSavedBudget(normalized);
 }
 
-export function removeSavedBudget(number: string): void {
-  const needle = String(number ?? "").trim();
-  if (!needle) return;
-  writeSavedBudgets(loadSavedBudgets().filter((b) => b.number !== needle));
+export function removeSavedBudget(idOrNumber: string): void {
+  const key = String(idOrNumber ?? "").trim();
+  if (!key) return;
+  writeSavedBudgets(
+    loadSavedBudgets().filter((b) => b.id !== key && b.number !== key && b.name !== key),
+  );
 }
 
 export function savedBudgetsAsListItems(budgets: BudgetRecord[] = loadSavedBudgets()): BudgetListItem[] {

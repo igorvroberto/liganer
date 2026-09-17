@@ -3,12 +3,13 @@ import type { BudgetListItem } from "../lib/budgetTypes";
 type Props = {
   items: BudgetListItem[];
   loading?: boolean;
+  editingNumber?: string | null;
   onPdfCliente: (number: string) => void;
   onPdfLiganer: (number: string) => void;
   onPdfGestao: (number: string) => void;
   onXlsx: (number: string) => void;
-  onEdit: (number: string) => void;
-  onDelete: (number: string) => void;
+  onEdit: (item: BudgetListItem) => void;
+  onDelete: (item: BudgetListItem) => void;
 };
 
 function formatWhen(iso: string): string {
@@ -29,6 +30,7 @@ function ownerLabel(item: BudgetListItem): string {
 export default function SavedBudgetsList({
   items,
   loading = false,
+  editingNumber = null,
   onPdfCliente,
   onPdfLiganer,
   onPdfGestao,
@@ -45,6 +47,12 @@ export default function SavedBudgetsList({
       {!loading && items.length === 0 ? (
         <p className="note">Nenhum orçamento salvo ainda. Use Salvar nas Condições.</p>
       ) : null}
+      {editingNumber ? (
+        <p className="editing-banner">
+          Editando orçamento <strong>{editingNumber}</strong>. Clique em Salvar para atualizar este
+          número.
+        </p>
+      ) : null}
       {items.length > 0 ? (
         <div className="table-scroll saved-budgets-scroll">
           <table className="saved-budgets-table">
@@ -59,61 +67,69 @@ export default function SavedBudgetsList({
               </tr>
             </thead>
             <tbody>
-              {items.map((row) => (
-                <tr key={`${row.source}-${row.number}`}>
-                  <td>{row.number}</td>
-                  <td>{row.client || "—"}</td>
-                  <td>{row.cnpj || "—"}</td>
-                  <td>{ownerLabel(row)}</td>
-                  <td>{formatWhen(row.savedAt || row.createdAt)}</td>
-                  <td>
-                    <div className="saved-budget-actions">
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-compact"
-                        onClick={() => onPdfCliente(row.number)}
-                      >
-                        PDF cliente
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-compact"
-                        onClick={() => onPdfLiganer(row.number)}
-                      >
-                        PDF Liganer
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-compact"
-                        onClick={() => onPdfGestao(row.number)}
-                      >
-                        PDF gestão
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-compact"
-                        onClick={() => onXlsx(row.number)}
-                      >
-                        XLSX
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-compact"
-                        onClick={() => onEdit(row.number)}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-compact"
-                        onClick={() => onDelete(row.number)}
-                      >
-                        Excluir
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {items.map((row) => {
+                const isEditing = Boolean(
+                  editingNumber && (row.number === editingNumber || row.name === editingNumber),
+                );
+                return (
+                  <tr
+                    key={`${row.source}-${row.number}`}
+                    className={isEditing ? "is-editing" : undefined}
+                  >
+                    <td>{row.number}</td>
+                    <td>{row.client || "—"}</td>
+                    <td>{row.cnpj || "—"}</td>
+                    <td>{ownerLabel(row)}</td>
+                    <td>{formatWhen(row.savedAt || row.createdAt)}</td>
+                    <td>
+                      <div className="saved-budget-actions">
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-compact"
+                          onClick={() => onPdfCliente(row.number)}
+                        >
+                          PDF cliente
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-compact"
+                          onClick={() => onPdfLiganer(row.number)}
+                        >
+                          PDF Liganer
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-compact"
+                          onClick={() => onPdfGestao(row.number)}
+                        >
+                          PDF gestão
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-compact"
+                          onClick={() => onXlsx(row.number)}
+                        >
+                          XLSX
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-compact"
+                          onClick={() => onEdit(row)}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-compact"
+                          onClick={() => onDelete(row)}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
