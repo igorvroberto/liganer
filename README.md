@@ -43,10 +43,11 @@ npm test
 
 ## Orçamentos salvos
 
-- O botão **PDF cliente** salva o orçamento (localStorage) e abre o PDF com o número `AAMMDD##`.
-- Com `config.json` no host (`saveUrl` + `syncSecret`), também sincroniza via `api/budgets.php`.
+- O botão **Salvar** (em Condições) grava o orçamento na lista; PDFs/XLSX saem das ações de cada item.
+- Número no formato `AAMMDD##`. A lista mostra **Número**, **Dono** (usuário logado) e demais colunas.
+- Login compartilhado na raiz de `vendas.liganer.com.br` (`/login.html`, `/auth/me.php`). Ao salvar na equipe (`syncSecret`), é obrigatório estar autenticado; o `owner` do orçamento não muda na edição.
+- Com `config.json` no host (`saveUrl` + `syncSecret`), sincroniza via `api/budgets.php`.
 - Use `public/config.example.json` como modelo; **não** versionar o `config.json` real nem a pasta `data/`.
-- PDF Liganer / gestão não salvam orçamento.
 
 Peso da peça (kg):
 
