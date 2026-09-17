@@ -597,8 +597,13 @@ select:focus {
   font-size: 0.9rem;
 }
 
+.editing-banner strong {
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
 .saved-budgets-table tr.is-editing td {
-  background: rgba(198, 0, 0, 0.04);
+  background: #c600000a;
 }
 
 .saved-budgets {
