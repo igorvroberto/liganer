@@ -355,16 +355,6 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
     setSelectedAlt(0);
   };
 
-  const resetForm = () => {
-    setClient({ ...EMPTY_QUOTE_CLIENT });
-    setItems(EMPTY_ITEMS);
-    setConditions({ ...EMPTY_QUOTE_CONDITIONS });
-    setDemandModes(EMPTY_MODES);
-    setAllowOvershoot(true);
-    setSelectedAlt(0);
-    setEditingBudget(null);
-  };
-
   const buildBudgetPayload = (
     number: string,
     summaryValue: QuoteSummary,
@@ -435,10 +425,13 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
       }
 
       await refreshBudgetList(cfg);
-      setEditingBudget(record);
+      const wasEditing = Boolean(editingBudget);
+      setEditingBudget(null);
       setStatus({
         text: remote
-          ? `Orçamento ${record.number} salvo.`
+          ? wasEditing
+            ? `Orçamento ${record.number} atualizado no servidor.`
+            : `Orçamento ${record.number} salvo.`
           : `Orçamento ${record.number} salvo só neste navegador (sem syncSecret).`,
         kind: "ok",
       });
@@ -450,6 +443,11 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
     } finally {
       setSaveBusy(false);
     }
+  };
+
+  const cancelEditingBudget = () => {
+    setEditingBudget(null);
+    setStatus({ text: "Edição cancelada.", kind: "ok" });
   };
 
   const loadBudgetByNumber = async (number: string): Promise<BudgetRecord | null> => {
@@ -547,16 +545,27 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
     }
   };
 
-  const handleSavedEdit = async (number: string) => {
+  const handleSavedEdit = async (item: BudgetListItem) => {
     try {
+      const number = item.number || item.name || item.id;
       const budget = await loadBudgetByNumber(number);
       if (!budget) {
         setStatus({ text: `Orçamento ${number} não encontrado.`, kind: "error" });
         return;
       }
+      if (!budget.items.length) {
+        setStatus({ text: "Orçamento sem itens para editar.", kind: "error" });
+        return;
+      }
       applyBudgetToForm(budget);
-      setEditingBudget(budget);
-      setStatus({ text: `Editando orçamento ${budget.number}.`, kind: "ok" });
+      setEditingBudget({
+        ...budget,
+        owner: budget.owner || item.owner || null,
+      });
+      setStatus({
+        text: `Editando orçamento ${budget.number}. Altere os campos e clique em Salvar para atualizar.`,
+        kind: "ok",
+      });
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setStatus({
@@ -566,24 +575,38 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
     }
   };
 
-  const handleSavedDelete = async (number: string) => {
+  const handleSavedDelete = async (item: BudgetListItem) => {
+    const number = item.number || item.name || item.id;
     if (!window.confirm(`Excluir o orçamento ${number}?`)) return;
     try {
       const cfg = appConfig.saveUrl ? appConfig : await loadAppConfig();
-      removeSavedBudget(number);
-      if (hasRemoteSync(cfg)) {
-        await deleteBudgetRemote(number, cfg);
+      removeSavedBudget(item.id);
+      if (item.number) removeSavedBudget(item.number);
+      if (item.name && item.name !== item.id) removeSavedBudget(item.name);
+
+      if (item.number && hasRemoteSync(cfg)) {
+        try {
+          await deleteBudgetRemote(item.number, cfg);
+        } catch (err) {
+          setStatus({
+            text: `Removido neste navegador, mas falhou no servidor: ${
+              err instanceof Error ? err.message : ""
+            }`.trim(),
+            kind: "error",
+          });
+          await refreshBudgetList(cfg);
+          return;
+        }
       }
-      if (editingBudget?.number === number) {
+
+      if (
+        editingBudget &&
+        (editingBudget.id === item.id || editingBudget.number === item.number)
+      ) {
         setEditingBudget(null);
       }
       await refreshBudgetList(cfg);
-      setStatus({
-        text: hasRemoteSync(cfg)
-          ? `Orçamento ${number} excluído.`
-          : `Orçamento ${number} excluído neste navegador.`,
-        kind: "ok",
-      });
+      setStatus({ text: `Orçamento ${number} excluído.`, kind: "ok" });
     } catch (err) {
       setStatus({
         text: err instanceof Error ? err.message : "Falha ao excluir orçamento.",
@@ -594,17 +617,6 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
 
   return (
     <div className="calculator-model" data-model="slitters">
-      {editingBudget ? (
-        <div className="editing-banner">
-          <span>
-            Editando orçamento <strong>{editingBudget.number}</strong>
-          </span>
-          <button type="button" className="btn btn-ghost" onClick={resetForm}>
-            Cancelar edição
-          </button>
-        </div>
-      ) : null}
-
       <QuoteClientFields client={client} onChange={setClient} />
 
       <SlitterItemsTable
@@ -634,6 +646,8 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
         conditions={conditions}
         onChange={updateCondition}
         onSave={() => void handleSave()}
+        onCancelEdit={cancelEditingBudget}
+        editingNumber={editingBudget?.number ?? null}
         statusText={status.text}
         statusKind={status.kind}
         saveBusy={saveBusy}
@@ -642,12 +656,13 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
       <SavedBudgetsList
         items={budgetList}
         loading={budgetsLoading}
+        editingNumber={editingBudget?.number ?? null}
         onPdfCliente={(n) => void handleSavedPdf(n, "cliente")}
         onPdfLiganer={(n) => void handleSavedPdf(n, "liganer")}
         onPdfGestao={(n) => void handleSavedPdf(n, "gestao")}
         onXlsx={(n) => void handleSavedXlsx(n)}
-        onEdit={(n) => void handleSavedEdit(n)}
-        onDelete={(n) => void handleSavedDelete(n)}
+        onEdit={(item) => void handleSavedEdit(item)}
+        onDelete={(item) => void handleSavedDelete(item)}
       />
 
       <div className="grid results-grid">
