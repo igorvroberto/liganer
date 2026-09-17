@@ -333,6 +333,7 @@ export default function App() {
       updatedAt: new Date().toISOString(),
     })
     setStatus({ kind: 'ok', text: `Editando comparação ${record.number}.` })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function deleteSaved(item: SavedComparisonListItem) {
