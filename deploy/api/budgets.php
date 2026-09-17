@@ -95,6 +95,7 @@ if ($method === 'GET') {
         if ($name === '') {
             $name = '—';
         }
+        $owner = is_array($data['owner'] ?? null) ? $data['owner'] : null;
         $items[] = [
             'id' => (string) ($data['id'] ?? basename($file, '.json')),
             'number' => $number !== '' ? $number : null,
@@ -106,6 +107,11 @@ if ($method === 'GET') {
             'createdAt' => $createdAt !== '' ? $createdAt : null,
             'savedAt' => $savedAt !== '' ? $savedAt : null,
             'source' => isset($data['source']) ? (string) $data['source'] : null,
+            'owner' => $owner ? [
+                'id' => (string) ($owner['id'] ?? $owner['email'] ?? ''),
+                'email' => (string) ($owner['email'] ?? ''),
+                'name' => (string) ($owner['name'] ?? $owner['email'] ?? ''),
+            ] : null,
         ];
     }
 
@@ -139,6 +145,12 @@ if ($updating) {
     }
     if (is_array($previous) && !empty($previous['id']) && empty($payload['id'])) {
         $payload['id'] = $previous['id'];
+    }
+    // Preserva o dono original se o cliente não enviar owner.
+    $payloadOwner = is_array($payload['owner'] ?? null) ? $payload['owner'] : null;
+    $payloadOwnerEmail = is_array($payloadOwner) ? trim((string) ($payloadOwner['email'] ?? '')) : '';
+    if ($payloadOwnerEmail === '' && is_array($previous) && is_array($previous['owner'] ?? null)) {
+        $payload['owner'] = $previous['owner'];
     }
 } else {
     $stamp = date('ymd');

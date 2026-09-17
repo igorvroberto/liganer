@@ -106,6 +106,12 @@ export type BudgetRecord = {
   savedAt?: string
   /** Origem do salvamento, ex.: botão Salvar ou PDF cliente. */
   source?: string
+  /** Usuário logado em vendas.liganer.com.br que salvou. */
+  owner?: {
+    id: string
+    email: string
+    name: string
+  } | null
 }
 
 export type BudgetListItem = {
@@ -116,4 +122,9 @@ export type BudgetListItem = {
   createdAt?: string | null
   savedAt?: string | null
   source?: string | null
+  owner?: {
+    id: string
+    email: string
+    name: string
+  } | null
 }

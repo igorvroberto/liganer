@@ -38,6 +38,7 @@ import {
   type PriceCatalogRow,
 } from './lib/priceCatalog'
 import type { BudgetListItem, BudgetRecord, ClientInfo, Conditions, FieldDef, ItemRow } from './lib/types'
+import { fetchVendasUser, vendasLoginUrl, type VendasUser } from './lib/vendasAuth'
 
 function isCalculatedForRow(field: FieldDef): boolean {
   return Boolean(field.calculated)
@@ -292,9 +293,11 @@ export default function App() {
     id: string
     number: string
     createdAt?: string
+    owner?: VendasUser | null
   } | null>(null)
   const [priceCatalogVersion, setPriceCatalogVersion] = useState(0)
   const [activeRowIndex, setActiveRowIndex] = useState(0)
+  const [vendasUser, setVendasUser] = useState<VendasUser | null>(null)
 
   const model = getModel(modelId)
   const fields = useMemo(() => itemFields(model), [model])
@@ -310,6 +313,10 @@ export default function App() {
 
   useEffect(() => {
     void loadConfig().then(setConfig)
+  }, [])
+
+  useEffect(() => {
+    void fetchVendasUser().then(setVendasUser)
   }, [])
 
   useEffect(() => {
@@ -445,6 +452,7 @@ export default function App() {
       id: record.id,
       number,
       createdAt: record.createdAt,
+      owner: record.owner || item.owner || null,
     })
     setActiveRowIndex(0)
     setStatus({ text: `Editando orçamento ${number}.`, kind: 'ok' })
@@ -510,8 +518,22 @@ export default function App() {
       setStatus({ text: 'Adicione ao menos um item.', kind: 'error' })
       return
     }
+    let user = vendasUser
+    if (!user) {
+      user = await fetchVendasUser()
+      setVendasUser(user)
+    }
+    if (!user && config.syncSecret) {
+      setStatus({
+        text: 'Faça login em vendas.liganer.com.br para salvar na lista da equipe.',
+        kind: 'error',
+      })
+      window.location.assign(vendasLoginUrl(`${import.meta.env.BASE_URL}`))
+      return
+    }
     const number = editingBudget?.number || localPrintNumber()
     const createdAt = editingBudget?.createdAt || new Date().toISOString()
+    const owner = editingBudget?.owner?.email ? editingBudget.owner : user
     const record: BudgetRecord = {
       id: editingBudget?.id || number,
       createdAt,
@@ -525,6 +547,7 @@ export default function App() {
       number,
       name: number,
       source: 'salvar',
+      owner: owner || null,
     }
     upsertSavedBudget(record)
     if (config.syncSecret) {
@@ -534,7 +557,7 @@ export default function App() {
       }
     }
     await refreshSavedBudgetsList()
-    setEditingBudget({ id: record.id, number, createdAt })
+    setEditingBudget({ id: record.id, number, createdAt, owner: record.owner || null })
     setStatus({ text: `Orçamento ${number} salvo.`, kind: 'ok' })
   }
 
@@ -545,6 +568,18 @@ export default function App() {
         <div>
           <p className="eyebrow">Liganer</p>
           <h1>Orçamento ACE</h1>
+        </div>
+        <div className="session-chip">
+          {vendasUser ? (
+            <>
+              <strong>{vendasUser.name}</strong>
+              <span>{vendasUser.email}</span>
+            </>
+          ) : (
+            <a className="btn btn-secondary btn-compact" href={vendasLoginUrl(`${import.meta.env.BASE_URL}`)}>
+              Entrar
+            </a>
+          )}
         </div>
       </div>
 
@@ -749,6 +784,7 @@ export default function App() {
                   <th>Número</th>
                   <th>Cliente</th>
                   <th>CNPJ</th>
+                  <th>Dono</th>
                   <th>Dia/horário</th>
                   <th>Ações</th>
                 </tr>
@@ -764,6 +800,7 @@ export default function App() {
                       <td>{item.number || item.name}</td>
                       <td>{item.client.name?.trim() || '—'}</td>
                       <td>{item.client.cnpj?.trim() || '—'}</td>
+                      <td>{item.owner?.name?.trim() || item.owner?.email?.trim() || '—'}</td>
                       <td>{when ? new Date(when).toLocaleString('pt-BR') : '—'}</td>
                       <td>
                         <div className="saved-budget-actions">
