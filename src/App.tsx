@@ -456,6 +456,7 @@ export default function App() {
     })
     setActiveRowIndex(0)
     setStatus({ text: `Editando orçamento ${number}.`, kind: 'ok' })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   async function deleteSavedBudget(item: BudgetListItem) {
