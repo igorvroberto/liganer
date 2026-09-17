@@ -14,6 +14,7 @@ https://vendas.liganer.com.br/orcamento/chapas-bobinas/
 - Base path `/comparador-preco/`
 - Persistência local (`localStorage`)
 - Exportação PDF das comparações salvas
+- Dono do registro via login compartilhado (`/auth/me.php`; ver chapas-bobinas `AUTH.md`)
 
 ## Desenvolvimento
 
@@ -23,6 +24,8 @@ npm run dev
 ```
 
 O Vite serve em `http://localhost:5173/comparador-preco/`.
+
+Em desenvolvimento, `vite.config.ts` mocka `/auth/me.php` para permitir Salvar sem o PHP da raiz. Em produção use o login real em `/login.html`.
 
 ## Scripts
 
