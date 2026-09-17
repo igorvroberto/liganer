@@ -563,7 +563,7 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
         owner: budget.owner || item.owner || null,
       });
       setStatus({
-        text: `Editando orçamento ${budget.number}. Altere os campos e clique em Salvar para atualizar.`,
+        text: `Editando orçamento ${budget.number}. Use Atualizar para gravar as alterações`,
         kind: "ok",
       });
       window.scrollTo({ top: 0, behavior: "smooth" });

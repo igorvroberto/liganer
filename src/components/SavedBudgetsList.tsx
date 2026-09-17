@@ -49,8 +49,8 @@ export default function SavedBudgetsList({
       ) : null}
       {editingNumber ? (
         <p className="editing-banner">
-          Editando orçamento <strong>{editingNumber}</strong>. Clique em Salvar para atualizar este
-          número.
+          Editando orçamento <strong>{editingNumber}</strong>. Use <strong>Atualizar</strong> para
+          gravar as alterações
         </p>
       ) : null}
       {items.length > 0 ? (
