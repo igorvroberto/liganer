@@ -300,6 +300,11 @@ export function exportPdf(
         min-height: 297mm;
         max-width: none;
       }
+      /* Chrome/Edge omitem fundos no “Salvar como PDF” sem isto. */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
     }
 
     .banner {
@@ -307,11 +312,13 @@ export function exportPdf(
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      background: #c60000;
-      color: #fff;
+      background: #c60000 !important;
+      color: #fff !important;
       padding: 12px 16px;
       border-radius: 8px;
       margin-bottom: 12px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     .brand {
       display: flex;
@@ -392,13 +399,15 @@ export function exportPdf(
       overflow-wrap: normal;
     }
     table.items th {
-      background: #c60000;
-      color: #fff;
+      background: #c60000 !important;
+      color: #fff !important;
       font-size: 7px;
       font-weight: 800;
       text-transform: uppercase;
       line-height: 1.15;
       letter-spacing: 0.01em;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     table.items td {
       font-size: 7.5px;
@@ -423,11 +432,13 @@ export function exportPdf(
 
     .sheet-scale {
       width: 100%;
-      overflow: hidden;
+      overflow: visible;
     }
     .sheet {
       display: inline-block;
       min-width: 100%;
+      padding-right: 1px;
+      padding-bottom: 1px;
       transform-origin: top left;
     }
 
@@ -449,12 +460,14 @@ export function exportPdf(
     .panel h2 {
       margin: 0;
       padding: 8px 10px;
-      background: #fce8e8;
-      color: #c60000;
+      background: #fce8e8 !important;
+      color: #c60000 !important;
       font-size: 12px;
       font-weight: 800;
       text-align: center;
       border-bottom: 1px solid #d8dfd9;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     body.pdf-liganer .panel h2 { font-size: 9px; padding: 5px 8px; }
     .summary-columns {
@@ -560,7 +573,7 @@ export function exportPdf(
       const avail = scaleBox.clientWidth || document.body.clientWidth || window.innerWidth
       const needed = Math.max(sheet.scrollWidth, sheet.offsetWidth)
       if (!avail || !needed) return
-      const scale = Math.min(1, avail / needed)
+      const scale = Math.min(1, (avail - 2) / needed)
       if (scale >= 0.999) return
       if ('zoom' in sheet.style) {
         sheet.style.zoom = String(scale)
