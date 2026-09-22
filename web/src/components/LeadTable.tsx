@@ -21,7 +21,6 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'distancia_km_aracatuba', label: 'Distância' },
   { key: 'linha', label: 'Linha' },
   { key: 'categoria', label: 'Cat.' },
-  { key: 'produto_provavel', label: 'Produto' },
   { key: 'comprador', label: 'Comprador' },
   { key: 'crm', label: 'CRM' },
   { key: 'vendedor', label: 'Vendedor' },
@@ -29,8 +28,6 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'status', label: 'Status' },
   { key: 'proximo_contato', label: 'Próximo contato' },
   { key: 'ultima_compra', label: 'Última compra' },
-  { key: 'observacoes_comerciais', label: 'Observação' },
-  { key: 'proxima_acao', label: 'Próxima ação' },
   { key: 'situacao', label: 'Situação' },
   { key: 'indicacao', label: 'Indicação' },
 ]
@@ -142,7 +139,6 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
               </td>
               <td className="linha-cell">{l.linha || '—'}</td>
               <td className="cat-cell">{l.categoria || '—'}</td>
-              <td className="cell-text">{l.produto_provavel || '—'}</td>
               <td onClick={(e) => e.stopPropagation()}>
                 <input
                   type="text"
@@ -226,16 +222,6 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
                   aria-label={`Última compra de ${l.empresa}`}
                 />
               </td>
-              <td className="cell-text" onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="text"
-                  className="table-edit-text"
-                  value={l.observacoes_comerciais ?? ''}
-                  onChange={(e) => onPatch(l.id, { observacoes_comerciais: e.target.value })}
-                  aria-label={`Observação de ${l.empresa}`}
-                />
-              </td>
-              <td className="cell-text">{l.proxima_acao || '—'}</td>
               <td onClick={(e) => e.stopPropagation()}>
                 <select
                   className="table-edit table-edit-situacao"
