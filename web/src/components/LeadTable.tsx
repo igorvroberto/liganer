@@ -8,7 +8,7 @@ import {
   SITUACAO_OPTIONS,
   STATUS_OPTIONS,
 } from '../types'
-import { potClass, sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
+import { sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
 import { formatLinha, parseLinha } from '../lib/linha'
 
 type Props = {
