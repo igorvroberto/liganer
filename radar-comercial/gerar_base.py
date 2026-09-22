@@ -5,6 +5,7 @@ import csv
 from pathlib import Path
 
 from categorias import remap_categoria
+from leads_wave_setores import LEADS_SETORES
 
 DATA = "08/09/2026"
 HEADERS = [
@@ -3964,8 +3965,10 @@ LEADS = [
         "abordagem": "Indireta via caldeirarias Prudente; e-mail institucional.",
         "observacoes_comerciais": "Escritório central também em Prudente (18) 3229-2955.",
     },
-
 ]
+
+# Onda setores (pré-moldados, artefatos, fundações, infraestrutura, silos, tanques)
+LEADS.extend(LEADS_SETORES)
 
 def main():
     out = Path(__file__).parent / "LEADS.csv"
