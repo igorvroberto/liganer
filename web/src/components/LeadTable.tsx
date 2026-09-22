@@ -18,6 +18,7 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'cnpj', label: 'CNPJ' },
   { key: 'cidade', label: 'Cidade' },
   { key: 'estado', label: 'UF' },
+  { key: 'distancia_km_aracatuba', label: 'Distância' },
   { key: 'linha', label: 'Linha' },
   { key: 'categoria', label: 'Cat.' },
   { key: 'produto_provavel', label: 'Produto' },
@@ -55,7 +56,10 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
     } else {
       setSortKey(key)
       setSortDir(
-        key === 'ultima_compra' || key === 'proximo_contato' || key === 'ultimo_contato'
+        key === 'ultima_compra' ||
+          key === 'proximo_contato' ||
+          key === 'ultimo_contato' ||
+          key === 'distancia_km_aracatuba'
           ? 'desc'
           : 'asc',
       )
@@ -131,13 +135,11 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
                 <strong>{l.empresa}</strong>
               </td>
               <td className="mono-cell">{l.cnpj || '—'}</td>
-              <td>
-                {l.cidade || '—'}
-                {l.distancia_km_aracatuba ? (
-                  <div className="muted tiny">{l.distancia_km_aracatuba} km</div>
-                ) : null}
-              </td>
+              <td>{l.cidade || '—'}</td>
               <td className="mono-cell">{l.estado || '—'}</td>
+              <td className="mono-cell cell-dist">
+                {l.distancia_km_aracatuba ? `${l.distancia_km_aracatuba} km` : '—'}
+              </td>
               <td className="linha-cell">{l.linha || '—'}</td>
               <td className="cat-cell">{l.categoria || '—'}</td>
               <td className="cell-text">{l.produto_provavel || '—'}</td>

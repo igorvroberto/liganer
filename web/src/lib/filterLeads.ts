@@ -19,6 +19,7 @@ export type SortKey =
   | 'cnpj'
   | 'cidade'
   | 'estado'
+  | 'distancia_km_aracatuba'
   | 'categoria'
   | 'linha'
   | 'produto_provavel'
@@ -130,6 +131,13 @@ function cmp(a: Lead, b: Lead, key: SortKey): number {
       return (a.cidade ?? '').localeCompare(b.cidade ?? '', 'pt-BR')
     case 'estado':
       return (a.estado ?? '').localeCompare(b.estado ?? '', 'pt-BR')
+    case 'distancia_km_aracatuba': {
+      const da = Number(String(a.distancia_km_aracatuba ?? '').replace(',', '.'))
+      const db = Number(String(b.distancia_km_aracatuba ?? '').replace(',', '.'))
+      const na = Number.isFinite(da) ? da : Number.POSITIVE_INFINITY
+      const nb = Number.isFinite(db) ? db : Number.POSITIVE_INFINITY
+      return na - nb
+    }
     case 'comprador':
       return (a.comprador ?? '').localeCompare(b.comprador ?? '', 'pt-BR')
     case 'crm':
