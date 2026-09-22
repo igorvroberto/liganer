@@ -164,7 +164,7 @@ export function createEmptyLead(leads: Lead[]): Lead {
     produto_secundario: '',
     justificativa_produto: '',
     potencial: 'Médio',
-    consumo_estimado: '',
+    consumo_estimado: 'Médio',
     tipo_operacao: '',
     o_que_fabrica_constroi: '',
     obras_atuais: '',

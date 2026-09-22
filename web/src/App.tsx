@@ -14,7 +14,7 @@ import {
   saveLocalLeads,
 } from './lib/persist'
 import { createSyncQueue, loadSyncConfig, type SyncConfig } from './lib/syncApi'
-import { EMPTY_FILTERS, type Filters, type Lead } from './types'
+import { EMPTY_FILTERS, raioMaxFromLeads, type Filters, type Lead } from './types'
 import './App.css'
 
 type Tab = 'todos' | 'top20'
@@ -151,6 +151,19 @@ export default function App() {
     setSelectedId(lead.id)
   }, [leads, queueSync])
 
+  const onRemoveLead = useCallback(
+    (id: string) => {
+      const lead = leads.find((l) => l.id === id)
+      const nome = lead?.empresa || id
+      if (!confirm(`Remover o lead "${nome}"?\n\nEsta ação não pode ser desfeita.`)) return
+      const next = leads.filter((l) => l.id !== id)
+      setLeads(next)
+      if (selectedId === id) setSelectedId(null)
+      queueSync(next, { immediate: true, message: `Remove lead ${id}` })
+    },
+    [leads, queueSync, selectedId],
+  )
+
   const discardLocal = () => {
     if (!confirm('Descartar edições locais não sincronizadas e recarregar do servidor?')) return
     clearLocalLeads()
@@ -269,7 +282,9 @@ export default function App() {
               leads={leads}
               filters={filters}
               onChange={setFilters}
-              onClear={() => setFilters(EMPTY_FILTERS)}
+              onClear={() =>
+                setFilters({ ...EMPTY_FILTERS, raioKm: raioMaxFromLeads(leads) })
+              }
             />
           ) : (
             <p className="banner">
@@ -295,6 +310,7 @@ export default function App() {
               }}
               onPatch={onPatch}
               onAdd={onAddLead}
+              onRemove={onRemoveLead}
             />
             <LeadDetail
               lead={selected}

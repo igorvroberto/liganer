@@ -1,11 +1,12 @@
+import { useEffect, useMemo } from 'react'
 import type { Filters, Lead } from '../types'
 import {
   CATEGORIA_OPTIONS,
   LINHA_OPTIONS,
   POTENCIAL_OPTIONS,
-  RAIO_MAX_KM,
   SITUACAO_OPTIONS,
   STATUS_OPTIONS,
+  raioMaxFromLeads,
 } from '../types'
 import { uniqueSorted } from '../lib/filterLeads'
 import { formatLinha, parseLinha } from '../lib/linha'
@@ -18,6 +19,17 @@ type Props = {
 }
 
 export function FilterBar({ leads, filters, onChange, onClear }: Props) {
+  const raioMax = useMemo(() => raioMaxFromLeads(leads), [leads])
+  const mid = Math.round(raioMax / 2 / 10) * 10
+
+  useEffect(() => {
+    if (filters.raioKm > raioMax) {
+      onChange({ ...filters, raioKm: raioMax })
+    }
+    // Só ajusta quando o teto do raio muda (cidade mais longe).
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- evita loop com onChange/filters
+  }, [raioMax])
+
   const cidades = uniqueSorted(leads.map((l) => l.cidade))
   const categorias = [
     ...CATEGORIA_OPTIONS,
@@ -51,6 +63,8 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
     set('linha', formatLinha(next))
   }
 
+  const raioValue = Math.min(filters.raioKm, raioMax)
+
   return (
     <section className="filters" aria-label="Filtros">
       <div className="filters-grid">
@@ -66,30 +80,29 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
 
         <label className="field field-raio">
           <span>
-            Raio · até <strong>{filters.raioKm} km</strong> de Araçatuba
+            Raio <strong>{raioValue} km</strong>
           </span>
           <input
             type="range"
             min={0}
-            max={RAIO_MAX_KM}
+            max={raioMax}
             step={10}
-            value={filters.raioKm}
+            value={raioValue}
             onChange={(e) => set('raioKm', Number(e.target.value))}
             aria-valuemin={0}
-            aria-valuemax={RAIO_MAX_KM}
-            aria-valuenow={filters.raioKm}
+            aria-valuemax={raioMax}
+            aria-valuenow={raioValue}
             aria-label="Raio máximo em quilômetros a partir de Araçatuba"
           />
           <div className="raio-scale" aria-hidden>
             <span>0</span>
-            <span>100</span>
-            <span>200</span>
+            <span>{mid}</span>
+            <span>{raioMax}</span>
           </div>
         </label>
 
         <fieldset className="field field-linha">
           <legend>Linha</legend>
-          <p className="muted tiny">Uma ou mais · lead com qualquer marcada</p>
           <div className="linha-checks">
             {LINHA_OPTIONS.map((l) => (
               <label key={l} className="linha-check">
@@ -181,7 +194,13 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
       </div>
 
       <div className="filters-actions">
-        <button type="button" className="btn ghost" onClick={onClear}>
+        <button
+          type="button"
+          className="btn ghost"
+          onClick={() => {
+            onClear()
+          }}
+        >
           Limpar filtros
         </button>
       </div>
