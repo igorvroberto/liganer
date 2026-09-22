@@ -154,8 +154,8 @@ export function topAttackList(leads: Lead[], limit = 20): Lead[] {
     else if (l.potencial === 'Médio') score += 50
     else if (l.potencial === 'Baixo') score += 10
     if (/^sim/i.test(l.multioportunidade)) score += 15
-    if (l.categoria === 'Corte e dobra ferro para construção') score += 20
-    else if (l.categoria.startsWith('Corte e dobra')) score += 10
+    if (l.categoria === 'Corte e dobra' && /ferro/i.test(l.linha ?? '')) score += 20
+    else if (l.categoria === 'Corte e dobra') score += 12
     else if (
       l.categoria === 'Pré-moldados' ||
       l.categoria === 'Fundações' ||

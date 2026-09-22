@@ -1,9 +1,9 @@
 import Papa from 'papaparse'
 import type { Lead } from '../types'
 import { SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
-import { inferLinha } from './linha'
+import { inferLinha, shortenCategoria } from './linha'
 
-const STORAGE_KEY = 'liganer-prospeccao-leads-v5'
+const STORAGE_KEY = 'liganer-prospeccao-leads-v6'
 
 export type LocalStore = {
   leads: Lead[]
@@ -77,9 +77,11 @@ export function normalizeLead(
     classificacao_comercial?: string
     multiproduto?: string
   }
+  const linha = inferLinha(rest)
   return {
     ...rest,
-    linha: inferLinha(rest),
+    categoria: shortenCategoria(rest.categoria),
+    linha,
     ultimo_contato: rest.ultimo_contato ?? '',
     proximo_contato: rest.proximo_contato ?? '',
     ultima_compra: rest.ultima_compra ?? '',

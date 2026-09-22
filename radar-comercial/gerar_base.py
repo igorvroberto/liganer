@@ -4,7 +4,11 @@
 import csv
 from pathlib import Path
 
-from categorias import infer_linha, remap_categoria
+from categorias import (
+    encurtar_categoria,
+    infer_linha,
+    remap_categoria_detalhada,
+)
 from leads_wave_setores import LEADS_SETORES
 
 DATA = "08/09/2026"
@@ -3976,10 +3980,11 @@ def main():
     rows = []
     for i, lead in enumerate(LEADS, start=1):
         row = {"id": f"ARA-{i:03d}", **lead}
-        row["categoria"] = remap_categoria(lead)
+        det = remap_categoria_detalhada(lead)
+        row["linha"] = infer_linha({**lead, "categoria": det})
+        row["categoria"] = encurtar_categoria(det)
         # Subcategorias legadas (CD2, M1…) não se aplicam ao novo vocabulário
         row["subcategoria"] = ""
-        row["linha"] = infer_linha({**lead, "categoria": row["categoria"]})
         rows.append(row)
     with out.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=HEADERS, extrasaction="ignore")

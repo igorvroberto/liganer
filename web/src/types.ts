@@ -60,19 +60,13 @@ export const LINHA_OPTIONS = ['Ferro para construção', 'Carbono', 'Inox'] as c
 
 export type Linha = (typeof LINHA_OPTIONS)[number]
 
-/** Ordem canônica das categorias comerciais (operação) */
+/** Ordem canônica das categorias comerciais (operação — sem material) */
 export const CATEGORIA_OPTIONS = [
   'Construtora',
-  'Corte e dobra ferro para construção',
-  'Corte e dobra carbono',
-  'Corte e dobra inox',
-  'Indústria inox',
-  'Indústria carbono',
-  'Metalúrgica inox',
-  'Metalúrgica carbono',
-  'Revenda ferro para construção',
-  'Revenda inox',
-  'Revenda carbono',
+  'Corte e dobra',
+  'Indústria',
+  'Metalúrgica',
+  'Revenda',
   'Pré-moldados',
   'Artefatos de concreto',
   'Fundações',
@@ -86,16 +80,10 @@ export type Categoria = (typeof CATEGORIA_OPTIONS)[number]
 /** Abreviação compacta para a barra de stats */
 export const CATEGORIA_ABREV: Record<string, string> = {
   Construtora: 'C',
-  'Corte e dobra ferro para construção': 'CDF',
-  'Corte e dobra carbono': 'CDC',
-  'Corte e dobra inox': 'CDI',
-  'Indústria inox': 'II',
-  'Indústria carbono': 'IC',
-  'Metalúrgica inox': 'MI',
-  'Metalúrgica carbono': 'MC',
-  'Revenda ferro para construção': 'RF',
-  'Revenda inox': 'RI',
-  'Revenda carbono': 'RC',
+  'Corte e dobra': 'CD',
+  Indústria: 'I',
+  Metalúrgica: 'M',
+  Revenda: 'R',
   'Pré-moldados': 'PM',
   'Artefatos de concreto': 'AC',
   Fundações: 'F',
