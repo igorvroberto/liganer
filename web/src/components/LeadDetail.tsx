@@ -70,6 +70,7 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
       <div className="detail-grid edit-grid">
         <fieldset className="detail-row edit-row linha-fieldset">
           <legend className="edit-label">Linha de produto</legend>
+          <p className="muted tiny linha-hint">Pode marcar mais de uma (multiproduto).</p>
           <div className="linha-checks">
             {LINHA_OPTIONS.map((opt) => (
               <label key={opt} className="linha-check">

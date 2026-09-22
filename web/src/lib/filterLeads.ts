@@ -35,11 +35,15 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
   return leads.filter((l) => {
     if (f.categoria && l.categoria !== f.categoria) return false
     if (f.linha) {
-      const lines = (l.linha ?? '')
+      const want = f.linha
         .split(/[;,|/]/)
         .map((p) => p.trim())
         .filter(Boolean)
-      if (!lines.includes(f.linha)) return false
+      const have = (l.linha ?? '')
+        .split(/[;,|/]/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+      if (!want.some((w) => have.includes(w))) return false
     }
     if (f.potencial && l.potencial !== f.potencial) return false
     if (f.cidade && l.cidade !== f.cidade) return false
