@@ -128,6 +128,7 @@ export const EDITABLE_FIELDS: {
   { key: 'cnpj', label: 'CNPJ', kind: 'text' },
   { key: 'cidade', label: 'Cidade', kind: 'text' },
   { key: 'estado', label: 'Estado', kind: 'text' },
+  { key: 'distancia_km_aracatuba', label: 'Distância (km)', kind: 'text' },
   { key: 'categoria', label: 'Categoria', kind: 'select', options: CATEGORIA_OPTIONS },
   { key: 'potencial', label: 'Potencial', kind: 'select', options: POTENCIAL_OPTIONS },
   { key: 'situacao', label: 'Situação', kind: 'select', options: SITUACAO_OPTIONS },
