@@ -26,7 +26,9 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
     if (filters.raioKm > raioMax) {
       onChange({ ...filters, raioKm: raioMax })
     }
-  }, [raioMax, filters, onChange])
+    // Só ajusta quando o teto do raio muda (cidade mais longe).
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- evita loop com onChange/filters
+  }, [raioMax])
 
   const cidades = uniqueSorted(leads.map((l) => l.cidade))
   const categorias = [
