@@ -40,8 +40,8 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
           </p>
           <h2>{lead.empresa}</h2>
           <p className="muted">
-            Edite abaixo — salvamento automático. Para descartar um lead, use Situação =
-            Desqualificado (não há remoção).
+            Edite abaixo — salvamento automático. Use × na tabela para remover um lead (com
+            confirmação).
           </p>
         </div>
         <button type="button" className="btn ghost" onClick={onClose} aria-label="Fechar">
@@ -68,9 +68,13 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
       </div>
 
       <div className="detail-grid edit-grid">
+        <div className="detail-row edit-row readonly-row">
+          <span className="edit-label">Distância (km)</span>
+          <p className="readonly-value">{lead.distancia_km_aracatuba || '—'} km de Araçatuba</p>
+        </div>
+
         <fieldset className="detail-row edit-row linha-fieldset">
           <legend className="edit-label">Linha de produto</legend>
-          <p className="muted tiny linha-hint">Pode marcar mais de uma.</p>
           <div className="linha-checks">
             {LINHA_OPTIONS.map((opt) => (
               <label key={opt} className="linha-check">

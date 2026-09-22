@@ -486,6 +486,50 @@ button {
   opacity: 0.85;
 }
 
+.col-remove {
+  width: 2rem;
+  padding-left: 6px !important;
+  padding-right: 4px !important;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.btn-remove-row {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-remove-row:hover {
+  background: #fff1f0;
+  color: var(--danger);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.readonly-value {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
 .leads-table tbody tr {
   cursor: pointer;
 }

@@ -54,6 +54,17 @@ export type Filters = {
 
 export const RAIO_MAX_KM = 200
 
+/** Teto do slider = maior distância entre os leads (arredondada para cima em 10 km), mín. 200 */
+export function raioMaxFromLeads(leads: readonly { distancia_km_aracatuba?: string }[]): number {
+  let max = 0
+  for (const l of leads) {
+    const d = Number(String(l.distancia_km_aracatuba ?? '').replace(',', '.'))
+    if (Number.isFinite(d) && d > max) max = d
+  }
+  const rounded = Math.ceil(max / 10) * 10
+  return Math.max(RAIO_MAX_KM, rounded || RAIO_MAX_KM)
+}
+
 /** Linha de produto (material) — pode ser multi no CSV */
 export const LINHA_OPTIONS = ['Ferro para construção', 'Carbono', 'Inox'] as const
 
@@ -93,6 +104,8 @@ export const CATEGORIA_ABREV: Record<string, string> = {
 
 export const POTENCIAL_OPTIONS = ['Alto', 'Médio', 'Baixo'] as const
 
+export const CONSUMO_OPTIONS = ['Alto', 'Médio', 'Baixo'] as const
+
 export const SITUACAO_OPTIONS = ['Qualificado', 'Desqualificado'] as const
 
 export const CRM_OPTIONS = ['Ativo', 'Inativo', 'Sem cadastro', 'Sem compra'] as const
@@ -126,11 +139,10 @@ export const EDITABLE_FIELDS: {
   { key: 'cnpj', label: 'CNPJ', kind: 'text' },
   { key: 'cidade', label: 'Cidade', kind: 'text' },
   { key: 'estado', label: 'UF', kind: 'text' },
-  { key: 'distancia_km_aracatuba', label: 'Distância (km)', kind: 'text' },
   { key: 'endereco', label: 'Endereço', kind: 'textarea' },
   { key: 'categoria', label: 'Categoria', kind: 'select', options: CATEGORIA_OPTIONS },
   { key: 'potencial', label: 'Potencial', kind: 'select', options: POTENCIAL_OPTIONS },
-  { key: 'consumo_estimado', label: 'Consumo estimado', kind: 'text' },
+  { key: 'consumo_estimado', label: 'Consumo estimado', kind: 'select', options: CONSUMO_OPTIONS },
   { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },
   { key: 'produto_secundario', label: 'Produto secundário', kind: 'textarea' },
   { key: 'justificativa_produto', label: 'Justificativa do produto', kind: 'textarea' },

@@ -9,6 +9,7 @@ type Props = {
   onSelect: (id: string) => void
   onPatch: (id: string, patch: Partial<Lead>) => void
   onAdd?: () => void
+  onRemove?: (id: string) => void
 }
 
 const COLUMNS: { key: SortKey; label: string }[] = [
@@ -42,7 +43,7 @@ function toDateInputValue(raw: string): string {
   return ''
 }
 
-export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props) {
+export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemove }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('potencial')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -78,6 +79,11 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props
       <table className="leads-table">
         <thead>
           <tr>
+            {onRemove ? (
+              <th className="col-remove">
+                <span className="sr-only">Remover</span>
+              </th>
+            ) : null}
             {COLUMNS.map((col) => {
               const active = sortKey === col.key
               return (
@@ -105,6 +111,19 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props
               className={selectedId === l.id ? 'selected' : undefined}
               onClick={() => onSelect(l.id)}
             >
+              {onRemove ? (
+                <td className="col-remove" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    className="btn-remove-row"
+                    onClick={() => onRemove(l.id)}
+                    aria-label={`Remover ${l.empresa}`}
+                    title="Remover lead"
+                  >
+                    ×
+                  </button>
+                </td>
+              ) : null}
               <td>
                 <span className={`pot-pill ${potClass(l.potencial)}`}>{l.potencial}</span>
               </td>
@@ -249,7 +268,7 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props
         {onAdd ? (
           <tfoot>
             <tr className="table-add-row">
-              <td colSpan={COLUMNS.length}>
+              <td colSpan={COLUMNS.length + (onRemove ? 1 : 0)}>
                 <button type="button" className="btn ghost btn-sm table-add-btn" onClick={onAdd}>
                   + Adicionar linha
                 </button>
