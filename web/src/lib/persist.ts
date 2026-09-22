@@ -3,7 +3,7 @@ import type { Lead } from '../types'
 import { CRM_OPTIONS, SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
 import { inferLinha, shortenCategoria } from './linha'
 
-const STORAGE_KEY = 'liganer-prospeccao-leads-v8'
+const STORAGE_KEY = 'liganer-prospeccao-leads-v9'
 
 export type LocalStore = {
   leads: Lead[]
@@ -90,6 +90,11 @@ export function normalizeLead(
     classificacao_comercial?: string
     multiproduto?: string
     responsavel?: string
+    subcategoria?: string
+    multioportunidade?: string
+    compra_recorrente?: string
+    fornecedor_atual?: string
+    cargo_comprador?: string
   },
 ): Lead {
   const {
@@ -97,12 +102,22 @@ export function normalizeLead(
     classificacao_comercial: _c,
     multiproduto: _m,
     responsavel: _r,
+    subcategoria: _s,
+    multioportunidade: _mo,
+    compra_recorrente: _cr,
+    fornecedor_atual: _fa,
+    cargo_comprador: _cc,
     ...rest
   } = row as Lead & {
     visita_presencial?: string
     classificacao_comercial?: string
     multiproduto?: string
     responsavel?: string
+    subcategoria?: string
+    multioportunidade?: string
+    compra_recorrente?: string
+    fornecedor_atual?: string
+    cargo_comprador?: string
   }
   const linha = inferLinha(rest)
   return {
@@ -144,21 +159,16 @@ export function createEmptyLead(leads: Lead[]): Lead {
     estado: 'SP',
     distancia_km_aracatuba: '',
     categoria: 'Construtora',
-    subcategoria: '',
     linha: 'Ferro para construção',
     produto_provavel: '',
     produto_secundario: '',
     justificativa_produto: '',
     potencial: 'Médio',
-    multioportunidade: 'Não',
     consumo_estimado: '',
-    compra_recorrente: '',
     tipo_operacao: '',
     o_que_fabrica_constroi: '',
     obras_atuais: '',
-    fornecedor_atual: '',
     comprador: '',
-    cargo_comprador: '',
     telefone: '',
     whatsapp: '',
     email: '',

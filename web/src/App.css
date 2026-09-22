@@ -389,10 +389,6 @@ button {
   align-items: start;
 }
 
-.workspace:has(.detail) {
-  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
-}
-
 .table-wrap {
   overflow: auto;
   max-height: calc(100vh - 280px);
@@ -626,10 +622,22 @@ button {
 
 .detail {
   padding: 18px;
-  position: sticky;
-  top: 0.75rem;
-  max-height: calc(100vh - 120px);
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.detail-below {
+  scroll-margin-top: 0.75rem;
+}
+
+.detail-below .detail-grid.edit-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.85rem 1.1rem;
+}
+
+.detail-below .linha-fieldset,
+.detail-below .edit-row:has(textarea) {
+  grid-column: 1 / -1;
 }
 
 .empty,
@@ -706,12 +714,8 @@ button {
   .filters-grid {
     grid-template-columns: 1fr 1fr;
   }
-  .workspace {
+  .detail-below .detail-grid.edit-grid {
     grid-template-columns: 1fr;
-  }
-  .detail {
-    position: static;
-    max-height: none;
   }
   .table-wrap {
     max-height: none;

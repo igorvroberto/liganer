@@ -21,21 +21,16 @@ HEADERS = [
     "estado",
     "distancia_km_aracatuba",
     "categoria",
-    "subcategoria",
     "linha",
     "produto_provavel",
     "produto_secundario",
     "justificativa_produto",
     "potencial",
-    "multioportunidade",
     "consumo_estimado",
-    "compra_recorrente",
     "tipo_operacao",
     "o_que_fabrica_constroi",
     "obras_atuais",
-    "fornecedor_atual",
     "comprador",
-    "cargo_comprador",
     "telefone",
     "whatsapp",
     "email",
@@ -4006,8 +4001,6 @@ def main():
         det = remap_categoria_detalhada(lead)
         row["linha"] = infer_linha({**lead, "categoria": det})
         row["categoria"] = encurtar_categoria(det)
-        # Subcategorias legadas (CD2, M1…) não se aplicam ao novo vocabulário
-        row["subcategoria"] = ""
         if not (row.get("crm") or "").strip():
             row["crm"] = "Sem cadastro"
         rows.append(row)

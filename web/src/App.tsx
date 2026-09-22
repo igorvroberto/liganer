@@ -273,8 +273,8 @@ export default function App() {
             />
           ) : (
             <p className="banner">
-              TOP 20 ordenado por potencial, recorrência, corte/dobra e proximidade. Datas e status
-              editam na tabela; demais campos no painel.
+              TOP 20 ordenado por potencial, consumo, corte/dobra e proximidade. Datas e status
+              editam na tabela; demais campos no detalhe abaixo.
             </p>
           )}
 
@@ -284,7 +284,15 @@ export default function App() {
             <LeadTable
               leads={view}
               selectedId={selectedId}
-              onSelect={(id) => setSelectedId(id)}
+              onSelect={(id) => {
+                setSelectedId(id)
+                requestAnimationFrame(() => {
+                  document.getElementById('lead-detail')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                  })
+                })
+              }}
               onPatch={onPatch}
               onAdd={onAddLead}
             />

@@ -65,7 +65,6 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
       l.cidade,
       l.estado,
       l.categoria,
-      l.subcategoria,
       l.linha,
       l.produto_provavel,
       l.produto_secundario,
@@ -179,7 +178,6 @@ export function topAttackList(leads: Lead[], limit = 20): Lead[] {
     if (l.potencial === 'Alto') score += 100
     else if (l.potencial === 'Médio') score += 50
     else if (l.potencial === 'Baixo') score += 10
-    if (/^sim/i.test(l.multioportunidade)) score += 15
     if (l.categoria === 'Corte e dobra' && /ferro/i.test(l.linha ?? '')) score += 20
     else if (l.categoria === 'Corte e dobra') score += 12
     else if (
@@ -195,7 +193,6 @@ export function topAttackList(leads: Lead[], limit = 20): Lead[] {
     )
       score += 12
     if (l.consumo_estimado === 'Alto') score += 15
-    if (l.compra_recorrente === 'Sim') score += 15
     const dist = Number(l.distancia_km_aracatuba)
     if (!Number.isNaN(dist)) score += Math.max(0, 20 - dist / 10)
     return { l, score }

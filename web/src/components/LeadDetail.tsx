@@ -31,7 +31,7 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
   }
 
   return (
-    <aside className="detail">
+    <section className="detail detail-below" id="lead-detail" aria-label={`Detalhe de ${lead.empresa}`}>
       <header className="detail-header">
         <div>
           <p className="eyebrow">
@@ -40,7 +40,7 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
           </p>
           <h2>{lead.empresa}</h2>
           <p className="muted">
-            Edite aqui — salvamento automático. Para descartar um lead, use Situação =
+            Edite abaixo — salvamento automático. Para descartar um lead, use Situação =
             Desqualificado (não há remoção).
           </p>
         </div>
@@ -70,7 +70,7 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
       <div className="detail-grid edit-grid">
         <fieldset className="detail-row edit-row linha-fieldset">
           <legend className="edit-label">Linha de produto</legend>
-          <p className="muted tiny linha-hint">Pode marcar mais de uma (multiproduto).</p>
+          <p className="muted tiny linha-hint">Pode marcar mais de uma.</p>
           <div className="linha-checks">
             {LINHA_OPTIONS.map((opt) => (
               <label key={opt} className="linha-check">
@@ -130,6 +130,6 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
           )
         })}
       </div>
-    </aside>
+    </section>
   )
 }
