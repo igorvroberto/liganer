@@ -3,6 +3,7 @@ export type Lead = {
   empresa: string
   cnpj: string
   cidade: string
+  /** UF (ex.: SP, MS) — campo CSV `estado` */
   estado: string
   distancia_km_aracatuba: string
   categoria: string
@@ -33,12 +34,16 @@ export type Lead = {
   status: string
   proximo_contato: string
   ultima_compra: string
+  responsavel: string
+  crm: string
+  vendedor: string
   situacao: string
   proxima_acao: string
   necessidade_identificada: string
   motivo_prospect: string
   abordagem: string
   observacoes_comerciais: string
+  indicacao: string
 }
 
 export type Filters = {
@@ -124,17 +129,20 @@ export const EDITABLE_FIELDS: {
   { key: 'empresa', label: 'Empresa', kind: 'text' },
   { key: 'cnpj', label: 'CNPJ', kind: 'text' },
   { key: 'cidade', label: 'Cidade', kind: 'text' },
-  { key: 'estado', label: 'Estado', kind: 'text' },
+  { key: 'estado', label: 'UF', kind: 'text' },
   { key: 'distancia_km_aracatuba', label: 'Distância (km)', kind: 'text' },
   { key: 'categoria', label: 'Categoria', kind: 'select', options: CATEGORIA_OPTIONS },
   { key: 'potencial', label: 'Potencial', kind: 'select', options: POTENCIAL_OPTIONS },
-  { key: 'situacao', label: 'Situação', kind: 'select', options: SITUACAO_OPTIONS },
+  { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },
+  { key: 'produto_secundario', label: 'Produto secundário', kind: 'textarea' },
+  { key: 'responsavel', label: 'Responsável', kind: 'text' },
+  { key: 'crm', label: 'CRM', kind: 'text' },
+  { key: 'vendedor', label: 'Vendedor', kind: 'text' },
   { key: 'ultimo_contato', label: 'Último contato', kind: 'date' },
   { key: 'status', label: 'Status', kind: 'select', options: STATUS_OPTIONS },
   { key: 'proximo_contato', label: 'Próximo contato', kind: 'date' },
   { key: 'ultima_compra', label: 'Última compra', kind: 'date' },
-  { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },
-  { key: 'produto_secundario', label: 'Produto secundário', kind: 'textarea' },
+  { key: 'observacoes_comerciais', label: 'Observação', kind: 'textarea' },
   { key: 'proxima_acao', label: 'Próxima ação', kind: 'textarea' },
   { key: 'motivo_prospect', label: 'Motivo', kind: 'textarea' },
   { key: 'abordagem', label: 'Abordagem', kind: 'textarea' },
@@ -142,5 +150,6 @@ export const EDITABLE_FIELDS: {
   { key: 'whatsapp', label: 'WhatsApp', kind: 'text' },
   { key: 'email', label: 'E-mail', kind: 'text' },
   { key: 'comprador', label: 'Comprador', kind: 'text' },
-  { key: 'observacoes_comerciais', label: 'Observações', kind: 'textarea' },
+  { key: 'situacao', label: 'Situação', kind: 'select', options: SITUACAO_OPTIONS },
+  { key: 'indicacao', label: 'Indicação', kind: 'text' },
 ]
