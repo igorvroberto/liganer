@@ -19,6 +19,7 @@ export type SortKey =
   | 'cnpj'
   | 'cidade'
   | 'categoria'
+  | 'linha'
   | 'produto_provavel'
   | 'situacao'
   | 'ultimo_contato'
@@ -33,6 +34,17 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
   const q = f.q.trim().toLowerCase()
   return leads.filter((l) => {
     if (f.categoria && l.categoria !== f.categoria) return false
+    if (f.linha) {
+      const want = f.linha
+        .split(/[;,|/]/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+      const have = (l.linha ?? '')
+        .split(/[;,|/]/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+      if (!want.some((w) => have.includes(w))) return false
+    }
     if (f.potencial && l.potencial !== f.potencial) return false
     if (f.cidade && l.cidade !== f.cidade) return false
     if (f.situacao && l.situacao !== f.situacao) return false
@@ -47,6 +59,7 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
       l.cidade,
       l.categoria,
       l.subcategoria,
+      l.linha,
       l.produto_provavel,
       l.produto_secundario,
       l.motivo_prospect,
@@ -89,6 +102,8 @@ function cmp(a: Lead, b: Lead, key: SortKey): number {
       return dateSortValue(a.ultima_compra ?? '') - dateSortValue(b.ultima_compra ?? '')
     case 'categoria':
       return (a.categoria ?? '').localeCompare(b.categoria ?? '', 'pt-BR')
+    case 'linha':
+      return (a.linha ?? '').localeCompare(b.linha ?? '', 'pt-BR')
     case 'produto_provavel':
       return (a.produto_provavel ?? '').localeCompare(b.produto_provavel ?? '', 'pt-BR')
     case 'proxima_acao':

@@ -109,7 +109,7 @@ function leads_to_csv(array $leads): string
 {
     $columns = [
         'id', 'empresa', 'cnpj', 'cidade', 'estado', 'distancia_km_aracatuba',
-        'categoria', 'subcategoria', 'produto_provavel', 'produto_secundario',
+        'categoria', 'subcategoria', 'linha', 'produto_provavel', 'produto_secundario',
         'justificativa_produto', 'potencial', 'multioportunidade',
         'consumo_estimado', 'compra_recorrente', 'tipo_operacao', 'o_que_fabrica_constroi',
         'obras_atuais', 'fornecedor_atual', 'comprador', 'cargo_comprador',

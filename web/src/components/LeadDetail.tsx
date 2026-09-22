@@ -1,5 +1,6 @@
 import type { Lead } from '../types'
-import { EDITABLE_FIELDS } from '../types'
+import { EDITABLE_FIELDS, LINHA_OPTIONS } from '../types'
+import { formatLinha, parseLinha } from '../lib/linha'
 
 type Props = {
   lead: Lead | null
@@ -20,6 +21,14 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
   if (!lead) return null
 
   const wa = lead.whatsapp?.replace(/\D/g, '')
+  const linhas = parseLinha(lead.linha)
+
+  const toggleLinha = (opt: string) => {
+    const next = linhas.includes(opt as (typeof LINHA_OPTIONS)[number])
+      ? linhas.filter((x) => x !== opt)
+      : [...linhas, opt]
+    onPatch(lead.id, { linha: formatLinha(next) })
+  }
 
   return (
     <aside className="detail">
@@ -27,6 +36,7 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
         <div>
           <p className="eyebrow">
             {lead.id} · {lead.categoria}
+            {lead.linha ? ` · ${lead.linha}` : ''}
           </p>
           <h2>{lead.empresa}</h2>
           <p className="muted">
@@ -58,6 +68,23 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
       </div>
 
       <div className="detail-grid edit-grid">
+        <fieldset className="detail-row edit-row linha-fieldset">
+          <legend className="edit-label">Linha de produto</legend>
+          <p className="muted tiny linha-hint">Pode marcar mais de uma (multiproduto).</p>
+          <div className="linha-checks">
+            {LINHA_OPTIONS.map((opt) => (
+              <label key={opt} className="linha-check">
+                <input
+                  type="checkbox"
+                  checked={linhas.includes(opt)}
+                  onChange={() => toggleLinha(opt)}
+                />
+                <span>{opt}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
         {EDITABLE_FIELDS.map((field) => {
           const raw = String(lead[field.key] ?? '')
           const value = field.kind === 'date' ? toDateInputValue(raw) : raw

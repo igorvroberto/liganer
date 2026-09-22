@@ -1,12 +1,14 @@
 import type { Filters, Lead } from '../types'
 import {
   CATEGORIA_OPTIONS,
+  LINHA_OPTIONS,
   POTENCIAL_OPTIONS,
   RAIO_MAX_KM,
   SITUACAO_OPTIONS,
   STATUS_OPTIONS,
 } from '../types'
 import { uniqueSorted } from '../lib/filterLeads'
+import { formatLinha, parseLinha } from '../lib/linha'
 
 type Props = {
   leads: Lead[]
@@ -38,6 +40,14 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
 
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) =>
     onChange({ ...filters, [key]: value })
+
+  const linhasFiltro = parseLinha(filters.linha)
+  const toggleLinhaFiltro = (opt: string) => {
+    const next = linhasFiltro.includes(opt as (typeof LINHA_OPTIONS)[number])
+      ? linhasFiltro.filter((x) => x !== opt)
+      : [...linhasFiltro, opt]
+    set('linha', formatLinha(next))
+  }
 
   return (
     <section className="filters" aria-label="Filtros">
@@ -74,6 +84,23 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
             <span>200</span>
           </div>
         </label>
+
+        <fieldset className="field field-linha">
+          <legend>Linha</legend>
+          <p className="muted tiny">Uma ou mais · lead com qualquer marcada</p>
+          <div className="linha-checks">
+            {LINHA_OPTIONS.map((l) => (
+              <label key={l} className="linha-check">
+                <input
+                  type="checkbox"
+                  checked={linhasFiltro.includes(l)}
+                  onChange={() => toggleLinhaFiltro(l)}
+                />
+                <span>{l}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <label className="field">
           <span>Categoria</span>

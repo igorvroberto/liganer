@@ -7,6 +7,8 @@ export type Lead = {
   distancia_km_aracatuba: string
   categoria: string
   subcategoria: string
+  /** Linha de produto: Ferro para construção; Carbono; Inox (multi via "; ") */
+  linha: string
   produto_provavel: string
   produto_secundario: string
   justificativa_produto: string
@@ -42,6 +44,7 @@ export type Lead = {
 export type Filters = {
   q: string
   categoria: string
+  linha: string
   potencial: string
   cidade: string
   situacao: string
@@ -52,7 +55,12 @@ export type Filters = {
 
 export const RAIO_MAX_KM = 200
 
-/** Ordem canônica das categorias comerciais */
+/** Linha de produto (material) — pode ser multi no CSV */
+export const LINHA_OPTIONS = ['Ferro para construção', 'Carbono', 'Inox'] as const
+
+export type Linha = (typeof LINHA_OPTIONS)[number]
+
+/** Ordem canônica das categorias comerciais (operação) */
 export const CATEGORIA_OPTIONS = [
   'Construtora',
   'Corte e dobra ferro para construção',
@@ -110,6 +118,7 @@ export const STATUS_OPTIONS = [
 export const EMPTY_FILTERS: Filters = {
   q: '',
   categoria: '',
+  linha: '',
   potencial: '',
   cidade: '',
   situacao: '',

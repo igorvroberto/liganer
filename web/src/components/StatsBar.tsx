@@ -1,5 +1,6 @@
 import type { Lead } from '../types'
-import { CATEGORIA_ABREV, CATEGORIA_OPTIONS } from '../types'
+import { CATEGORIA_ABREV, CATEGORIA_OPTIONS, LINHA_OPTIONS } from '../types'
+import { leadHasLinha } from '../lib/linha'
 
 type Props = {
   all: Lead[]
@@ -11,6 +12,10 @@ export function StatsBar({ all, filtered }: Props) {
   const byCat = CATEGORIA_OPTIONS.map((c) => ({
     c,
     n: count((l) => l.categoria === c),
+  })).filter((x) => x.n > 0)
+  const byLinha = LINHA_OPTIONS.map((l) => ({
+    l,
+    n: count((lead) => leadHasLinha(lead, l)),
   })).filter((x) => x.n > 0)
 
   return (
@@ -24,6 +29,12 @@ export function StatsBar({ all, filtered }: Props) {
         <span>potencial Alto</span>
       </div>
       <div className="stat cats">
+        {byLinha.map(({ l, n }) => (
+          <span key={l} title={l}>
+            {l === 'Ferro para construção' ? 'Ferro' : l}:{n}
+          </span>
+        ))}
+        <span aria-hidden>·</span>
         {byCat.map(({ c, n }) => (
           <span key={c} title={c}>
             {CATEGORIA_ABREV[c] ?? c}:{n}

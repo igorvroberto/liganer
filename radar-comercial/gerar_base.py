@@ -4,7 +4,7 @@
 import csv
 from pathlib import Path
 
-from categorias import remap_categoria
+from categorias import infer_linha, remap_categoria
 from leads_wave_setores import LEADS_SETORES
 
 DATA = "08/09/2026"
@@ -17,6 +17,7 @@ HEADERS = [
     "distancia_km_aracatuba",
     "categoria",
     "subcategoria",
+    "linha",
     "produto_provavel",
     "produto_secundario",
     "justificativa_produto",
@@ -3978,6 +3979,7 @@ def main():
         row["categoria"] = remap_categoria(lead)
         # Subcategorias legadas (CD2, M1…) não se aplicam ao novo vocabulário
         row["subcategoria"] = ""
+        row["linha"] = infer_linha({**lead, "categoria": row["categoria"]})
         rows.append(row)
     with out.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=HEADERS, extrasaction="ignore")
@@ -3989,8 +3991,10 @@ def main():
     from collections import Counter
     cat = Counter(r["categoria"] for r in rows)
     pot = Counter(r["potencial"] for r in rows)
+    lin = Counter(r["linha"] for r in rows)
     print("Por categoria:", dict(cat))
     print("Por potencial:", dict(pot))
+    print("Por linha:", dict(lin))
 
 if __name__ == "__main__":
     main()
