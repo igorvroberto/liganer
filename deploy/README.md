@@ -39,7 +39,7 @@ GitHub → **Settings → Secrets and variables → Actions** → New secret:
 | Secret | Para quê |
 | ------ | -------- |
 | `LEADS_SYNC_SECRET` | Senha compartilhada entre o app e o PHP (gere uma string longa) |
-| `LEADS_GITHUB_TOKEN` | Personal Access Token (classic `repo` ou fine-grained com **Contents: Read and write** neste repositório) |
+| `LEADS_GITHUB_TOKEN` | Personal Access Token (classic `repo` ou fine-grained com **Contents: Read and write** neste repositório). Token só de leitura gera 404 no commit. |
 
 Opcionais:
 
@@ -49,6 +49,20 @@ Opcionais:
 | `LEADS_GITHUB_BRANCH` | `main` |
 
 Sem `LEADS_SYNC_SECRET` + `LEADS_GITHUB_TOKEN`, o site sobe normalmente, mas edições ficam só no navegador (como antes).
+
+### Erro: `PUT GitHub HTTP 404` / “CSV local atualizado, mas falhou o commit”
+
+O CSV na hospedagem gravou; o commit no GitHub não. Em repositório **privado**, o GitHub responde **404** (não 403) quando o token não enxerga o repo ou não tem escrita.
+
+1. Crie um novo PAT em GitHub → Settings → Developer settings → Personal access tokens:
+   - **Classic:** marque o escopo `repo` (acesso total a privados).
+   - **Fine-grained:** Resource owner = dono do repo; só o repositório `liganer-prospeccao`; permissão **Contents: Read and write**.
+2. Atualize o secret de Actions **`LEADS_GITHUB_TOKEN`** com esse token.
+3. Confirme **`LEADS_GITHUB_REPO`** = `igorvroberto/liganer-prospeccao` (ou apague o secret para usar o padrão).
+4. Rode **Actions → Deploy prospecção → FTP → Run workflow** (isso regenera `api/config.local.php` na hospedagem).
+5. Edite um lead de novo — deve aparecer “Salvo no servidor e no GitHub”.
+
+> Só trocar o secret **não** atualiza o PHP já publicado; o deploy FTP é obrigatório.
 
 ## 3) Primeira publicação
 
