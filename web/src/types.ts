@@ -101,6 +101,8 @@ export const POTENCIAL_OPTIONS = ['Alto', 'Médio', 'Baixo'] as const
 
 export const SITUACAO_OPTIONS = ['Qualificado', 'Desqualificado'] as const
 
+export const CRM_OPTIONS = ['Ativo', 'Inativo', 'Sem cadastro', 'Sem compra'] as const
+
 export const STATUS_OPTIONS = [
   'Sem retorno',
   'Em contato',
@@ -136,7 +138,7 @@ export const EDITABLE_FIELDS: {
   { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },
   { key: 'produto_secundario', label: 'Produto secundário', kind: 'textarea' },
   { key: 'responsavel', label: 'Responsável', kind: 'text' },
-  { key: 'crm', label: 'CRM', kind: 'text' },
+  { key: 'crm', label: 'CRM', kind: 'select', options: CRM_OPTIONS },
   { key: 'vendedor', label: 'Vendedor', kind: 'text' },
   { key: 'ultimo_contato', label: 'Último contato', kind: 'date' },
   { key: 'status', label: 'Status', kind: 'select', options: STATUS_OPTIONS },

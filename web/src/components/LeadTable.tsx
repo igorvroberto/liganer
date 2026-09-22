@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Lead } from '../types'
-import { SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
+import { CRM_OPTIONS, SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
 import { potClass, sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
 
 type Props = {
@@ -132,13 +132,23 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props
                 />
               </td>
               <td onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="text"
-                  className="table-edit-text"
-                  value={l.crm ?? ''}
+                <select
+                  className="table-edit"
+                  value={l.crm || 'Sem cadastro'}
                   onChange={(e) => onPatch(l.id, { crm: e.target.value })}
                   aria-label={`CRM de ${l.empresa}`}
-                />
+                >
+                  {[
+                    ...CRM_OPTIONS,
+                    ...(CRM_OPTIONS as readonly string[]).includes(l.crm) || !l.crm
+                      ? []
+                      : [l.crm],
+                  ].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
               </td>
               <td onClick={(e) => e.stopPropagation()}>
                 <input
