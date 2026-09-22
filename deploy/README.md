@@ -50,19 +50,20 @@ Opcionais:
 
 Sem `LEADS_SYNC_SECRET` + `LEADS_GITHUB_TOKEN`, o site sobe normalmente, mas edições ficam só no navegador (como antes).
 
-### Erro: `PUT GitHub HTTP 404` / “CSV local atualizado, mas falhou o commit”
+### Erro: `Repo inacessível com este token (HTTP 404)` / falha no commit GitHub
 
-O CSV na hospedagem gravou; o commit no GitHub não. Em repositório **privado**, o GitHub responde **404** (não 403) quando o token não enxerga o repo ou não tem escrita.
+O CSV na hospedagem gravou; o commit no GitHub não. Em repositório **privado**, o GitHub responde **404** quando o token não enxerga o repo ou não tem escrita.
 
-1. Crie um novo PAT em GitHub → Settings → Developer settings → Personal access tokens:
-   - **Classic:** marque o escopo `repo` (acesso total a privados).
-   - **Fine-grained:** Resource owner = dono do repo; só o repositório `liganer-prospeccao`; permissão **Contents: Read and write**.
-2. Atualize o secret de Actions **`LEADS_GITHUB_TOKEN`** com esse token.
-3. Confirme **`LEADS_GITHUB_REPO`** = `igorvroberto/liganer-prospeccao` (ou apague o secret para usar o padrão).
-4. Rode **Actions → Deploy prospecção → FTP → Run workflow** (isso regenera `api/config.local.php` na hospedagem).
-5. Edite um lead de novo — deve aparecer “Salvo no servidor e no GitHub”.
+**Faça nesta ordem (obrigatório o passo 4):**
 
-> Só trocar o secret **não** atualiza o PHP já publicado; o deploy FTP é obrigatório.
+1. Abra https://github.com/settings/tokens → **Generate new token (classic)** → marque **`repo`** → Generate.
+2. Repo → **Settings → Secrets and variables → Actions** → edite **`LEADS_GITHUB_TOKEN`** e cole o token novo.
+3. Se existir secret **`LEADS_GITHUB_REPO`**, confira se é exatamente `igorvroberto/liganer-prospeccao` (senão apague o secret).
+4. **Actions → Deploy prospecção → FTP → Run workflow** — isso publica o token novo em `api/config.local.php`. Sem este passo o site continua com o token velho.
+5. No log do job, o passo *Write sync API config* deve mostrar `Token OK para igorvroberto/liganer-prospeccao`. Se falhar aí, o PAT ainda está errado.
+6. No site, edite um lead — deve aparecer **Salvo no servidor e no GitHub**.
+
+> Fine-grained também serve: Resource owner = dono do repo, só `liganer-prospeccao`, **Contents: Read and write**. Classic `repo` é o caminho mais simples.
 
 ## 3) Primeira publicação
 
