@@ -55,6 +55,14 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
     if (f.cidade && l.cidade !== f.cidade) return false
     if (f.situacao && l.situacao !== f.situacao) return false
     if (f.status && l.status !== f.status) return false
+    if (f.indicacao) {
+      const ind = (l.indicacao ?? '').trim()
+      if (f.indicacao === '__vazio__') {
+        if (ind) return false
+      } else if (ind !== f.indicacao) {
+        return false
+      }
+    }
     const dist = Number(l.distancia_km_aracatuba)
     const raio = Number.isFinite(f.raioKm) ? f.raioKm : 200
     if (!Number.isNaN(dist) && dist > raio) return false

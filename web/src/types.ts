@@ -48,6 +48,8 @@ export type Filters = {
   cidade: string
   situacao: string
   status: string
+  /** Valor da indicação, ou `__vazio__` para leads sem indicação */
+  indicacao: string
   /** Distância máxima a partir de Araçatuba (km) */
   raioKm: number
 }
@@ -112,6 +114,7 @@ export const EMPTY_FILTERS: Filters = {
   cidade: '',
   situacao: '',
   status: '',
+  indicacao: '',
   raioKm: RAIO_MAX_KM,
 }
 

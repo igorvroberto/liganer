@@ -37,6 +37,8 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
       (s) => !(STATUS_OPTIONS as readonly string[]).includes(s),
     ),
   ]
+  const indicacoes = uniqueSorted(leads.map((l) => (l.indicacao ?? '').trim()))
+  const temSemIndicacao = leads.some((l) => !(l.indicacao ?? '').trim())
 
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) =>
     onChange({ ...filters, [key]: value })
@@ -157,6 +159,21 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
             {statuses.map((s) => (
               <option key={s} value={s}>
                 {s}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="field">
+          <span>Indicação</span>
+          <select value={filters.indicacao} onChange={(e) => set('indicacao', e.target.value)}>
+            <option value="">Todas</option>
+            {temSemIndicacao ? (
+              <option value="__vazio__">Sem indicação</option>
+            ) : null}
+            {indicacoes.map((i) => (
+              <option key={i} value={i}>
+                {i}
               </option>
             ))}
           </select>
