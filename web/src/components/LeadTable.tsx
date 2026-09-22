@@ -1,7 +1,15 @@
 import { useMemo, useState } from 'react'
 import type { Lead } from '../types'
-import { CRM_OPTIONS, SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
+import {
+  CATEGORIA_OPTIONS,
+  CRM_OPTIONS,
+  LINHA_OPTIONS,
+  POTENCIAL_OPTIONS,
+  SITUACAO_OPTIONS,
+  STATUS_OPTIONS,
+} from '../types'
 import { potClass, sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
+import { formatLinha, parseLinha } from '../lib/linha'
 
 type Props = {
   leads: Lead[]
@@ -39,6 +47,63 @@ function toDateInputValue(raw: string): string {
   const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
   if (br) return `${br[3]}-${br[2]}-${br[1]}`
   return ''
+}
+
+function TextCell({
+  value,
+  onChange,
+  ariaLabel,
+  className,
+}: {
+  value: string
+  onChange: (v: string) => void
+  ariaLabel: string
+  className?: string
+}) {
+  return (
+    <td onClick={(e) => e.stopPropagation()}>
+      <input
+        type="text"
+        className={`table-edit-text${className ? ` ${className}` : ''}`}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+      />
+    </td>
+  )
+}
+
+function SelectCell({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+  className,
+}: {
+  value: string
+  options: readonly string[]
+  onChange: (v: string) => void
+  ariaLabel: string
+  className?: string
+}) {
+  const extra =
+    value && !(options as readonly string[]).includes(value) ? [value] : ([] as string[])
+  return (
+    <td className={className} onClick={(e) => e.stopPropagation()}>
+      <select
+        className="table-edit"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+      >
+        {[...options, ...extra].map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+    </td>
+  )
 }
 
 export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemove }: Props) {
@@ -106,152 +171,150 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
           </tr>
         </thead>
         <tbody>
-          {sorted.map((l) => (
-            <tr
-              key={l.id}
-              className={selectedId === l.id ? 'selected' : undefined}
-              onClick={() => onSelect(l.id)}
-            >
-              {onRemove ? (
-                <td className="col-remove" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    className="btn-remove-row"
-                    onClick={() => onRemove(l.id)}
-                    aria-label={`Remover ${l.empresa}`}
-                    title="Remover lead"
-                  >
-                    ×
-                  </button>
+          {sorted.map((l) => {
+            const linhas = parseLinha(l.linha)
+            const toggleLinha = (opt: string) => {
+              const next = linhas.includes(opt as (typeof LINHA_OPTIONS)[number])
+                ? linhas.filter((x) => x !== opt)
+                : [...linhas, opt]
+              onPatch(l.id, { linha: formatLinha(next) })
+            }
+            return (
+              <tr
+                key={l.id}
+                className={selectedId === l.id ? 'selected' : undefined}
+                onClick={() => onSelect(l.id)}
+              >
+                {onRemove ? (
+                  <td className="col-remove" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="btn-remove-row"
+                      onClick={() => onRemove(l.id)}
+                      aria-label={`Remover ${l.empresa}`}
+                      title="Remover lead"
+                    >
+                      ×
+                    </button>
+                  </td>
+                ) : null}
+                <SelectCell
+                  value={l.potencial || 'Médio'}
+                  options={POTENCIAL_OPTIONS}
+                  onChange={(v) => onPatch(l.id, { potencial: v })}
+                  ariaLabel={`Potencial de ${l.empresa}`}
+                />
+                <TextCell
+                  value={l.empresa ?? ''}
+                  onChange={(v) => onPatch(l.id, { empresa: v })}
+                  ariaLabel={`Empresa`}
+                  className="table-edit-empresa"
+                />
+                <TextCell
+                  value={l.cnpj ?? ''}
+                  onChange={(v) => onPatch(l.id, { cnpj: v })}
+                  ariaLabel={`CNPJ de ${l.empresa}`}
+                  className="table-edit-cnpj"
+                />
+                <TextCell
+                  value={l.cidade ?? ''}
+                  onChange={(v) => onPatch(l.id, { cidade: v })}
+                  ariaLabel={`Cidade de ${l.empresa}`}
+                />
+                <TextCell
+                  value={l.estado ?? ''}
+                  onChange={(v) => onPatch(l.id, { estado: v })}
+                  ariaLabel={`UF de ${l.empresa}`}
+                  className="table-edit-uf"
+                />
+                <td className="mono-cell cell-dist">
+                  {l.distancia_km_aracatuba || '—'}
                 </td>
-              ) : null}
-              <td>
-                <span className={`pot-pill ${potClass(l.potencial)}`}>{l.potencial}</span>
-              </td>
-              <td>
-                <strong>{l.empresa}</strong>
-              </td>
-              <td className="mono-cell">{l.cnpj || '—'}</td>
-              <td>{l.cidade || '—'}</td>
-              <td className="mono-cell">{l.estado || '—'}</td>
-              <td className="mono-cell cell-dist">
-                {l.distancia_km_aracatuba ? `${l.distancia_km_aracatuba} km` : '—'}
-              </td>
-              <td className="linha-cell">{l.linha || '—'}</td>
-              <td className="cat-cell">{l.categoria || '—'}</td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="text"
-                  className="table-edit-text"
+                <td className="linha-cell" onClick={(e) => e.stopPropagation()}>
+                  <div className="linha-checks linha-checks-table">
+                    {LINHA_OPTIONS.map((opt) => (
+                      <label key={opt} className="linha-check">
+                        <input
+                          type="checkbox"
+                          checked={linhas.includes(opt)}
+                          onChange={() => toggleLinha(opt)}
+                        />
+                        <span>{opt === 'Ferro para construção' ? 'Ferro' : opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                </td>
+                <SelectCell
+                  value={l.categoria || 'Metalúrgica'}
+                  options={CATEGORIA_OPTIONS}
+                  onChange={(v) => onPatch(l.id, { categoria: v })}
+                  ariaLabel={`Categoria de ${l.empresa}`}
+                  className="cat-cell"
+                />
+                <TextCell
                   value={l.comprador ?? ''}
-                  onChange={(e) => onPatch(l.id, { comprador: e.target.value })}
-                  aria-label={`Comprador de ${l.empresa}`}
+                  onChange={(v) => onPatch(l.id, { comprador: v })}
+                  ariaLabel={`Comprador de ${l.empresa}`}
                 />
-              </td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <select
-                  className="table-edit"
+                <SelectCell
                   value={l.crm || 'Sem cadastro'}
-                  onChange={(e) => onPatch(l.id, { crm: e.target.value })}
-                  aria-label={`CRM de ${l.empresa}`}
-                >
-                  {[
-                    ...CRM_OPTIONS,
-                    ...(CRM_OPTIONS as readonly string[]).includes(l.crm) || !l.crm
-                      ? []
-                      : [l.crm],
-                  ].map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="text"
-                  className="table-edit-text"
+                  options={CRM_OPTIONS}
+                  onChange={(v) => onPatch(l.id, { crm: v })}
+                  ariaLabel={`CRM de ${l.empresa}`}
+                />
+                <TextCell
                   value={l.vendedor ?? ''}
-                  onChange={(e) => onPatch(l.id, { vendedor: e.target.value })}
-                  aria-label={`Vendedor de ${l.empresa}`}
+                  onChange={(v) => onPatch(l.id, { vendedor: v })}
+                  ariaLabel={`Vendedor de ${l.empresa}`}
                 />
-              </td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="date"
-                  className="table-edit-text"
-                  value={toDateInputValue(l.ultimo_contato ?? '')}
-                  onChange={(e) => onPatch(l.id, { ultimo_contato: e.target.value })}
-                  aria-label={`Último contato de ${l.empresa}`}
-                />
-              </td>
-              <td className="col-status" onClick={(e) => e.stopPropagation()}>
-                <select
-                  className="table-edit table-edit-status"
+                <td onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="date"
+                    className="table-edit-text"
+                    value={toDateInputValue(l.ultimo_contato ?? '')}
+                    onChange={(e) => onPatch(l.id, { ultimo_contato: e.target.value })}
+                    aria-label={`Último contato de ${l.empresa}`}
+                  />
+                </td>
+                <SelectCell
                   value={l.status || 'Sem retorno'}
-                  onChange={(e) => onPatch(l.id, { status: e.target.value })}
-                  aria-label={`Status de ${l.empresa}`}
-                >
-                  {[
-                    ...STATUS_OPTIONS,
-                    ...(STATUS_OPTIONS as readonly string[]).includes(l.status) || !l.status
-                      ? []
-                      : [l.status],
-                  ].map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="date"
-                  className="table-edit-text"
-                  value={toDateInputValue(l.proximo_contato ?? '')}
-                  onChange={(e) => onPatch(l.id, { proximo_contato: e.target.value })}
-                  aria-label={`Próximo contato de ${l.empresa}`}
+                  options={STATUS_OPTIONS}
+                  onChange={(v) => onPatch(l.id, { status: v })}
+                  ariaLabel={`Status de ${l.empresa}`}
+                  className="col-status"
                 />
-              </td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="date"
-                  className="table-edit-text"
-                  value={toDateInputValue(l.ultima_compra ?? '')}
-                  onChange={(e) => onPatch(l.id, { ultima_compra: e.target.value })}
-                  aria-label={`Última compra de ${l.empresa}`}
-                />
-              </td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <select
-                  className="table-edit table-edit-situacao"
+                <td onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="date"
+                    className="table-edit-text"
+                    value={toDateInputValue(l.proximo_contato ?? '')}
+                    onChange={(e) => onPatch(l.id, { proximo_contato: e.target.value })}
+                    aria-label={`Próximo contato de ${l.empresa}`}
+                  />
+                </td>
+                <td onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="date"
+                    className="table-edit-text"
+                    value={toDateInputValue(l.ultima_compra ?? '')}
+                    onChange={(e) => onPatch(l.id, { ultima_compra: e.target.value })}
+                    aria-label={`Última compra de ${l.empresa}`}
+                  />
+                </td>
+                <SelectCell
                   value={l.situacao || 'Qualificado'}
-                  onChange={(e) => onPatch(l.id, { situacao: e.target.value })}
-                  aria-label={`Situação de ${l.empresa}`}
-                >
-                  {[
-                    ...SITUACAO_OPTIONS,
-                    ...(SITUACAO_OPTIONS as readonly string[]).includes(l.situacao) || !l.situacao
-                      ? []
-                      : [l.situacao],
-                  ].map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="text"
-                  className="table-edit-text"
-                  value={l.indicacao ?? ''}
-                  onChange={(e) => onPatch(l.id, { indicacao: e.target.value })}
-                  aria-label={`Indicação de ${l.empresa}`}
+                  options={SITUACAO_OPTIONS}
+                  onChange={(v) => onPatch(l.id, { situacao: v })}
+                  ariaLabel={`Situação de ${l.empresa}`}
                 />
-              </td>
-            </tr>
-          ))}
+                <TextCell
+                  value={l.indicacao ?? ''}
+                  onChange={(v) => onPatch(l.id, { indicacao: v })}
+                  ariaLabel={`Indicação de ${l.empresa}`}
+                />
+              </tr>
+            )
+          })}
         </tbody>
         {onAdd ? (
           <tfoot>
