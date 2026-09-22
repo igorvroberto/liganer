@@ -115,9 +115,10 @@ function leads_to_csv(array $leads): string
         'obras_atuais', 'fornecedor_atual', 'comprador', 'cargo_comprador',
         'telefone', 'whatsapp', 'email', 'site', 'endereco', 'fonte',
         'data_pesquisa', 'ultimo_contato', 'status', 'proximo_contato', 'ultima_compra',
+        'responsavel', 'crm', 'vendedor',
         'situacao', 'proxima_acao',
         'necessidade_identificada', 'motivo_prospect',
-        'abordagem', 'observacoes_comerciais',
+        'abordagem', 'observacoes_comerciais', 'indicacao',
     ];
 
     $fh = fopen('php://temp', 'r+');

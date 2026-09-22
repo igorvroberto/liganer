@@ -3,7 +3,7 @@ import type { Lead } from '../types'
 import { SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
 import { inferLinha, shortenCategoria } from './linha'
 
-const STORAGE_KEY = 'liganer-prospeccao-leads-v6'
+const STORAGE_KEY = 'liganer-prospeccao-leads-v7'
 
 export type LocalStore = {
   leads: Lead[]
@@ -59,6 +59,24 @@ function mapStatus(value: string | undefined): string {
   return 'Sem retorno'
 }
 
+const UF_RE = /\b([A-Z]{2})\b(?:\s*$|[^a-z])/i
+
+/** UF a partir de estado, endereço (/SP) ou padrão SP do radar */
+function inferEstado(lead: {
+  estado?: string
+  endereco?: string
+  cidade?: string
+}): string {
+  const raw = (lead.estado ?? '').trim().toUpperCase()
+  if (/^[A-Z]{2}$/.test(raw)) return raw
+  const end = lead.endereco ?? ''
+  const slash = end.match(/\/\s*([A-Za-z]{2})\b/)
+  if (slash) return slash[1].toUpperCase()
+  const m = end.match(UF_RE)
+  if (m) return m[1].toUpperCase()
+  return 'SP'
+}
+
 /** Remove campos legados e normaliza situação/status */
 export function normalizeLead(
   row: Lead & {
@@ -82,6 +100,12 @@ export function normalizeLead(
     ...rest,
     categoria: shortenCategoria(rest.categoria),
     linha,
+    estado: inferEstado(rest),
+    responsavel: rest.responsavel ?? '',
+    crm: rest.crm ?? '',
+    vendedor: rest.vendedor ?? '',
+    indicacao: rest.indicacao ?? '',
+    observacoes_comerciais: rest.observacoes_comerciais ?? '',
     ultimo_contato: rest.ultimo_contato ?? '',
     proximo_contato: rest.proximo_contato ?? '',
     ultima_compra: rest.ultima_compra ?? '',
@@ -137,11 +161,15 @@ export function createEmptyLead(leads: Lead[]): Lead {
     status: 'Sem retorno',
     proximo_contato: '',
     ultima_compra: '',
+    responsavel: '',
+    crm: '',
+    vendedor: '',
     situacao: 'Qualificado',
     proxima_acao: '',
     necessidade_identificada: '',
     motivo_prospect: '',
     abordagem: '',
     observacoes_comerciais: '',
+    indicacao: '',
   })
 }

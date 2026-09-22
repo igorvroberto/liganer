@@ -46,12 +46,16 @@ HEADERS = [
     "status",
     "proximo_contato",
     "ultima_compra",
+    "responsavel",
+    "crm",
+    "vendedor",
     "situacao",
     "proxima_acao",
     "necessidade_identificada",
     "motivo_prospect",
     "abordagem",
     "observacoes_comerciais",
+    "indicacao",
 ]
 
 # Campos alinhados com HEADERS (exceto id, preenchido depois)

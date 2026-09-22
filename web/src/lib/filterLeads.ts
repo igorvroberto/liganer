@@ -18,15 +18,21 @@ export type SortKey =
   | 'empresa'
   | 'cnpj'
   | 'cidade'
+  | 'estado'
   | 'categoria'
   | 'linha'
   | 'produto_provavel'
+  | 'responsavel'
+  | 'crm'
+  | 'vendedor'
   | 'situacao'
   | 'ultimo_contato'
   | 'status'
   | 'proximo_contato'
   | 'ultima_compra'
+  | 'observacoes_comerciais'
   | 'proxima_acao'
+  | 'indicacao'
 
 export type SortDir = 'asc' | 'desc'
 
@@ -57,11 +63,15 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
       l.empresa,
       l.cnpj,
       l.cidade,
+      l.estado,
       l.categoria,
       l.subcategoria,
       l.linha,
       l.produto_provavel,
       l.produto_secundario,
+      l.responsavel,
+      l.crm,
+      l.vendedor,
       l.motivo_prospect,
       l.proxima_acao,
       l.telefone,
@@ -69,6 +79,7 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
       l.status,
       l.ultima_compra,
       l.observacoes_comerciais,
+      l.indicacao,
     ]
       .join(' ')
       .toLowerCase()
@@ -110,6 +121,21 @@ function cmp(a: Lead, b: Lead, key: SortKey): number {
       return (a.proxima_acao ?? '').localeCompare(b.proxima_acao ?? '', 'pt-BR')
     case 'cidade':
       return (a.cidade ?? '').localeCompare(b.cidade ?? '', 'pt-BR')
+    case 'estado':
+      return (a.estado ?? '').localeCompare(b.estado ?? '', 'pt-BR')
+    case 'responsavel':
+      return (a.responsavel ?? '').localeCompare(b.responsavel ?? '', 'pt-BR')
+    case 'crm':
+      return (a.crm ?? '').localeCompare(b.crm ?? '', 'pt-BR')
+    case 'vendedor':
+      return (a.vendedor ?? '').localeCompare(b.vendedor ?? '', 'pt-BR')
+    case 'observacoes_comerciais':
+      return (a.observacoes_comerciais ?? '').localeCompare(
+        b.observacoes_comerciais ?? '',
+        'pt-BR',
+      )
+    case 'indicacao':
+      return (a.indicacao ?? '').localeCompare(b.indicacao ?? '', 'pt-BR')
     case 'cnpj':
       return (a.cnpj ?? '').localeCompare(b.cnpj ?? '', 'pt-BR')
     case 'empresa':

@@ -16,15 +16,21 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'empresa', label: 'Empresa' },
   { key: 'cnpj', label: 'CNPJ' },
   { key: 'cidade', label: 'Cidade' },
+  { key: 'estado', label: 'UF' },
   { key: 'linha', label: 'Linha' },
   { key: 'categoria', label: 'Cat.' },
   { key: 'produto_provavel', label: 'Produto' },
-  { key: 'situacao', label: 'Situação' },
+  { key: 'responsavel', label: 'Responsável' },
+  { key: 'crm', label: 'CRM' },
+  { key: 'vendedor', label: 'Vendedor' },
   { key: 'ultimo_contato', label: 'Último contato' },
   { key: 'status', label: 'Status' },
   { key: 'proximo_contato', label: 'Próximo contato' },
   { key: 'ultima_compra', label: 'Última compra' },
+  { key: 'observacoes_comerciais', label: 'Observação' },
   { key: 'proxima_acao', label: 'Próxima ação' },
+  { key: 'situacao', label: 'Situação' },
+  { key: 'indicacao', label: 'Indicação' },
 ]
 
 function toDateInputValue(raw: string): string {
@@ -112,27 +118,36 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props
                   <div className="muted tiny">{l.distancia_km_aracatuba} km</div>
                 ) : null}
               </td>
+              <td className="mono-cell">{l.estado || '—'}</td>
               <td className="linha-cell">{l.linha || '—'}</td>
               <td className="cat-cell">{l.categoria || '—'}</td>
               <td className="cell-text">{l.produto_provavel || '—'}</td>
               <td onClick={(e) => e.stopPropagation()}>
-                <select
-                  className="table-edit table-edit-situacao"
-                  value={l.situacao || 'Qualificado'}
-                  onChange={(e) => onPatch(l.id, { situacao: e.target.value })}
-                  aria-label={`Situação de ${l.empresa}`}
-                >
-                  {[
-                    ...SITUACAO_OPTIONS,
-                    ...(SITUACAO_OPTIONS as readonly string[]).includes(l.situacao) || !l.situacao
-                      ? []
-                      : [l.situacao],
-                  ].map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  className="table-edit-text"
+                  value={l.responsavel ?? ''}
+                  onChange={(e) => onPatch(l.id, { responsavel: e.target.value })}
+                  aria-label={`Responsável de ${l.empresa}`}
+                />
+              </td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="text"
+                  className="table-edit-text"
+                  value={l.crm ?? ''}
+                  onChange={(e) => onPatch(l.id, { crm: e.target.value })}
+                  aria-label={`CRM de ${l.empresa}`}
+                />
+              </td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="text"
+                  className="table-edit-text"
+                  value={l.vendedor ?? ''}
+                  onChange={(e) => onPatch(l.id, { vendedor: e.target.value })}
+                  aria-label={`Vendedor de ${l.empresa}`}
+                />
               </td>
               <td onClick={(e) => e.stopPropagation()}>
                 <input
@@ -180,7 +195,44 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props
                   aria-label={`Última compra de ${l.empresa}`}
                 />
               </td>
+              <td className="cell-text" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="text"
+                  className="table-edit-text"
+                  value={l.observacoes_comerciais ?? ''}
+                  onChange={(e) => onPatch(l.id, { observacoes_comerciais: e.target.value })}
+                  aria-label={`Observação de ${l.empresa}`}
+                />
+              </td>
               <td className="cell-text">{l.proxima_acao || '—'}</td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <select
+                  className="table-edit table-edit-situacao"
+                  value={l.situacao || 'Qualificado'}
+                  onChange={(e) => onPatch(l.id, { situacao: e.target.value })}
+                  aria-label={`Situação de ${l.empresa}`}
+                >
+                  {[
+                    ...SITUACAO_OPTIONS,
+                    ...(SITUACAO_OPTIONS as readonly string[]).includes(l.situacao) || !l.situacao
+                      ? []
+                      : [l.situacao],
+                  ].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </td>
+              <td onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="text"
+                  className="table-edit-text"
+                  value={l.indicacao ?? ''}
+                  onChange={(e) => onPatch(l.id, { indicacao: e.target.value })}
+                  aria-label={`Indicação de ${l.empresa}`}
+                />
+              </td>
             </tr>
           ))}
         </tbody>
