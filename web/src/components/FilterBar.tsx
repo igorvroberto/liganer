@@ -1,6 +1,7 @@
 import type { Filters, Lead } from '../types'
 import {
   CATEGORIA_OPTIONS,
+  LINHA_OPTIONS,
   POTENCIAL_OPTIONS,
   RAIO_MAX_KM,
   SITUACAO_OPTIONS,
@@ -73,6 +74,18 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
             <span>100</span>
             <span>200</span>
           </div>
+        </label>
+
+        <label className="field">
+          <span>Linha</span>
+          <select value={filters.linha} onChange={(e) => set('linha', e.target.value)}>
+            <option value="">Todas</option>
+            {LINHA_OPTIONS.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="field">

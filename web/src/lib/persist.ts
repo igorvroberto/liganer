@@ -1,8 +1,9 @@
 import Papa from 'papaparse'
 import type { Lead } from '../types'
 import { SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
+import { inferLinha } from './linha'
 
-const STORAGE_KEY = 'liganer-prospeccao-leads-v4'
+const STORAGE_KEY = 'liganer-prospeccao-leads-v5'
 
 export type LocalStore = {
   leads: Lead[]
@@ -78,6 +79,7 @@ export function normalizeLead(
   }
   return {
     ...rest,
+    linha: inferLinha(rest),
     ultimo_contato: rest.ultimo_contato ?? '',
     proximo_contato: rest.proximo_contato ?? '',
     ultima_compra: rest.ultima_compra ?? '',
@@ -108,6 +110,7 @@ export function createEmptyLead(leads: Lead[]): Lead {
     distancia_km_aracatuba: '',
     categoria: 'Construtora',
     subcategoria: '',
+    linha: 'Ferro para construção',
     produto_provavel: '',
     produto_secundario: '',
     justificativa_produto: '',

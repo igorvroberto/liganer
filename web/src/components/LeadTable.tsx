@@ -16,6 +16,7 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'empresa', label: 'Empresa' },
   { key: 'cnpj', label: 'CNPJ' },
   { key: 'cidade', label: 'Cidade' },
+  { key: 'linha', label: 'Linha' },
   { key: 'categoria', label: 'Cat.' },
   { key: 'produto_provavel', label: 'Produto' },
   { key: 'situacao', label: 'Situação' },
@@ -103,7 +104,6 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props
               </td>
               <td>
                 <strong>{l.empresa}</strong>
-                <div className="muted tiny">{l.id}</div>
               </td>
               <td className="mono-cell">{l.cnpj || '—'}</td>
               <td>
@@ -112,6 +112,7 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props
                   <div className="muted tiny">{l.distancia_km_aracatuba} km</div>
                 ) : null}
               </td>
+              <td className="linha-cell">{l.linha || '—'}</td>
               <td className="cat-cell">{l.categoria || '—'}</td>
               <td className="cell-text">{l.produto_provavel || '—'}</td>
               <td onClick={(e) => e.stopPropagation()}>

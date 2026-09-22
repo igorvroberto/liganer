@@ -48,6 +48,92 @@ CATEGORIA_ABREV = {
     "Tanques e vasos": "TV",
 }
 
+# Linha de produto (material) — independente da categoria (operação)
+LINHAS = [
+    "Ferro para construção",
+    "Carbono",
+    "Inox",
+]
+
+_LINHA_POR_CATEGORIA = {
+    "Construtora": "Ferro para construção",
+    "Corte e dobra ferro para construção": "Ferro para construção",
+    "Revenda ferro para construção": "Ferro para construção",
+    "Pré-moldados": "Ferro para construção",
+    "Artefatos de concreto": "Ferro para construção",
+    "Fundações": "Ferro para construção",
+    "Infraestrutura": "Ferro para construção",
+    "Corte e dobra carbono": "Carbono",
+    "Revenda carbono": "Carbono",
+    "Metalúrgica carbono": "Carbono",
+    "Indústria carbono": "Carbono",
+    "Silos e estruturas agro": "Carbono",
+    "Tanques e vasos": "Carbono",
+    "Corte e dobra inox": "Inox",
+    "Revenda inox": "Inox",
+    "Metalúrgica inox": "Inox",
+    "Indústria inox": "Inox",
+}
+
+
+def format_linha(values) -> str:
+    ordered = []
+    for name in LINHAS:
+        if name in values:
+            ordered.append(name)
+    return "; ".join(ordered)
+
+
+def parse_linha(raw: str) -> list[str]:
+    parts = [p.strip() for p in (raw or "").replace(",", ";").split(";") if p.strip()]
+    return [p for p in LINHAS if p in parts]
+
+
+def infer_linha(lead: dict) -> str:
+    """Infere linha de produto a partir da categoria e, se multiproduto, dos textos."""
+    existing = parse_linha(lead.get("linha") or "")
+    if existing:
+        return format_linha(existing)
+
+    found: set[str] = set()
+    cat = (lead.get("categoria") or "").strip()
+    cat = _CATEGORIA_ALIASES.get(cat, cat)
+    base = _LINHA_POR_CATEGORIA.get(cat)
+    if base:
+        found.add(base)
+
+    multi = (lead.get("multioportunidade") or "").strip().lower().startswith("sim")
+    blob = " ".join(
+        [
+            lead.get("produto_provavel") or "",
+            lead.get("produto_secundario") or "",
+            lead.get("justificativa_produto") or "",
+        ]
+    ).lower()
+
+    if multi or not found:
+        if any(
+            k in blob
+            for k in ("ca-50", "ca-60", "vergalhão", "si 50", "armadura", "treliça", "trelica")
+        ):
+            found.add("Ferro para construção")
+        if any(k in blob for k in ("chapa", "carbono", "metalon", "laminad")):
+            found.add("Carbono")
+        elif "bobina" in blob and not any(
+            k in blob for k in ("ca-50", "ca-60", "vergalhão", "si 50")
+        ):
+            found.add("Carbono")
+        if "inox" in blob:
+            found.add("Inox")
+
+    if not found and base:
+        found.add(base)
+    if not found:
+        found.add("Carbono")
+
+    return format_linha(found)
+
+
 _CDC_EMPRESAS = (
     "tornofer",
     "fratini",
