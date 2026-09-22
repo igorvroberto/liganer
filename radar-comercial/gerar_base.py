@@ -10,6 +10,7 @@ from categorias import (
     remap_categoria_detalhada,
 )
 from leads_wave_setores import LEADS_SETORES
+from leads_wave_paulo import LEADS_PAULO
 
 DATA = "08/09/2026"
 HEADERS = [
@@ -101,7 +102,7 @@ LEADS = [
     },
     {
         "empresa": "Serv Aço",
-        "cnpj": "Não identificado",
+        "cnpj": "48.203.570/0001-05",
         "cidade": "Birigui",
         "estado": "SP",
         "distancia_km_aracatuba": "20",
@@ -131,12 +132,15 @@ LEADS = [
         "status": "Sem retorno",
         "proximo_contato": "",
         "ultima_compra": "",
+        "crm": "Ativo",
+        "vendedor": "Hugo",
         "situacao": "Qualificado",
         "proxima_acao": "Visita Birigui junto com Saita; cotação CA-50/60 + treliças",
         "necessidade_identificada": "Suprimento recorrente de vergalhão e treliças",
         "motivo_prospect": "CD ativa a 20 km; compra recorrente; atende construtoras de Birigui",
         "abordagem": "Mesma lógica Medida Exata: matéria-prima + prazo. Comparar frete Araçatuba vs fornecedor atual.",
-        "observacoes_comerciais": "Agrupar rota Araçatuba–Birigui.",
+        "observacoes_comerciais": "Agrupar rota Araçatuba–Birigui. | Atualizado via indicação Paulo (xlsx).",
+        "indicacao": "Paulo",
     },
     {
         "empresa": "Vivafer Ferro e Aço",
@@ -588,7 +592,7 @@ LEADS = [
         "o_que_fabrica_constroi": "Peças e equipamentos para sucroalcooleiro, mineração, alimentício, químico, energia",
         "obras_atuais": "N/A — produção contínua sob encomenda",
         "fornecedor_atual": "Não identificado",
-        "comprador": "Não identificado",
+        "comprador": "Cleyton ou Carla",
         "cargo_comprador": "Provável — compras industriais / PCP; validar",
         "telefone": "Não identificado no site (formulário)",
         "whatsapp": "Não identificado",
@@ -601,16 +605,19 @@ LEADS = [
         "status": "Sem retorno",
         "proximo_contato": "",
         "ultima_compra": "",
+        "crm": "Inativo",
+        "vendedor": "Sem informação",
         "situacao": "Qualificado",
         "proxima_acao": "Visita presencial à fábrica; falar com compras: espessuras de chapa carbono e inox",
         "necessidade_identificada": "Chapas carbono grossas + inox para caldeiraria",
         "motivo_prospect": "Maior transformador metal-mecânico local identificado; multiproduto; consumo recorrente",
         "abordagem": "Abrir com chapa quente/oxicorte (necessidade óbvia). Segundo passo: inox 304. Levar tabela de espessuras.",
-        "observacoes_comerciais": "⭐ MULTIPRODUTO + MULTIOPORTUNIDADE (M + I). Capital social ~R$ 6,7 mi nas bases. Alvo âncora do funil M.",
+        "observacoes_comerciais": "⭐ MULTIPRODUTO + MULTIOPORTUNIDADE (M + I). Capital social ~R$ 6,7 mi nas bases. Alvo âncora do funil M. | Atualizado via indicação Paulo (xlsx).",
+        "indicacao": "Paulo",
     },
     {
         "empresa": "Passador & Cia Ltda.",
-        "cnpj": "Não identificado",
+        "cnpj": "45.662.236/0001-21",
         "cidade": "Andradina",
         "estado": "SP",
         "distancia_km_aracatuba": "100",
@@ -627,7 +634,7 @@ LEADS = [
         "o_que_fabrica_constroi": "Tanques, dutos, estruturas, tubulações, steel deck, insertos, guarda-corpo",
         "obras_atuais": "Atende usinas (incl. região Andradina/Raízen)",
         "fornecedor_atual": "Não identificado",
-        "comprador": "Não identificado",
+        "comprador": "Líbero",
         "cargo_comprador": "Provável — compras; validar",
         "telefone": "(18) 3722-3636",
         "whatsapp": "Não identificado",
@@ -640,16 +647,19 @@ LEADS = [
         "status": "Sem retorno",
         "proximo_contato": "",
         "ultima_compra": "",
+        "crm": "Sem cadastro",
+        "vendedor": "",
         "situacao": "Qualificado",
         "proxima_acao": "Ligar + visita Andradina combinada com JBS/Raízen Gasa",
         "necessidade_identificada": "Chapas carbono e inox para caldeiraria e usinas",
         "motivo_prospect": "Grande transformador com multiproduto e vínculo com sucroalcooleiro",
         "abordagem": "Foco chapa quente espessas + inox. Mencionar capacidade de fornecimento para projetos de usina.",
-        "observacoes_comerciais": "⭐ MULTIPRODUTO. Distância ~100 km — justificar com volume.",
+        "observacoes_comerciais": "⭐ MULTIPRODUTO. Distância ~100 km — justificar com volume. | Atualizado via indicação Paulo (xlsx).",
+        "indicacao": "Paulo",
     },
     {
         "empresa": "Megatec Implementos Agrícolas",
-        "cnpj": "Não identificado",
+        "cnpj": "48.429.823/0001-63 / 48.429.823/0010-54 (matriz/filial)",
         "cidade": "Araçatuba",
         "estado": "SP",
         "distancia_km_aracatuba": "0",
@@ -666,7 +676,7 @@ LEADS = [
         "o_que_fabrica_constroi": "Transbordos, implementos sucroalcooleiros e para grãos",
         "obras_atuais": "N/A — linha de produção",
         "fornecedor_atual": "Não identificado",
-        "comprador": "Não identificado",
+        "comprador": "Oseas",
         "cargo_comprador": "Provável — compras; validar",
         "telefone": "(18) 2103-2021",
         "whatsapp": "Não identificado",
@@ -679,12 +689,15 @@ LEADS = [
         "status": "Sem retorno",
         "proximo_contato": "",
         "ultima_compra": "",
+        "crm": "Sem cadastro",
+        "vendedor": "",
         "situacao": "Qualificado",
         "proxima_acao": "E-mail + visita: mapear espessuras de chapa e bitolas de tubo/metalon",
         "necessidade_identificada": "Aço estrutural contínuo para implementos",
         "motivo_prospect": "Transformador verticalizado; vários grupos do catálogo; recorrência industrial",
         "abordagem": "Abrir com chapa + metalon/tubo (kit implemento). Oferecer programação de fornecimento.",
-        "observacoes_comerciais": "⭐ MULTIPRODUTO. Vizinha da Nestlé na Rondon — rota industrial.",
+        "observacoes_comerciais": "⭐ MULTIPRODUTO. Vizinha da Nestlé na Rondon — rota industrial. | Paulo: Indústria · Equipamentos | Atualizado via indicação Paulo (xlsx).",
+        "indicacao": "Paulo",
     },
     {
         "empresa": "Estruturas Metálicas Saita",
@@ -727,7 +740,7 @@ LEADS = [
     },
     {
         "empresa": "André Ferro e Aço",
-        "cnpj": "Não identificado",
+        "cnpj": "23.422.100/0001-01",
         "cidade": "Araçatuba",
         "estado": "SP",
         "distancia_km_aracatuba": "0",
@@ -757,12 +770,15 @@ LEADS = [
         "status": "Sem retorno",
         "proximo_contato": "",
         "ultima_compra": "",
+        "crm": "Inativo",
+        "vendedor": "Hugo",
         "situacao": "Qualificado",
         "proxima_acao": "Avaliar se há linha em que possam comprar (atacado) sem conflito; senão manter fora da rota",
         "necessidade_identificada": "Compra de bobina/chapa para revenda — possível cliente atacado",
         "motivo_prospect": "Portfólio sobreposto (chapas, tubos, perfis, barras) + serviço de corte",
         "abordagem": "Abordar com foco em venda atacado para centro de serviço.",
-        "observacoes_comerciais": "Pode gerar indicação de clientes finais. Não confundir corte de chapa com CD de vergalhão.",
+        "observacoes_comerciais": "Pode gerar indicação de clientes finais. Não confundir corte de chapa com CD de vergalhão. | Atualizado via indicação Paulo (xlsx).",
+        "indicacao": "Paulo",
     },
     {
         "empresa": "Serralheria 5 Estrelas",
@@ -1391,7 +1407,7 @@ LEADS = [
     },
     {
         "empresa": "Frigorífico Better Beef",
-        "cnpj": "05.826.986/0017-34 (filial listada)",
+        "cnpj": "05.826.986/0017-34 (filial listada); filial Rancharia 05.826.986/0002-58",
         "cidade": "Araçatuba",
         "estado": "SP",
         "distancia_km_aracatuba": "0",
@@ -1421,12 +1437,15 @@ LEADS = [
         "status": "Sem retorno",
         "proximo_contato": "",
         "ultima_compra": "",
+        "crm": "Sem cadastro",
+        "vendedor": "",
         "situacao": "Qualificado",
         "proxima_acao": "Confirmar se unidade opera; telefone; canal de manutenção",
         "necessidade_identificada": "Inox sanitário se planta ativa",
         "motivo_prospect": "Frigorífico local — justificativa de inox se ativo",
         "abordagem": "Validar operação antes de ofertar.",
-        "observacoes_comerciais": "Histórico regional de frigoríficos com aberturas/fechamentos — validar.",
+        "observacoes_comerciais": "Histórico regional de frigoríficos com aberturas/fechamentos — validar. | Indicação Paulo: unidade Rancharia (CNPJ …0002-58). | Atualizado via indicação Paulo (xlsx).",
+        "indicacao": "Paulo",
     },
     # ========== R — DISTRIBUIÇÃO (classificação cuidadosa) ==========
     {
@@ -3977,6 +3996,7 @@ LEADS = [
 
 # Onda setores (pré-moldados, artefatos, fundações, infraestrutura, silos, tanques)
 LEADS.extend(LEADS_SETORES)
+LEADS.extend(LEADS_PAULO)
 
 def main():
     out = Path(__file__).parent / "LEADS.csv"
