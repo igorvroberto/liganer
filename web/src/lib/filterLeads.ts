@@ -22,7 +22,7 @@ export type SortKey =
   | 'categoria'
   | 'linha'
   | 'produto_provavel'
-  | 'responsavel'
+  | 'comprador'
   | 'crm'
   | 'vendedor'
   | 'situacao'
@@ -69,7 +69,7 @@ export function filterLeads(leads: Lead[], f: Filters): Lead[] {
       l.linha,
       l.produto_provavel,
       l.produto_secundario,
-      l.responsavel,
+      l.comprador,
       l.crm,
       l.vendedor,
       l.motivo_prospect,
@@ -123,8 +123,8 @@ function cmp(a: Lead, b: Lead, key: SortKey): number {
       return (a.cidade ?? '').localeCompare(b.cidade ?? '', 'pt-BR')
     case 'estado':
       return (a.estado ?? '').localeCompare(b.estado ?? '', 'pt-BR')
-    case 'responsavel':
-      return (a.responsavel ?? '').localeCompare(b.responsavel ?? '', 'pt-BR')
+    case 'comprador':
+      return (a.comprador ?? '').localeCompare(b.comprador ?? '', 'pt-BR')
     case 'crm':
       return (a.crm ?? '').localeCompare(b.crm ?? '', 'pt-BR')
     case 'vendedor':

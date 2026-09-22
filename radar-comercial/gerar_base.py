@@ -46,7 +46,6 @@ HEADERS = [
     "status",
     "proximo_contato",
     "ultima_compra",
-    "responsavel",
     "crm",
     "vendedor",
     "situacao",

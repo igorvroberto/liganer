@@ -3,7 +3,7 @@ import type { Lead } from '../types'
 import { CRM_OPTIONS, SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
 import { inferLinha, shortenCategoria } from './linha'
 
-const STORAGE_KEY = 'liganer-prospeccao-leads-v7'
+const STORAGE_KEY = 'liganer-prospeccao-leads-v8'
 
 export type LocalStore = {
   leads: Lead[]
@@ -89,17 +89,20 @@ export function normalizeLead(
     visita_presencial?: string
     classificacao_comercial?: string
     multiproduto?: string
+    responsavel?: string
   },
 ): Lead {
   const {
     visita_presencial: _v,
     classificacao_comercial: _c,
     multiproduto: _m,
+    responsavel: _r,
     ...rest
   } = row as Lead & {
     visita_presencial?: string
     classificacao_comercial?: string
     multiproduto?: string
+    responsavel?: string
   }
   const linha = inferLinha(rest)
   return {
@@ -107,7 +110,7 @@ export function normalizeLead(
     categoria: shortenCategoria(rest.categoria),
     linha,
     estado: inferEstado(rest),
-    responsavel: rest.responsavel ?? '',
+    comprador: rest.comprador ?? '',
     crm: mapCrm(rest.crm),
     vendedor: rest.vendedor ?? '',
     indicacao: rest.indicacao ?? '',
@@ -167,7 +170,6 @@ export function createEmptyLead(leads: Lead[]): Lead {
     status: 'Sem retorno',
     proximo_contato: '',
     ultima_compra: '',
-    responsavel: '',
     crm: 'Sem cadastro',
     vendedor: '',
     situacao: 'Qualificado',

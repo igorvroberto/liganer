@@ -34,7 +34,6 @@ export type Lead = {
   status: string
   proximo_contato: string
   ultima_compra: string
-  responsavel: string
   crm: string
   vendedor: string
   situacao: string
@@ -137,7 +136,7 @@ export const EDITABLE_FIELDS: {
   { key: 'potencial', label: 'Potencial', kind: 'select', options: POTENCIAL_OPTIONS },
   { key: 'produto_provavel', label: 'Produto principal', kind: 'textarea' },
   { key: 'produto_secundario', label: 'Produto secundário', kind: 'textarea' },
-  { key: 'responsavel', label: 'Responsável', kind: 'text' },
+  { key: 'comprador', label: 'Comprador', kind: 'text' },
   { key: 'crm', label: 'CRM', kind: 'select', options: CRM_OPTIONS },
   { key: 'vendedor', label: 'Vendedor', kind: 'text' },
   { key: 'ultimo_contato', label: 'Último contato', kind: 'date' },
@@ -151,7 +150,6 @@ export const EDITABLE_FIELDS: {
   { key: 'telefone', label: 'Telefone', kind: 'text' },
   { key: 'whatsapp', label: 'WhatsApp', kind: 'text' },
   { key: 'email', label: 'E-mail', kind: 'text' },
-  { key: 'comprador', label: 'Comprador', kind: 'text' },
   { key: 'situacao', label: 'Situação', kind: 'select', options: SITUACAO_OPTIONS },
   { key: 'indicacao', label: 'Indicação', kind: 'text' },
 ]
