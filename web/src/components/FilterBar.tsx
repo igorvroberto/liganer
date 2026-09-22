@@ -79,9 +79,7 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
         </label>
 
         <label className="field field-raio">
-          <span>
-            Raio <strong>{raioValue} km</strong>
-          </span>
+          <span className="sr-only">Raio em km a partir de Araçatuba</span>
           <input
             type="range"
             min={0}

@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FilterBar } from './components/FilterBar'
 import { LeadDetail } from './components/LeadDetail'
 import { LeadTable } from './components/LeadTable'
-import { StatsBar } from './components/StatsBar'
-import { filterLeads, topAttackList } from './lib/filterLeads'
+import { filterLeads } from './lib/filterLeads'
 import { loadLeads, type LeadsSource } from './lib/loadLeads'
 import {
   clearLocalLeads,
@@ -17,7 +16,6 @@ import { createSyncQueue, loadSyncConfig, type SyncConfig } from './lib/syncApi'
 import { EMPTY_FILTERS, raioMaxFromLeads, type Filters, type Lead } from './types'
 import './App.css'
 
-type Tab = 'todos' | 'top20'
 type SyncUi = { state: 'idle' | 'saving' | 'saved' | 'error' | 'local-only'; detail?: string }
 
 export default function App() {
@@ -29,7 +27,6 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [tab, setTab] = useState<Tab>('todos')
   const [syncCfg, setSyncCfg] = useState<SyncConfig>({})
   const [syncUi, setSyncUi] = useState<SyncUi>({ state: 'idle' })
   const syncQueue = useRef(createSyncQueue(1200))
@@ -147,7 +144,6 @@ export default function App() {
     setLeads(next)
     queueSync(next, { immediate: true, message: `Adiciona lead ${lead.id}` })
     setFilters(EMPTY_FILTERS)
-    setTab('todos')
     setSelectedId(lead.id)
   }, [leads, queueSync])
 
@@ -173,8 +169,6 @@ export default function App() {
   }
 
   const filtered = useMemo(() => filterLeads(leads, filters), [leads, filters])
-  const top20 = useMemo(() => topAttackList(leads, 20), [leads])
-  const view = tab === 'top20' ? top20 : filtered
   const selected = leads.find((l) => l.id === selectedId) ?? null
 
   const syncLabel =
@@ -203,26 +197,9 @@ export default function App() {
           />
           <div>
             <h1>Prospecção</h1>
-            <p>Radar comercial · aço e metalurgia · Araçatuba</p>
           </div>
         </div>
         <div className="topbar-right">
-          <nav className="tabs" aria-label="Visões">
-            <button
-              type="button"
-              className={tab === 'todos' ? 'active' : undefined}
-              onClick={() => setTab('todos')}
-            >
-              Todos / filtros
-            </button>
-            <button
-              type="button"
-              className={tab === 'top20' ? 'active' : undefined}
-              onClick={() => setTab('top20')}
-            >
-              TOP 20 ataque
-            </button>
-          </nav>
           <div className="sync-note">
             <span>
               Fonte: {source?.label ?? '…'}
@@ -277,27 +254,18 @@ export default function App() {
 
       {!loading && !error ? (
         <>
-          {tab === 'todos' ? (
-            <FilterBar
-              leads={leads}
-              filters={filters}
-              onChange={setFilters}
-              onClear={() =>
-                setFilters({ ...EMPTY_FILTERS, raioKm: raioMaxFromLeads(leads) })
-              }
-            />
-          ) : (
-            <p className="banner">
-              TOP 20 ordenado por potencial, consumo, corte/dobra e proximidade. Datas e status
-              editam na tabela; demais campos no detalhe abaixo.
-            </p>
-          )}
-
-          <StatsBar all={leads} filtered={view} />
+          <FilterBar
+            leads={leads}
+            filters={filters}
+            onChange={setFilters}
+            onClear={() =>
+              setFilters({ ...EMPTY_FILTERS, raioKm: raioMaxFromLeads(leads) })
+            }
+          />
 
           <div className="workspace">
             <LeadTable
-              leads={view}
+              leads={filtered}
               selectedId={selectedId}
               onSelect={(id) => {
                 setSelectedId(id)
