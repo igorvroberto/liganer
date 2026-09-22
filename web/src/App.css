@@ -301,20 +301,20 @@ button {
 }
 
 .table-edit {
-  max-width: 8.5rem;
+  width: auto;
+  max-width: none;
+  min-width: max-content;
 }
 
 .table-edit-situacao {
   min-width: 8.5rem;
-  max-width: none;
   width: auto;
 }
 
 .table-edit-status,
 .col-status .table-edit {
   min-width: 11.5rem;
-  max-width: none;
-  width: 100%;
+  width: auto;
 }
 
 .col-status {
@@ -323,6 +323,7 @@ button {
 
 .table-edit-text {
   min-width: 10rem;
+  width: auto;
 }
 
 .edit-grid {
@@ -397,9 +398,25 @@ button {
   max-height: calc(100vh - 280px);
 }
 
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-warm);
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
 .leads-table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
   font-size: 0.92rem;
   background: #fff;
 }
@@ -410,6 +427,8 @@ button {
   border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
+  white-space: nowrap;
+  width: 1%;
 }
 
 .leads-table th {
@@ -417,11 +436,33 @@ button {
   top: 0;
   background: var(--accent-light);
   font-size: 0.72rem;
+  z-index: 1;
+}
+
+.leads-table td.cell-text,
+.leads-table td.cat-cell {
+  white-space: normal;
+  width: auto;
+  max-width: 28rem;
+  line-height: 1.35;
+}
+
+.table-add-row td {
+  background: var(--bg-accent);
+  border-bottom: 0;
+  white-space: normal;
+}
+
+.table-add-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.leads-table th {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #24312c;
   font-weight: 800;
-  z-index: 1;
 }
 
 .th-sort {
@@ -458,19 +499,9 @@ button {
   background: #c600000f;
 }
 
-.clamp {
-  max-width: 220px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 .cat-cell {
-  max-width: 160px;
   font-size: 0.85rem;
   line-height: 1.25;
-  white-space: normal;
 }
 
 .tiny {

@@ -85,3 +85,58 @@ export function normalizeLead(
     situacao: mapSituacao(rest.situacao),
   } as Lead
 }
+
+/** Próximo id ARA-NNN a partir dos leads existentes */
+export function nextLeadId(leads: Lead[]): string {
+  let max = 0
+  for (const l of leads) {
+    const m = /^ARA-(\d+)$/i.exec((l.id ?? '').trim())
+    if (m) max = Math.max(max, Number(m[1]))
+  }
+  return `ARA-${String(max + 1).padStart(3, '0')}`
+}
+
+/** Lead em branco para inclusão manual (empresa preenchida para passar no sync) */
+export function createEmptyLead(leads: Lead[]): Lead {
+  const today = new Date().toLocaleDateString('pt-BR')
+  return normalizeLead({
+    id: nextLeadId(leads),
+    empresa: 'Nova empresa',
+    cnpj: '',
+    cidade: '',
+    estado: 'SP',
+    distancia_km_aracatuba: '',
+    categoria: 'Construtora',
+    subcategoria: '',
+    produto_provavel: '',
+    produto_secundario: '',
+    justificativa_produto: '',
+    potencial: 'Médio',
+    multioportunidade: 'Não',
+    consumo_estimado: '',
+    compra_recorrente: '',
+    tipo_operacao: '',
+    o_que_fabrica_constroi: '',
+    obras_atuais: '',
+    fornecedor_atual: '',
+    comprador: '',
+    cargo_comprador: '',
+    telefone: '',
+    whatsapp: '',
+    email: '',
+    site: '',
+    endereco: '',
+    fonte: 'Inclusão manual',
+    data_pesquisa: today,
+    ultimo_contato: '',
+    status: 'Sem retorno',
+    proximo_contato: '',
+    ultima_compra: '',
+    situacao: 'Qualificado',
+    proxima_acao: '',
+    necessidade_identificada: '',
+    motivo_prospect: '',
+    abordagem: '',
+    observacoes_comerciais: '',
+  })
+}

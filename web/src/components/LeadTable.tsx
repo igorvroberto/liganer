@@ -8,6 +8,7 @@ type Props = {
   selectedId: string | null
   onSelect: (id: string) => void
   onPatch: (id: string, patch: Partial<Lead>) => void
+  onAdd?: () => void
 }
 
 const COLUMNS: { key: SortKey; label: string }[] = [
@@ -34,7 +35,7 @@ function toDateInputValue(raw: string): string {
   return ''
 }
 
-export function LeadTable({ leads, selectedId, onSelect, onPatch }: Props) {
+export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('potencial')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -53,12 +54,20 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch }: Props) {
     }
   }
 
-  if (!leads.length) {
-    return <p className="empty">Nenhum lead com esses filtros.</p>
-  }
-
   return (
     <div className="table-wrap">
+      <div className="table-toolbar">
+        {onAdd ? (
+          <button type="button" className="btn btn-sm" onClick={onAdd}>
+            Adicionar lead
+          </button>
+        ) : null}
+        <span className="muted tiny">
+          {leads.length
+            ? `${leads.length} na visão · colunas ajustam ao conteúdo`
+            : 'Nenhum lead com esses filtros'}
+        </span>
+      </div>
       <table className="leads-table">
         <thead>
           <tr>
@@ -98,13 +107,13 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch }: Props) {
               </td>
               <td className="mono-cell">{l.cnpj || '—'}</td>
               <td>
-                {l.cidade}
+                {l.cidade || '—'}
                 {l.distancia_km_aracatuba ? (
                   <div className="muted tiny">{l.distancia_km_aracatuba} km</div>
                 ) : null}
               </td>
-              <td className="cat-cell">{l.categoria}</td>
-              <td className="clamp">{l.produto_provavel}</td>
+              <td className="cat-cell">{l.categoria || '—'}</td>
+              <td className="cell-text">{l.produto_provavel || '—'}</td>
               <td onClick={(e) => e.stopPropagation()}>
                 <select
                   className="table-edit table-edit-situacao"
@@ -170,10 +179,21 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch }: Props) {
                   aria-label={`Última compra de ${l.empresa}`}
                 />
               </td>
-              <td className="clamp">{l.proxima_acao}</td>
+              <td className="cell-text">{l.proxima_acao || '—'}</td>
             </tr>
           ))}
         </tbody>
+        {onAdd ? (
+          <tfoot>
+            <tr className="table-add-row">
+              <td colSpan={COLUMNS.length}>
+                <button type="button" className="btn ghost btn-sm table-add-btn" onClick={onAdd}>
+                  + Adicionar linha
+                </button>
+              </td>
+            </tr>
+          </tfoot>
+        ) : null}
       </table>
     </div>
   )

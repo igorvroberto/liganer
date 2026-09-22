@@ -7,6 +7,7 @@ import { filterLeads, topAttackList } from './lib/filterLeads'
 import { loadLeads, type LeadsSource } from './lib/loadLeads'
 import {
   clearLocalLeads,
+  createEmptyLead,
   downloadLeadsCsv,
   loadLocalLeads,
   normalizeLead,
@@ -140,6 +141,16 @@ export default function App() {
     [queueSync],
   )
 
+  const onAddLead = useCallback(() => {
+    const lead = createEmptyLead(leads)
+    const next = [...leads, lead]
+    setLeads(next)
+    queueSync(next, { immediate: true, message: `Adiciona lead ${lead.id}` })
+    setFilters(EMPTY_FILTERS)
+    setTab('todos')
+    setSelectedId(lead.id)
+  }, [leads, queueSync])
+
   const discardLocal = () => {
     if (!confirm('Descartar edições locais não sincronizadas e recarregar do servidor?')) return
     clearLocalLeads()
@@ -220,6 +231,14 @@ export default function App() {
                 {syncLabel}
               </span>
             ) : null}
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={onAddLead}
+              disabled={loading}
+            >
+              Adicionar lead
+            </button>
             <button type="button" className="btn ghost btn-sm" onClick={() => refresh(true)} disabled={loading}>
               Atualizar
             </button>
@@ -267,6 +286,7 @@ export default function App() {
               selectedId={selectedId}
               onSelect={(id) => setSelectedId(id)}
               onPatch={onPatch}
+              onAdd={onAddLead}
             />
             <LeadDetail
               lead={selected}
