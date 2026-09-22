@@ -1,17 +1,12 @@
-"""Categorias comerciais do radar — fonte única para gerar_base e docs."""
+"""Categorias comerciais do radar — operação (categoria) × material (linha)."""
 
+# Operação apenas — material vai em `linha`
 CATEGORIAS = [
     "Construtora",
-    "Corte e dobra ferro para construção",
-    "Corte e dobra carbono",
-    "Corte e dobra inox",
-    "Indústria inox",
-    "Indústria carbono",
-    "Metalúrgica inox",
-    "Metalúrgica carbono",
-    "Revenda ferro para construção",
-    "Revenda inox",
-    "Revenda carbono",
+    "Corte e dobra",
+    "Indústria",
+    "Metalúrgica",
+    "Revenda",
     "Pré-moldados",
     "Artefatos de concreto",
     "Fundações",
@@ -20,26 +15,44 @@ CATEGORIAS = [
     "Tanques e vasos",
 ]
 
-# Nomes antigos → atuais (CSV/UI já publicados)
+# Vocabulário detalhado (legado) → operação curta
+_DETALHADA_PARA_CURTA = {
+    "Construtora": "Construtora",
+    "Corte e dobra ferro para construção": "Corte e dobra",
+    "Corte e dobra de ferro para construção": "Corte e dobra",
+    "Corte e dobra carbono": "Corte e dobra",
+    "Corte e dobra de aço carbono": "Corte e dobra",
+    "Corte e dobra inox": "Corte e dobra",
+    "Corte e dobra de aço inox": "Corte e dobra",
+    "Indústria inox": "Indústria",
+    "Indústria carbono": "Indústria",
+    "Metalúrgica inox": "Metalúrgica",
+    "Metalúrgica carbono": "Metalúrgica",
+    "Revenda ferro para construção": "Revenda",
+    "Revenda inox": "Revenda",
+    "Revenda carbono": "Revenda",
+    "Pré-moldados": "Pré-moldados",
+    "Artefatos de concreto": "Artefatos de concreto",
+    "Fundações": "Fundações",
+    "Infraestrutura": "Infraestrutura",
+    "Silos e estruturas agro": "Silos e estruturas agro",
+    "Tanques e vasos": "Tanques e vasos",
+    "Distribuição": "Revenda",
+}
+
+# Nomes antigos → detalhado (antes de encurtar)
 _CATEGORIA_ALIASES = {
     "Corte e dobra de ferro para construção": "Corte e dobra ferro para construção",
     "Corte e dobra de aço carbono": "Corte e dobra carbono",
     "Corte e dobra de aço inox": "Corte e dobra inox",
 }
 
-# Abreviações só para UI compacta (stats)
 CATEGORIA_ABREV = {
     "Construtora": "C",
-    "Corte e dobra ferro para construção": "CDF",
-    "Corte e dobra carbono": "CDC",
-    "Corte e dobra inox": "CDI",
-    "Indústria inox": "II",
-    "Indústria carbono": "IC",
-    "Metalúrgica inox": "MI",
-    "Metalúrgica carbono": "MC",
-    "Revenda ferro para construção": "RF",
-    "Revenda inox": "RI",
-    "Revenda carbono": "RC",
+    "Corte e dobra": "CD",
+    "Indústria": "I",
+    "Metalúrgica": "M",
+    "Revenda": "R",
     "Pré-moldados": "PM",
     "Artefatos de concreto": "AC",
     "Fundações": "F",
@@ -48,32 +61,43 @@ CATEGORIA_ABREV = {
     "Tanques e vasos": "TV",
 }
 
-# Linha de produto (material) — independente da categoria (operação)
 LINHAS = [
     "Ferro para construção",
     "Carbono",
     "Inox",
 ]
 
+# Linha a partir do nome detalhado (legado) ou operação sem material
 _LINHA_POR_CATEGORIA = {
     "Construtora": "Ferro para construção",
     "Corte e dobra ferro para construção": "Ferro para construção",
+    "Corte e dobra de ferro para construção": "Ferro para construção",
     "Revenda ferro para construção": "Ferro para construção",
     "Pré-moldados": "Ferro para construção",
     "Artefatos de concreto": "Ferro para construção",
     "Fundações": "Ferro para construção",
     "Infraestrutura": "Ferro para construção",
     "Corte e dobra carbono": "Carbono",
+    "Corte e dobra de aço carbono": "Carbono",
     "Revenda carbono": "Carbono",
     "Metalúrgica carbono": "Carbono",
     "Indústria carbono": "Carbono",
     "Silos e estruturas agro": "Carbono",
     "Tanques e vasos": "Carbono",
     "Corte e dobra inox": "Inox",
+    "Corte e dobra de aço inox": "Inox",
     "Revenda inox": "Inox",
     "Metalúrgica inox": "Inox",
     "Indústria inox": "Inox",
 }
+
+
+def encurtar_categoria(nome: str) -> str:
+    n = (nome or "").strip()
+    n = _CATEGORIA_ALIASES.get(n, n)
+    if n in CATEGORIAS:
+        return n
+    return _DETALHADA_PARA_CURTA.get(n, n or "Metalúrgica")
 
 
 def format_linha(values) -> str:
@@ -90,7 +114,7 @@ def parse_linha(raw: str) -> list[str]:
 
 
 def infer_linha(lead: dict) -> str:
-    """Infere linha de produto a partir da categoria e, se multiproduto, dos textos."""
+    """Infere linha de produto a partir da categoria (detalhada ou curta) e textos."""
     existing = parse_linha(lead.get("linha") or "")
     if existing:
         return format_linha(existing)
@@ -111,7 +135,16 @@ def infer_linha(lead: dict) -> str:
         ]
     ).lower()
 
-    if multi or not found:
+    # Sem material na categoria curta (Metalúrgica, Revenda, Corte e dobra, Indústria)
+    # sempre tenta o blob; multiproduto também amplia.
+    precisa_blob = multi or not found or cat in (
+        "Corte e dobra",
+        "Indústria",
+        "Metalúrgica",
+        "Revenda",
+    )
+
+    if precisa_blob:
         if any(
             k in blob
             for k in ("ca-50", "ca-60", "vergalhão", "si 50", "armadura", "treliça", "trelica")
@@ -186,8 +219,8 @@ _REVENDA_CARBONO = (
 )
 
 
-def _classify_revenda(lead: dict) -> str:
-    """Desmembra R / Distribuição em Revenda ferro / inox / carbono."""
+def _classify_revenda_detalhada(lead: dict) -> str:
+    """Classifica revenda no vocabulário detalhado (para inferir linha)."""
     sub = (lead.get("subcategoria") or "").strip().upper()
     emp = (lead.get("empresa") or "").lower()
     tipo = (lead.get("tipo_operacao") or "").lower()
@@ -204,7 +237,6 @@ def _classify_revenda(lead: dict) -> str:
         return "Revenda inox"
 
     if sub == "R1" or any(k in blob for k in _REVENDA_FERRO):
-        # Primário só chapa/bobina, sem armadura/construção → carbono
         if any(k in prod_pri for k in ("chapa", "bobina")) and not any(
             k in prod_pri
             for k in (
@@ -226,12 +258,16 @@ def _classify_revenda(lead: dict) -> str:
     return "Revenda carbono"
 
 
-def remap_categoria(lead: dict) -> str:
-    """Converte categorias legadas (C/CD/M/I/R/Distribuição) para o vocabulário atual."""
+def remap_categoria_detalhada(lead: dict) -> str:
+    """Vocabulário com material (legado) — usado para inferir linha."""
     old = (lead.get("categoria") or "").strip()
     old = _CATEGORIA_ALIASES.get(old, old)
-    # Já no vocabulário atual (exceto Distribuição, desmembrada abaixo)
-    if old in CATEGORIAS:
+
+    # Já detalhada
+    if old in _LINHA_POR_CATEGORIA or old in _DETALHADA_PARA_CURTA:
+        if old in CATEGORIAS:
+            # Já curta — não dá material aqui
+            return old
         return old
 
     sub = (lead.get("subcategoria") or "").strip()
@@ -246,7 +282,7 @@ def remap_categoria(lead: dict) -> str:
     if old == "CD":
         return "Corte e dobra ferro para construção"
     if old in ("R", "Distribuição"):
-        return _classify_revenda(lead)
+        return _classify_revenda_detalhada(lead)
 
     if old == "I":
         if any(k in emp for k in _MI_EMPRESAS) or sub in ("I4", "I5"):
@@ -280,3 +316,8 @@ def remap_categoria(lead: dict) -> str:
         return "Metalúrgica carbono"
 
     return old or "Metalúrgica carbono"
+
+
+def remap_categoria(lead: dict) -> str:
+    """Categoria operacional curta (sem inox/carbono/ferro no nome)."""
+    return encurtar_categoria(remap_categoria_detalhada(lead))
