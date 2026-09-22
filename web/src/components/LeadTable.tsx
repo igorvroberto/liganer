@@ -20,7 +20,7 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'linha', label: 'Linha' },
   { key: 'categoria', label: 'Cat.' },
   { key: 'produto_provavel', label: 'Produto' },
-  { key: 'responsavel', label: 'Responsável' },
+  { key: 'comprador', label: 'Comprador' },
   { key: 'crm', label: 'CRM' },
   { key: 'vendedor', label: 'Vendedor' },
   { key: 'ultimo_contato', label: 'Último contato' },
@@ -126,9 +126,9 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd }: Props
                 <input
                   type="text"
                   className="table-edit-text"
-                  value={l.responsavel ?? ''}
-                  onChange={(e) => onPatch(l.id, { responsavel: e.target.value })}
-                  aria-label={`Responsável de ${l.empresa}`}
+                  value={l.comprador ?? ''}
+                  onChange={(e) => onPatch(l.id, { comprador: e.target.value })}
+                  aria-label={`Comprador de ${l.empresa}`}
                 />
               </td>
               <td onClick={(e) => e.stopPropagation()}>
