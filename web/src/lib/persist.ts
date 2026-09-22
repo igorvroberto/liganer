@@ -1,6 +1,6 @@
 import Papa from 'papaparse'
 import type { Lead } from '../types'
-import { SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
+import { CRM_OPTIONS, SITUACAO_OPTIONS, STATUS_OPTIONS } from '../types'
 import { inferLinha, shortenCategoria } from './linha'
 
 const STORAGE_KEY = 'liganer-prospeccao-leads-v7'
@@ -59,6 +59,12 @@ function mapStatus(value: string | undefined): string {
   return 'Sem retorno'
 }
 
+function mapCrm(value: string | undefined): string {
+  const s = (value ?? '').trim()
+  if ((CRM_OPTIONS as readonly string[]).includes(s)) return s
+  return 'Sem cadastro'
+}
+
 const UF_RE = /\b([A-Z]{2})\b(?:\s*$|[^a-z])/i
 
 /** UF a partir de estado, endereço (/SP) ou padrão SP do radar */
@@ -102,7 +108,7 @@ export function normalizeLead(
     linha,
     estado: inferEstado(rest),
     responsavel: rest.responsavel ?? '',
-    crm: rest.crm ?? '',
+    crm: mapCrm(rest.crm),
     vendedor: rest.vendedor ?? '',
     indicacao: rest.indicacao ?? '',
     observacoes_comerciais: rest.observacoes_comerciais ?? '',
@@ -162,7 +168,7 @@ export function createEmptyLead(leads: Lead[]): Lead {
     proximo_contato: '',
     ultima_compra: '',
     responsavel: '',
-    crm: '',
+    crm: 'Sem cadastro',
     vendedor: '',
     situacao: 'Qualificado',
     proxima_acao: '',

@@ -3989,6 +3989,8 @@ def main():
         row["categoria"] = encurtar_categoria(det)
         # Subcategorias legadas (CD2, M1…) não se aplicam ao novo vocabulário
         row["subcategoria"] = ""
+        if not (row.get("crm") or "").strip():
+            row["crm"] = "Sem cadastro"
         rows.append(row)
     with out.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=HEADERS, extrasaction="ignore")
