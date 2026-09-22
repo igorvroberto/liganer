@@ -156,6 +156,47 @@ function github_put_file(
     string $content,
     string $message,
 ): array {
+    $repo = trim($repo);
+    if ($repo === '' || !preg_match('#^[^/]+/[^/]+$#', $repo)) {
+        return [
+            'ok' => false,
+            'error' => 'github_repo inválido (use owner/repo, ex.: igorvroberto/liganer-prospeccao).',
+        ];
+    }
+
+    $meta = github_request('GET', 'https://api.github.com/repos/' . $repo, $token);
+    if ($meta['status'] === 401) {
+        return [
+            'ok' => false,
+            'error' => 'Token GitHub inválido ou expirado. Atualize o secret LEADS_GITHUB_TOKEN e rode o deploy FTP.',
+        ];
+    }
+    if ($meta['status'] === 404 || $meta['status'] === 403) {
+        return [
+            'ok' => false,
+            'error' => 'Repo inacessível com este token (HTTP '
+                . $meta['status']
+                . '). Confira LEADS_GITHUB_REPO='
+                . $repo
+                . ' e conceda ao token acesso a este repositório privado (classic: escopo repo; fine-grained: Contents Read and write). Depois rode o deploy.',
+        ];
+    }
+    if ($meta['status'] !== 200 || !is_array($meta['json'])) {
+        return [
+            'ok' => false,
+            'error' => 'GET repo GitHub HTTP ' . $meta['status'] . ': ' . ($meta['raw'] ?? ''),
+        ];
+    }
+    $perms = $meta['json']['permissions'] ?? null;
+    if (is_array($perms) && array_key_exists('push', $perms) && !$perms['push']) {
+        return [
+            'ok' => false,
+            'error' => 'Token sem permissão de escrita (push) em '
+                . $repo
+                . '. No PAT fine-grained use Contents: Read and write; no classic marque o escopo repo. Atualize LEADS_GITHUB_TOKEN e rode o deploy FTP.',
+        ];
+    }
+
     $api = 'https://api.github.com/repos/' . $repo . '/contents/'
         . implode('/', array_map('rawurlencode', explode('/', $path)));
 
@@ -192,9 +233,14 @@ function github_put_file(
         return ['ok' => true, 'commit' => is_string($commit) ? $commit : null];
     }
 
+    $hint = '';
+    if ($put['status'] === 404 || $put['status'] === 403) {
+        $hint = ' Em repositório privado o GitHub costuma responder 404 quando o token não tem Contents: Write — atualize LEADS_GITHUB_TOKEN e rode Actions → Deploy prospecção → FTP.';
+    }
+
     return [
         'ok' => false,
-        'error' => 'PUT GitHub HTTP ' . $put['status'] . ': ' . ($put['raw'] ?? ''),
+        'error' => 'PUT GitHub HTTP ' . $put['status'] . ': ' . ($put['raw'] ?? '') . $hint,
     ];
 }
 
