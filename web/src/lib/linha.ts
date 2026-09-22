@@ -89,7 +89,6 @@ export function inferLinha(lead: Partial<Lead>): string {
   const base = LINHA_POR_CATEGORIA[cat]
   if (base) found.add(base)
 
-  const multi = /^sim/i.test(lead.multioportunidade ?? '')
   const blob = [
     lead.produto_provavel,
     lead.produto_secundario,
@@ -98,7 +97,7 @@ export function inferLinha(lead: Partial<Lead>): string {
     .join(' ')
     .toLowerCase()
 
-  const precisaBlob = multi || found.size === 0 || CAT_SEM_MATERIAL.has(cat)
+  const precisaBlob = found.size === 0 || CAT_SEM_MATERIAL.has(cat)
 
   if (precisaBlob) {
     if (/(ca-50|ca-60|vergalhão|si 50|armadura|treliça|trelica)/.test(blob)) {
