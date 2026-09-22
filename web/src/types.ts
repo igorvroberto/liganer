@@ -65,6 +65,12 @@ export const CATEGORIA_OPTIONS = [
   'Revenda ferro para construção',
   'Revenda inox',
   'Revenda carbono',
+  'Pré-moldados',
+  'Artefatos de concreto',
+  'Fundações',
+  'Infraestrutura',
+  'Silos e estruturas agro',
+  'Tanques e vasos',
 ] as const
 
 export type Categoria = (typeof CATEGORIA_OPTIONS)[number]
@@ -82,6 +88,12 @@ export const CATEGORIA_ABREV: Record<string, string> = {
   'Revenda ferro para construção': 'RF',
   'Revenda inox': 'RI',
   'Revenda carbono': 'RC',
+  'Pré-moldados': 'PM',
+  'Artefatos de concreto': 'AC',
+  Fundações: 'F',
+  Infraestrutura: 'IF',
+  'Silos e estruturas agro': 'SA',
+  'Tanques e vasos': 'TV',
 }
 
 export const POTENCIAL_OPTIONS = ['Alto', 'Médio', 'Baixo'] as const

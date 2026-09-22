@@ -141,6 +141,18 @@ export function topAttackList(leads: Lead[], limit = 20): Lead[] {
     if (/^sim/i.test(l.multioportunidade)) score += 15
     if (l.categoria === 'Corte e dobra ferro para construção') score += 20
     else if (l.categoria.startsWith('Corte e dobra')) score += 10
+    else if (
+      l.categoria === 'Pré-moldados' ||
+      l.categoria === 'Fundações' ||
+      l.categoria === 'Infraestrutura'
+    )
+      score += 18
+    else if (
+      l.categoria === 'Artefatos de concreto' ||
+      l.categoria === 'Silos e estruturas agro' ||
+      l.categoria === 'Tanques e vasos'
+    )
+      score += 12
     if (l.consumo_estimado === 'Alto') score += 15
     if (l.compra_recorrente === 'Sim') score += 15
     const dist = Number(l.distancia_km_aracatuba)

@@ -12,6 +12,12 @@ CATEGORIAS = [
     "Revenda ferro para construção",
     "Revenda inox",
     "Revenda carbono",
+    "Pré-moldados",
+    "Artefatos de concreto",
+    "Fundações",
+    "Infraestrutura",
+    "Silos e estruturas agro",
+    "Tanques e vasos",
 ]
 
 # Nomes antigos → atuais (CSV/UI já publicados)
@@ -34,6 +40,12 @@ CATEGORIA_ABREV = {
     "Revenda ferro para construção": "RF",
     "Revenda inox": "RI",
     "Revenda carbono": "RC",
+    "Pré-moldados": "PM",
+    "Artefatos de concreto": "AC",
+    "Fundações": "F",
+    "Infraestrutura": "IF",
+    "Silos e estruturas agro": "SA",
+    "Tanques e vasos": "TV",
 }
 
 _CDC_EMPRESAS = (
