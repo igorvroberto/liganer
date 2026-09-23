@@ -33,19 +33,18 @@ Prefira **FTPS**. Se o HostGator só aceitar FTP puro, edite `.github/workflows/
 
 **Não cole a senha no chat nem no código.** Só nos Secrets.
 
-### Home simples em `vendas.liganer.com.br/`
+### Home / login / auth em `vendas.liganer.com.br/`
 
-Há um workflow separado: **Deploy root index to vendas.liganer.com.br**.
+A raiz do domínio é publicada pelo **monorepo** (não por este app):
 
-- Fonte: `deploy/root-index/index.html`
+- Fonte oficial: `apps/root-index/`
+- Workflow: `.github/workflows/deploy-root-index.yml` (raiz do monorepo)
 - Destino FTP: `/vendas.liganer.com.br/`
-- Publica apenas o `index.html` da raiz, sem mexer em `/orcamento/blanks-slitters/`, `/orcamento/chapas-bobinas/`, `/orcamento/ace/` e `/prospeccao/`
-
-Roda automaticamente no push da `main` quando `deploy/root-index/` (ou o próprio workflow) muda. Também dá para disparar em **Actions → Run workflow**.
+- Docs: [`apps/root-index/AUTH.md`](../../root-index/AUTH.md)
 
 ### Login compartilhado e dono do orçamento
 
-Auth na **raiz** do domínio (`/login.html`, `/auth/me.php`, cookie `LIGANER_VENDAS_SESS`). Docs no app chapas-bobinas: `deploy/root-index/AUTH.md`.
+Auth na **raiz** do domínio (`/login.html`, `/auth/me.php`, cookie `LIGANER_VENDAS_SESS`). Docs: [`apps/root-index/AUTH.md`](../../root-index/AUTH.md).
 
 Neste app: `src/lib/vendasAuth.ts`. Ao **Salvar** na equipe, o JSON inclui `owner: { id, email, name }`; a lista mostra a coluna **Dono**. Em edição, o dono original é preservado.
 
