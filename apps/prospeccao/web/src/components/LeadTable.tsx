@@ -37,7 +37,7 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'proximo_contato', label: 'Próximo contato' },
   { key: 'ultima_compra', label: 'Última compra' },
   { key: 'situacao', label: 'Situação' },
-  { key: 'indicacao', label: 'Indicação' },
+  { key: 'indicacao', label: 'Usuário' },
 ]
 
 function toDateInputValue(raw: string): string {
@@ -54,11 +54,13 @@ function TextCell({
   onChange,
   ariaLabel,
   className,
+  placeholder,
 }: {
   value: string
   onChange: (v: string) => void
   ariaLabel: string
   className?: string
+  placeholder?: string
 }) {
   return (
     <td onClick={(e) => e.stopPropagation()}>
@@ -66,6 +68,7 @@ function TextCell({
         type="text"
         className={`table-edit-text${className ? ` ${className}` : ''}`}
         value={value}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         aria-label={ariaLabel}
       />
@@ -311,7 +314,9 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
                 <TextCell
                   value={l.indicacao ?? ''}
                   onChange={(v) => onPatch(l.id, { indicacao: v })}
-                  ariaLabel={`Indicação de ${l.empresa}`}
+                  ariaLabel={`Usuário de ${l.empresa}`}
+                  className="table-edit-usuario"
+                  placeholder="Igor Roberto"
                 />
               </tr>
             )

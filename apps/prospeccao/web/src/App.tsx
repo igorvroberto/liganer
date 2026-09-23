@@ -3,6 +3,7 @@ import { FilterBar } from './components/FilterBar'
 import { LeadDetail } from './components/LeadDetail'
 import { LeadTable } from './components/LeadTable'
 import { filterLeads } from './lib/filterLeads'
+import { defaultIndicacaoForSession, scopeLeadsForSession } from './lib/leadOwner'
 import { loadLeads, type LeadsSource } from './lib/loadLeads'
 import {
   clearLocalLeads,
@@ -13,6 +14,7 @@ import {
   saveLocalLeads,
 } from './lib/persist'
 import { createSyncQueue, loadSyncConfig, type SyncConfig } from './lib/syncApi'
+import { fetchVendasSession, type VendasSession } from './lib/vendasAuth'
 import { EMPTY_FILTERS, raioMaxFromLeads, type Filters, type Lead } from './types'
 import './App.css'
 
@@ -27,6 +29,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [session, setSession] = useState<VendasSession | null>(null)
   const [syncCfg, setSyncCfg] = useState<SyncConfig>({})
   const [syncUi, setSyncUi] = useState<SyncUi>({ state: 'idle' })
   const syncQueue = useRef(createSyncQueue(1200))
@@ -124,6 +127,10 @@ export default function App() {
   )
 
   useEffect(() => {
+    void fetchVendasSession().then(setSession)
+  }, [])
+
+  useEffect(() => {
     refresh(true)
   }, [refresh])
 
@@ -149,13 +156,15 @@ export default function App() {
   }, [])
 
   const onAddLead = useCallback(() => {
-    const lead = createEmptyLead(leads)
+    const lead = createEmptyLead(leads, {
+      indicacao: defaultIndicacaoForSession(session),
+    })
     const next = [...leads, lead]
     setLeads(next)
     queueSync(next, { immediate: true, message: `Adiciona lead ${lead.id}` })
     setFilters(EMPTY_FILTERS)
     selectLead(lead.id)
-  }, [leads, queueSync, selectLead])
+  }, [leads, queueSync, selectLead, session])
 
   const onRemoveLead = useCallback(
     (id: string) => {
@@ -178,8 +187,12 @@ export default function App() {
     refresh(false)
   }
 
-  const filtered = useMemo(() => filterLeads(leads, filters), [leads, filters])
-  const selected = leads.find((l) => l.id === selectedId) ?? null
+  const visibleLeads = useMemo(
+    () => scopeLeadsForSession(leads, session),
+    [leads, session],
+  )
+  const filtered = useMemo(() => filterLeads(visibleLeads, filters), [visibleLeads, filters])
+  const selected = visibleLeads.find((l) => l.id === selectedId) ?? null
 
   const syncLabel =
     syncUi.state === 'saving'
@@ -245,8 +258,8 @@ export default function App() {
             <button
               type="button"
               className="btn ghost btn-sm"
-              onClick={() => downloadLeadsCsv(leads)}
-              disabled={!leads.length}
+              onClick={() => downloadLeadsCsv(visibleLeads)}
+              disabled={!visibleLeads.length}
             >
               Baixar CSV
             </button>
@@ -265,11 +278,11 @@ export default function App() {
       {!loading && !error ? (
         <>
           <FilterBar
-            leads={leads}
+            leads={visibleLeads}
             filters={filters}
             onChange={setFilters}
             onClear={() =>
-              setFilters({ ...EMPTY_FILTERS, raioKm: raioMaxFromLeads(leads) })
+              setFilters({ ...EMPTY_FILTERS, raioKm: raioMaxFromLeads(visibleLeads) })
             }
           />
 
