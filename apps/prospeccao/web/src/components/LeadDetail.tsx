@@ -79,6 +79,11 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
           <p className="readonly-value">{leadOwner(lead.indicacao)}</p>
         </div>
 
+        <div className="detail-row edit-row readonly-row">
+          <span className="edit-label">Data da criação</span>
+          <p className="readonly-value">{lead.data_pesquisa || '—'}</p>
+        </div>
+
         <fieldset className="detail-row edit-row linha-fieldset">
           <legend className="edit-label">Linha de produto</legend>
           <div className="linha-checks">
