@@ -1,0 +1,6 @@
+inject-dist/
+root-dist/
+**/node_modules/
+**/dist/
+.DS_Store
+*.log

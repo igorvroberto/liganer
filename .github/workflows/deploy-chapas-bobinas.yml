@@ -1,8 +1,12 @@
-name: Deploy to vendas.liganer.com.br/orcamento/chapas-bobinas
+name: Deploy chapas-bobinas
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'apps/chapas-bobinas/**'
+      - 'packages/shared/**'
+      - '.github/workflows/deploy-chapas-bobinas.yml'
   workflow_dispatch:
 
 concurrency:
@@ -12,6 +16,9 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/chapas-bobinas
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,6 +28,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+          cache-dependency-path: apps/chapas-bobinas/package-lock.json
 
       - name: Install
         run: npm ci
@@ -32,7 +40,6 @@ jobs:
         run: |
           mkdir -p dist/api
           cp deploy/api/budgets.php dist/api/budgets.php
-          # Publica config.json (sync da equipe). data/ permanece só no host.
           if [ -n "${{ secrets.ORCAMENTO_SYNC_SECRET }}" ]; then
             python3 - <<'PY'
           import json
@@ -54,15 +61,6 @@ jobs:
           fi
           rm -rf dist/data
 
-      - name: Normalize FTP server dir
-        run: |
-          DIR="${{ secrets.FTP_SERVER_DIR }}"
-          case "$DIR" in
-            */) ;;
-            *) DIR="${DIR}/" ;;
-          esac
-          echo "FTP_SERVER_DIR=$DIR" >> "$GITHUB_ENV"
-
       - name: Deploy via FTP/FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -71,8 +69,8 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           port: 21
-          local-dir: ./dist/
-          server-dir: ${{ env.FTP_SERVER_DIR }}
+          local-dir: ./apps/chapas-bobinas/dist/
+          server-dir: /vendas.liganer.com.br/orcamento/chapas-bobinas/
           dangerous-clean-slate: false
           exclude: |
             **/.git*
