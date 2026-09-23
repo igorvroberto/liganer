@@ -189,7 +189,9 @@ if ($updating) {
 
 $payload['number'] = $number;
 $payload['name'] = $number;
-$payload['savedAt'] = date('c');
+// Honra savedAt do cliente: edição manda "agora"; só situação mantém o horário anterior.
+$clientSavedAt = trim((string) ($payload['savedAt'] ?? ''));
+$payload['savedAt'] = $clientSavedAt !== '' ? $clientSavedAt : date('c');
 if (empty($payload['createdAt'])) {
     $payload['createdAt'] = $payload['savedAt'];
 }
