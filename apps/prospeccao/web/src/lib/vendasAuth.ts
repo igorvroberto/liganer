@@ -1,0 +1,41 @@
+export type VendasUser = {
+  id: string
+  email: string
+  name: string
+}
+
+export type VendasSession = {
+  user: VendasUser
+  admin: boolean
+}
+
+export function isVendasHost(): boolean {
+  return window.location.hostname === 'vendas.liganer.com.br'
+}
+
+export async function fetchVendasSession(): Promise<VendasSession | null> {
+  try {
+    const res = await fetch('/auth/me.php', {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return null
+    const data = (await res.json()) as {
+      ok?: boolean
+      admin?: boolean
+      user?: VendasUser
+    }
+    if (!data?.user?.email) return null
+    return {
+      admin: Boolean(data.admin),
+      user: {
+        id: String(data.user.id || data.user.email),
+        email: String(data.user.email),
+        name: String(data.user.name || data.user.email),
+      },
+    }
+  } catch {
+    return null
+  }
+}

@@ -176,11 +176,11 @@ export function FilterBar({ leads, filters, onChange, onClear }: Props) {
         </label>
 
         <label className="field">
-          <span>Indicação</span>
+          <span>Usuário</span>
           <select value={filters.indicacao} onChange={(e) => set('indicacao', e.target.value)}>
-            <option value="">Todas</option>
+            <option value="">Todos</option>
             {temSemIndicacao ? (
-              <option value="__vazio__">Sem indicação</option>
+              <option value="__vazio__">Igor Roberto</option>
             ) : null}
             {indicacoes.map((i) => (
               <option key={i} value={i}>

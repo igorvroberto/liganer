@@ -149,7 +149,10 @@ export function nextLeadId(leads: Lead[]): string {
 }
 
 /** Lead em branco para inclusão manual (empresa preenchida para passar no sync) */
-export function createEmptyLead(leads: Lead[]): Lead {
+export function createEmptyLead(
+  leads: Lead[],
+  opts?: { indicacao?: string },
+): Lead {
   const today = new Date().toLocaleDateString('pt-BR')
   return normalizeLead({
     id: nextLeadId(leads),
@@ -188,6 +191,6 @@ export function createEmptyLead(leads: Lead[]): Lead {
     motivo_prospect: '',
     abordagem: '',
     observacoes_comerciais: '',
-    indicacao: '',
+    indicacao: opts?.indicacao ?? '',
   })
 }
