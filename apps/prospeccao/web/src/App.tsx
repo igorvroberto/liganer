@@ -27,9 +27,11 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [pendingNewId, setPendingNewId] = useState<string | null>(null)
   const [syncCfg, setSyncCfg] = useState<SyncConfig>({})
   const [syncUi, setSyncUi] = useState<SyncUi>({ state: 'idle' })
   const syncQueue = useRef(createSyncQueue(1200))
+  const detailDirtyRef = useRef(false)
 
   const autoSync = Boolean(syncCfg.syncSecret)
 
@@ -127,25 +129,70 @@ export default function App() {
     refresh(true)
   }, [refresh])
 
-  const onPatch = useCallback(
-    (id: string, patch: Partial<Lead>) => {
+  const onSaveLead = useCallback(
+    (lead: Lead) => {
       setLeads((prev) => {
-        const next = prev.map((l) => (l.id === id ? { ...l, ...patch } : l))
-        queueSync(next)
+        const next = prev.map((l) => (l.id === lead.id ? lead : l))
+        queueSync(next, {
+          immediate: true,
+          message: pendingNewId === lead.id ? `Adiciona lead ${lead.id}` : `Atualiza lead ${lead.id}`,
+        })
         return next
       })
+      if (pendingNewId === lead.id) setPendingNewId(null)
+      detailDirtyRef.current = false
     },
-    [queueSync],
+    [queueSync, pendingNewId],
+  )
+
+  const discardPendingNew = useCallback((id: string) => {
+    setLeads((prev) => prev.filter((l) => l.id !== id))
+    setPendingNewId((cur) => (cur === id ? null : cur))
+  }, [])
+
+  const selectLead = useCallback(
+    (id: string) => {
+      if (selectedId && selectedId !== id && detailDirtyRef.current) {
+        const isNew = pendingNewId === selectedId
+        const msg = isNew
+          ? 'Descartar o lead novo sem salvar e abrir outro?'
+          : 'Descartar alterações não salvas e abrir outro lead?'
+        if (!confirm(msg)) return
+        if (isNew) discardPendingNew(selectedId)
+      }
+      setSelectedId(id)
+      requestAnimationFrame(() => {
+        document.getElementById('lead-detail')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      })
+    },
+    [selectedId, pendingNewId, discardPendingNew],
   )
 
   const onAddLead = useCallback(() => {
+    if (selectedId && detailDirtyRef.current) {
+      const isNew = pendingNewId === selectedId
+      const msg = isNew
+        ? 'Descartar o lead novo sem salvar?'
+        : 'Descartar alterações não salvas?'
+      if (!confirm(msg)) return
+      if (isNew) discardPendingNew(selectedId)
+    }
     const lead = createEmptyLead(leads)
-    const next = [...leads, lead]
-    setLeads(next)
-    queueSync(next, { immediate: true, message: `Adiciona lead ${lead.id}` })
+    setLeads((prev) => [...prev, lead])
+    setPendingNewId(lead.id)
     setFilters(EMPTY_FILTERS)
+    detailDirtyRef.current = true
     setSelectedId(lead.id)
-  }, [leads, queueSync])
+    requestAnimationFrame(() => {
+      document.getElementById('lead-detail')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }, [leads, selectedId, pendingNewId, discardPendingNew])
 
   const onRemoveLead = useCallback(
     (id: string) => {
@@ -154,10 +201,18 @@ export default function App() {
       if (!confirm(`Remover o lead "${nome}"?\n\nEsta ação não pode ser desfeita.`)) return
       const next = leads.filter((l) => l.id !== id)
       setLeads(next)
-      if (selectedId === id) setSelectedId(null)
+      if (selectedId === id) {
+        setSelectedId(null)
+        detailDirtyRef.current = false
+      }
+      if (pendingNewId === id) {
+        setPendingNewId(null)
+        // Lead novo nunca sincronizado — só tira da memória.
+        return
+      }
       queueSync(next, { immediate: true, message: `Remove lead ${id}` })
     },
-    [leads, queueSync, selectedId],
+    [leads, queueSync, selectedId, pendingNewId],
   )
 
   const discardLocal = () => {
@@ -267,23 +322,24 @@ export default function App() {
             <LeadTable
               leads={filtered}
               selectedId={selectedId}
-              onSelect={(id) => {
-                setSelectedId(id)
-                requestAnimationFrame(() => {
-                  document.getElementById('lead-detail')?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start',
-                  })
-                })
-              }}
-              onPatch={onPatch}
+              onSelect={selectLead}
               onAdd={onAddLead}
               onRemove={onRemoveLead}
             />
             <LeadDetail
               lead={selected}
-              onClose={() => setSelectedId(null)}
-              onPatch={onPatch}
+              isNew={pendingNewId !== null && pendingNewId === selectedId}
+              onDirtyChange={(d) => {
+                detailDirtyRef.current = d
+              }}
+              onSave={onSaveLead}
+              onClose={({ discarded }) => {
+                if (discarded && pendingNewId && pendingNewId === selectedId) {
+                  discardPendingNew(pendingNewId)
+                }
+                detailDirtyRef.current = false
+                setSelectedId(null)
+              }}
             />
           </div>
         </>
