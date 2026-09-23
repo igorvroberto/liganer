@@ -737,20 +737,6 @@ button {
   margin-bottom: 0.85rem;
 }
 
-.detail-header-actions,
-.detail-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  align-items: center;
-}
-
-.detail-footer {
-  margin-top: 1rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--line, #e0e0e0);
-}
-
 .leads-table-readonly tbody tr:hover td {
   background: rgba(198, 0, 0, 0.04);
 }
