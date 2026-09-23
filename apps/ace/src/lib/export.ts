@@ -1,0 +1,625 @@
+import * as XLSX from 'xlsx'
+import { calculateRow } from './calc'
+import { displayFieldValue, formatCurrency } from './format'
+import {
+  HIDDEN_FROM_CLIENT,
+  PDF_18_ONLY_KEYS,
+  PDF_4_ONLY_KEYS,
+  fieldLabel,
+  footerFields,
+  itemFields,
+} from './models'
+import { localPrintNumber } from './storage'
+import type { ClientInfo, Conditions, FieldDef, ItemRow, ModelDef, Summary } from './types'
+
+export type PdfKind = 'cliente18' | 'cliente4' | 'liganer'
+
+function valueForField(
+  field: FieldDef,
+  modelId: string,
+  row: ItemRow,
+  conditions: Conditions,
+  index: number,
+): unknown {
+  if (field.key === '_item') return index + 1
+  const calc = calculateRow(modelId, row, conditions)
+  if (field.calculated && field.calc && field.calc in calc) {
+    return calc[field.calc]
+  }
+  return row[field.key]
+}
+
+function exportableFields(model: ModelDef, kind: PdfKind): FieldDef[] {
+  const fields = itemFields(model).filter((f) => !f.hiddenInApp)
+  if (kind === 'liganer') return fields
+  let visible = fields.filter((f) => !HIDDEN_FROM_CLIENT.has(f.key) && f.type !== 'boolean')
+  if (kind === 'cliente18') {
+    visible = visible.filter((f) => !PDF_4_ONLY_KEYS.has(f.key))
+  } else if (kind === 'cliente4') {
+    visible = visible.filter((f) => !PDF_18_ONLY_KEYS.has(f.key))
+  }
+  return orderClientePdfFields(visible)
+}
+
+/** PDF cliente: após Subtotal → Estoque total, Estoque SP, Estoque CE. */
+function orderClientePdfFields(fields: FieldDef[]): FieldDef[] {
+  const stockOrder = ['_estoque_total', 'estoque_sp', 'estoque_ce']
+  const stockKeys = new Set(stockOrder)
+  const stock = stockOrder
+    .map((key) => fields.find((f) => f.key === key))
+    .filter((f): f is FieldDef => Boolean(f))
+  const rest = fields.filter((f) => !stockKeys.has(f.key))
+  const subtotalIdx = rest.findIndex(
+    (f) => f.key === '_subtotal_sp' || f.key === '_subtotal_ce',
+  )
+  if (subtotalIdx < 0) return [...rest, ...stock]
+  return [...rest.slice(0, subtotalIdx + 1), ...stock, ...rest.slice(subtotalIdx + 1)]
+}
+
+export function exportExcel(
+  model: ModelDef,
+  client: ClientInfo,
+  rows: ItemRow[],
+  conditions: Conditions,
+  options?: { number?: string },
+): void {
+  if (!rows.length) return
+  const fields = exportableFields(model, 'liganer')
+  const aoa: (string | number)[][] = [
+    ['Cliente', 'CNPJ', ...fields.map((f) => fieldLabel(f.label))],
+  ]
+  rows.forEach((row, index) => {
+    aoa.push([
+      client.name,
+      client.cnpj,
+      ...fields.map((f) => {
+        const v = valueForField(f, model.id, row, conditions, index)
+        if (typeof v === 'boolean') return v ? 'X' : ''
+        if (typeof v === 'number') return v
+        return v == null ? '' : String(v)
+      }),
+    ])
+  })
+  const sheet = XLSX.utils.aoa_to_sheet(aoa)
+  const book = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(book, sheet, 'Orcamento')
+  const number = String(options?.number ?? '').trim()
+  const filename = number ? `${number}.xlsx` : `orcamento-${model.id}.xlsx`
+  XLSX.writeFile(book, filename)
+}
+
+function logoUrl(): string {
+  const base = import.meta.env.BASE_URL || '/'
+  return `${window.location.origin}${base}liganer_favicon.webp`
+}
+
+function summaryRowsForPdf(kind: PdfKind, summary: Summary): [string, string][] {
+  if (kind === 'cliente18') {
+    return [
+      ['Subtotal 18%', formatCurrency(summary.subtotalSp ?? summary.subtotal)],
+      ['IPI 18%', formatCurrency(summary.ipiSp ?? summary.ipi)],
+      ['Total 18%', formatCurrency(summary.totalSp ?? summary.total)],
+    ]
+  }
+  if (kind === 'cliente4') {
+    return [
+      ['Subtotal 4%', formatCurrency(summary.subtotalCe ?? 0)],
+      ['IPI 4%', formatCurrency(summary.ipiCe ?? 0)],
+      ['Total 4%', formatCurrency(summary.totalCe ?? 0)],
+    ]
+  }
+  return []
+}
+
+function kvRowsHtml(rows: [string, string][]): string {
+  return rows
+    .map(
+      ([label, value]) => `
+          <div>
+            <strong>${escapeHtml(label)}</strong>
+            <span>${escapeHtml(value)}</span>
+          </div>`,
+    )
+    .join('')
+}
+
+function summaryHtmlForPdf(kind: PdfKind, summary: Summary, regimeLabel: string): string {
+  if (kind === 'liganer') {
+    const col4: [string, string][] = [
+      ['Subtotal 4%', formatCurrency(summary.subtotalCe ?? 0)],
+      ['IPI 4%', formatCurrency(summary.ipiCe ?? 0)],
+      ['Total 4%', formatCurrency(summary.totalCe ?? 0)],
+    ]
+    const col18: [string, string][] = [
+      ['Subtotal 18%', formatCurrency(summary.subtotalSp ?? summary.subtotal)],
+      ['IPI 18%', formatCurrency(summary.ipiSp ?? summary.ipi)],
+      ['Total 18%', formatCurrency(summary.totalSp ?? summary.total)],
+    ]
+    return `
+    <section class="panel">
+      <h2>Totais · ${escapeHtml(regimeLabel)}</h2>
+      <div class="summary-columns">
+        <div class="summary-column">
+          <h3>4%</h3>
+          <div class="kv">${kvRowsHtml(col4)}</div>
+        </div>
+        <div class="summary-column">
+          <h3>18%</h3>
+          <div class="kv">${kvRowsHtml(col18)}</div>
+        </div>
+      </div>
+    </section>`
+  }
+
+  return `
+    <section class="panel">
+      <h2>Totais · ${escapeHtml(regimeLabel)}</h2>
+      <div class="kv">
+        ${kvRowsHtml(summaryRowsForPdf(kind, summary))}
+      </div>
+    </section>`
+}
+
+export function exportPdf(
+  kind: PdfKind,
+  model: ModelDef,
+  client: ClientInfo,
+  rows: ItemRow[],
+  conditions: Conditions,
+  summary: Summary,
+  options?: { number?: string },
+): void {
+  if (!rows.length) return
+  const fields = exportableFields(model, kind)
+  const footer = footerFields(model).filter((f) => {
+    if (!String(conditions[f.key] ?? '').trim()) return false
+    if (kind !== 'liganer' && f.key === 'frete_percentual') return false
+    return true
+  })
+  const number = String(options?.number ?? '').trim() || localPrintNumber()
+  const now = new Date().toLocaleString('pt-BR')
+  const pdfClass = kind === 'liganer' ? 'pdf-liganer' : 'pdf-cliente'
+  const logo = logoUrl()
+  const regimeLabel =
+    kind === 'cliente18' ? 'ICMS 18%' : kind === 'cliente4' ? 'ICMS 4%' : 'Liganer'
+
+  const itemRows = rows
+    .map((row, index) => {
+      const cells = fields
+        .map((field) => {
+          const value = valueForField(field, model.id, row, conditions, index)
+          const text =
+            field.type === 'boolean'
+              ? value
+                ? 'X'
+                : ''
+              : displayFieldValue(value, field)
+          return `<td>${escapeHtml(text)}</td>`
+        })
+        .join('')
+      return `<tr><td class="item-no">${index + 1}</td>${cells}</tr>`
+    })
+    .join('')
+
+  const summaryHtml = summaryHtmlForPdf(kind, summary, regimeLabel)
+
+  const conditionsHtml = footer.length
+    ? `
+    <section class="panel">
+      <h2>Condições</h2>
+      <div class="kv">
+        ${footer
+          .map(
+            (field) => `
+          <div>
+            <strong>${escapeHtml(fieldLabel(field.label))}</strong>
+            <span>${escapeHtml(displayFieldValue(conditions[field.key], field))}</span>
+          </div>`,
+          )
+          .join('')}
+      </div>
+    </section>`
+    : ''
+
+  const clientName = String(client.name ?? '').trim()
+  const clientCnpj = String(client.cnpj ?? '').trim()
+  const clientArticles = [
+    clientName
+      ? `<article>
+      <span>Cliente</span>
+      <strong>${escapeHtml(clientName)}</strong>
+    </article>`
+      : '',
+    clientCnpj
+      ? `<article>
+      <span>CNPJ</span>
+      <strong>${escapeHtml(clientCnpj)}</strong>
+    </article>`
+      : '',
+  ].filter(Boolean)
+  const clientCardHtml = clientArticles.length
+    ? `<section class="client-card${clientArticles.length === 1 ? ' solo' : ''}">
+    ${clientArticles.join('\n    ')}
+  </section>`
+    : ''
+
+  const html = `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>${escapeHtml(`${number} · ${regimeLabel}`)}</title>
+  <style>
+    /* A4 retrato (210×297mm). */
+    @page {
+      size: 210mm 297mm;
+      margin: 8mm;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      color: #17211d;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      font-size: 10px;
+      background: #fff;
+    }
+    body {
+      min-width: 210mm;
+      max-width: 210mm;
+    }
+    body.pdf-liganer { font-size: 7px; }
+
+    .print-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px 12px;
+      margin-bottom: 10px;
+    }
+    .print-actions button {
+      border: 0;
+      border-radius: 6px;
+      background: #c60000;
+      color: #fff;
+      padding: 8px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .print-actions .print-hint {
+      color: #56635d;
+      font-size: 11px;
+    }
+    @media print {
+      .print-actions { display: none; }
+      @page {
+        size: 210mm 297mm;
+        margin: 8mm;
+      }
+      html, body {
+        width: 210mm;
+        min-height: 297mm;
+        max-width: none;
+      }
+      /* Chrome/Edge omitem fundos no “Salvar como PDF” sem isto. */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+
+    .banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: #c60000 !important;
+      color: #fff !important;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .brand img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #fff;
+      object-fit: contain;
+      flex: none;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+    body.pdf-liganer .brand h1 { font-size: 14px; }
+    .banner-meta {
+      text-align: right;
+      font-size: 11px;
+      line-height: 1.45;
+      white-space: nowrap;
+    }
+    body.pdf-liganer .banner-meta { font-size: 8px; }
+
+    .client-card {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .client-card.solo {
+      grid-template-columns: 1fr;
+    }
+    .client-card article {
+      border: 1px solid #d8dfd9;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #f2f2f2;
+    }
+    .client-card span {
+      display: block;
+      color: #56635d;
+      font-size: 8px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+    }
+    .client-card strong {
+      font-size: 12px;
+      font-weight: 700;
+    }
+    body.pdf-liganer .client-card strong { font-size: 9px; }
+
+    table.items {
+      width: max-content;
+      max-width: none;
+      border-collapse: collapse;
+      table-layout: auto;
+    }
+    table.items th,
+    table.items td {
+      border: 1px solid #d8dfd9;
+      padding: 4px 5px;
+      vertical-align: middle;
+      text-align: center;
+      overflow: visible;
+      width: auto;
+      max-width: none;
+      white-space: nowrap;
+      word-break: keep-all;
+      overflow-wrap: normal;
+    }
+    table.items th {
+      background: #c60000 !important;
+      color: #fff !important;
+      font-size: 7px;
+      font-weight: 800;
+      text-transform: uppercase;
+      line-height: 1.15;
+      letter-spacing: 0.01em;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    table.items td {
+      font-size: 7.5px;
+    }
+    table.items td.item-no {
+      width: 1%;
+      font-weight: 700;
+      color: #56635d;
+    }
+    table.items th.item-no {
+      width: 1%;
+    }
+    body.pdf-liganer table.items th {
+      font-size: 5px;
+      padding: 3px 2px;
+    }
+    body.pdf-liganer table.items td {
+      font-size: 5.4px;
+      padding: 2px 1px;
+      line-height: 1.12;
+    }
+
+    .sheet-scale {
+      width: 100%;
+      overflow: visible;
+    }
+    .sheet {
+      display: inline-block;
+      min-width: 100%;
+      padding-right: 1px;
+      padding-bottom: 1px;
+      transform-origin: top left;
+    }
+
+    .bottom {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+      break-inside: avoid;
+    }
+    .panel {
+      border: 1px solid #d8dfd9;
+      border-radius: 8px;
+      overflow: hidden;
+      height: fit-content;
+      align-self: start;
+    }
+    .panel h2 {
+      margin: 0;
+      padding: 8px 10px;
+      background: #fce8e8 !important;
+      color: #c60000 !important;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      border-bottom: 1px solid #d8dfd9;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    body.pdf-liganer .panel h2 { font-size: 9px; padding: 5px 8px; }
+    .summary-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .summary-column h3 {
+      margin: 0;
+      padding: 6px 8px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: #1a1f1c;
+      background: #f2f2f2;
+      border-bottom: 1px solid #d8dfd9;
+    }
+    body.pdf-liganer .summary-column h3 { font-size: 8px; padding: 4px 6px; }
+    .summary-column + .summary-column {
+      border-left: 1px solid #d8dfd9;
+    }
+    .kv div {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      border-bottom: 1px solid #d8dfd9;
+      min-height: 28px;
+    }
+    .kv div:last-child { border-bottom: 0; }
+    .kv strong,
+    .kv span {
+      display: grid;
+      place-items: center;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .kv strong {
+      color: #56635d;
+      font-size: 8px;
+      text-transform: uppercase;
+      border-right: 1px solid #d8dfd9;
+      background: #fafafa;
+    }
+    .kv span {
+      font-size: 11px;
+      font-weight: 700;
+    }
+    body.pdf-liganer .kv strong { font-size: 6px; }
+    body.pdf-liganer .kv span { font-size: 8px; }
+  </style>
+</head>
+<body class="${pdfClass}">
+  <div class="print-actions">
+    <span class="print-hint">Orientação: retrato (vertical)</span>
+    <button type="button" onclick="window.print()">Salvar em PDF</button>
+  </div>
+
+  <div class="sheet-scale">
+  <div class="sheet">
+  <header class="banner">
+    <div class="brand">
+      <img src="${escapeHtml(logo)}" alt="Liganer" width="40" height="40" />
+      <div>
+        <h1>Liganer</h1>
+      </div>
+    </div>
+    <div class="banner-meta">
+      <div><strong>Nº ${escapeHtml(number)}</strong></div>
+      <div>${escapeHtml(regimeLabel)}</div>
+      <div>${escapeHtml(now)}</div>
+      <div>${rows.length} item(ns)</div>
+    </div>
+  </header>
+
+  ${clientCardHtml}
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th class="item-no">Item</th>
+        ${fields
+          .map((field) => `<th>${escapeHtml(fieldLabel(field.label))}</th>`)
+          .join('')}
+      </tr>
+    </thead>
+    <tbody>${itemRows}</tbody>
+  </table>
+
+  <div class="bottom">
+    ${summaryHtml}
+    ${conditionsHtml}
+  </div>
+  </div>
+  </div>
+
+  <script>
+    function fitSheetToPage() {
+      const sheet = document.querySelector('.sheet')
+      const scaleBox = document.querySelector('.sheet-scale')
+      if (!sheet || !scaleBox) return
+      sheet.style.zoom = '1'
+      sheet.style.transform = 'none'
+      sheet.style.marginBottom = '0'
+      const avail = scaleBox.clientWidth || document.body.clientWidth || window.innerWidth
+      const needed = Math.max(sheet.scrollWidth, sheet.offsetWidth)
+      if (!avail || !needed) return
+      const scale = Math.min(1, (avail - 2) / needed)
+      if (scale >= 0.999) return
+      if ('zoom' in sheet.style) {
+        sheet.style.zoom = String(scale)
+      } else {
+        sheet.style.transform = 'scale(' + scale + ')'
+        sheet.style.marginBottom = (-(1 - scale) * sheet.scrollHeight) + 'px'
+      }
+    }
+    window.addEventListener('load', () => {
+      fitSheetToPage()
+      setTimeout(() => {
+        fitSheetToPage()
+        window.print()
+      }, 400)
+    })
+    window.addEventListener('resize', fitSheetToPage)
+  </script>
+</body>
+</html>`
+
+  // Janela em proporção retrato. Não usar noopener: em Chrome/Edge
+  // window.open(..., 'noopener') devolve null e o PDF deixa de abrir.
+  const win = window.open('', '_blank', 'width=900,height=1200,left=40,top=20')
+  if (!win) {
+    alert('O navegador bloqueou a janela de PDF. Permita pop-ups para exportar.')
+    return
+  }
+  try {
+    win.opener = null
+  } catch {
+    /* ignore */
+  }
+  win.document.open()
+  win.document.write(html)
+  win.document.close()
+  try {
+    win.focus()
+  } catch {
+    /* ignore */
+  }
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}

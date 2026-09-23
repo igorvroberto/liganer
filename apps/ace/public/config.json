@@ -1,0 +1,6 @@
+{
+  "_comment": "Opcional. Sem syncSecret, orçamentos ficam só no navegador (localStorage). No host: saveUrl=/orcamento/ace/api/budgets.php e syncSecret.",
+  "saveUrl": "",
+  "printNumberUrl": "",
+  "syncSecret": ""
+}
