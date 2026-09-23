@@ -12,8 +12,8 @@ import {
   optimizeCutting,
   productIndicesInProgram,
 } from "../lib/optimize";
-import type { BudgetListItem, BudgetRecord } from "../lib/budgetTypes";
-import { newBudgetId } from "../lib/budgetTypes";
+import type { BudgetListItem, BudgetRecord, BudgetSituacao } from "../lib/budgetTypes";
+import { newBudgetId, normalizeBudgetSituacao } from "../lib/budgetTypes";
 import { EMPTY_QUOTE_CLIENT, type QuoteClientInfo } from "../lib/quoteClient";
 import { exportQuotePdf, type PdfKind } from "../lib/quotePdfExport";
 import { downloadItemsExcel } from "../lib/quoteExport";
@@ -375,6 +375,7 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
       savedAt: now,
       source: hasRemoteSync(appConfig) ? "remote" : "local",
       owner,
+      situacao: normalizeBudgetSituacao(editingBudget?.situacao),
     };
   };
 
@@ -575,6 +576,66 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
     }
   };
 
+  const handleSituacaoChange = async (item: BudgetListItem, situacao: BudgetSituacao) => {
+    const current = normalizeBudgetSituacao(item.situacao);
+    if (current === situacao) return;
+    try {
+      const number = item.number || item.name || item.id;
+      const budget = await loadBudgetByNumber(number);
+      if (!budget) {
+        setStatus({ text: "Orçamento não encontrado para atualizar a situação.", kind: "error" });
+        return;
+      }
+      const next: BudgetRecord = {
+        ...budget,
+        situacao,
+        // Mantém savedAt original: mudança de situação não reordena.
+        savedAt: budget.savedAt || budget.createdAt,
+      };
+      upsertSavedBudget(next);
+      if (
+        editingBudget &&
+        (editingBudget.id === item.id || editingBudget.number === item.number)
+      ) {
+        setEditingBudget({ ...editingBudget, situacao });
+      }
+      setBudgetList((prev) =>
+        prev.map((row) =>
+          row.id === item.id || row.number === item.number
+            ? {
+                ...row,
+                situacao,
+                totalKg: next.summary?.totalKg ?? row.totalKg,
+                totalRs: next.summary?.total ?? row.totalRs,
+              }
+            : row,
+        ),
+      );
+      const cfg = appConfig.saveUrl ? appConfig : await loadAppConfig();
+      if (hasRemoteSync(cfg)) {
+        try {
+          await saveBudgetRemote(next, cfg);
+        } catch (err) {
+          setStatus({
+            text: `Situação atualizada neste navegador${
+              err instanceof Error ? ` — ${err.message}` : ""
+            }.`,
+            kind: "error",
+          });
+          await refreshBudgetList(cfg);
+          return;
+        }
+      }
+      setStatus({ text: `Situação do orçamento ${item.name} atualizada.`, kind: "ok" });
+      await refreshBudgetList(cfg);
+    } catch (err) {
+      setStatus({
+        text: err instanceof Error ? err.message : "Falha ao atualizar situação.",
+        kind: "error",
+      });
+    }
+  };
+
   const handleSavedDelete = async (item: BudgetListItem) => {
     const number = item.number || item.name || item.id;
     if (!window.confirm(`Excluir o orçamento ${number}?`)) return;
@@ -663,6 +724,7 @@ export default function SlitterCalculator({ vendasUser, onVendasUser }: Props) {
         onXlsx={(n) => void handleSavedXlsx(n)}
         onEdit={(item) => void handleSavedEdit(item)}
         onDelete={(item) => void handleSavedDelete(item)}
+        onSituacaoChange={(item, situacao) => void handleSituacaoChange(item, situacao)}
       />
 
       <div className="grid results-grid">

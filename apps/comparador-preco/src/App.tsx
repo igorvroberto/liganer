@@ -13,19 +13,24 @@ import {
   findSavedComparison,
   loadDraft,
   localPrintNumber,
+  normalizeBudgetSituacao,
   pushSavedComparison,
   removeSavedComparison,
   saveDraft,
   savedComparisonsAsListItems,
+  toSavedListItem,
   upsertSavedComparison,
 } from './lib/storage'
 import type {
+  BudgetSituacao,
   CompareRowInput,
   CompareSession,
   ComparisonOwner,
   SavedComparison,
   SavedComparisonListItem,
 } from './lib/types'
+import { SavedListSection } from '@liganer/shared/react'
+import type { SavedListItem } from '@liganer/shared'
 import { fetchVendasUser, vendasLoginUrl, type VendasUser } from './lib/vendasAuth'
 
 type EditableKey = keyof Pick<
@@ -99,6 +104,7 @@ type EditingMeta = {
   number: string
   createdAt: string
   owner?: ComparisonOwner | null
+  situacao?: BudgetSituacao
 }
 
 export default function App() {
@@ -114,6 +120,17 @@ export default function App() {
     kind: '',
     text: '',
   })
+
+  const savedListItems = useMemo<SavedListItem[]>(
+    () =>
+      savedList.map((item) => {
+        const isEditing = Boolean(
+          editing && (editing.id === item.id || editing.number === item.number),
+        )
+        return { ...toSavedListItem(item), meta: { isEditing } }
+      }),
+    [savedList, editing],
+  )
 
   useEffect(() => {
     saveDraft({ ...session, updatedAt: new Date().toISOString() })
@@ -287,6 +304,7 @@ export default function App() {
       createdAt: editing?.createdAt || nowIso,
       savedAt: nowIso,
       owner,
+      situacao: normalizeBudgetSituacao(editing?.situacao),
     }
     if (editing) upsertSavedComparison(record)
     else pushSavedComparison(record)
@@ -322,6 +340,7 @@ export default function App() {
       number: record.number,
       createdAt: record.createdAt,
       owner: record.owner || item.owner || null,
+      situacao: normalizeBudgetSituacao(record.situacao ?? item.situacao),
     })
     setDraftInputs({})
     setPisDraft(null)
@@ -343,6 +362,28 @@ export default function App() {
     }
     refreshSavedList()
     setStatus({ kind: 'ok', text: `Comparação ${item.number} excluída.` })
+  }
+
+
+  function updateSituacao(item: SavedComparisonListItem, situacao: BudgetSituacao) {
+    const current = normalizeBudgetSituacao(item.situacao)
+    if (current === situacao) return
+    const record = findSavedComparison(item.id) || findSavedComparison(item.number)
+    if (!record) {
+      setStatus({ kind: 'error', text: 'Comparação não encontrada para atualizar a situação.' })
+      return
+    }
+    const next: SavedComparison = {
+      ...record,
+      situacao,
+      savedAt: record.savedAt || record.createdAt,
+    }
+    upsertSavedComparison(next)
+    if (editing && (editing.id === item.id || editing.number === item.number)) {
+      setEditing({ ...editing, situacao })
+    }
+    refreshSavedList()
+    setStatus({ kind: 'ok', text: `Situação da comparação ${item.name} atualizada.` })
   }
 
   function cancelEditing() {
@@ -621,77 +662,59 @@ export default function App() {
         </div>
       </section>
 
-      <section className="card">
-        <h2>Comparações salvas</h2>
-        {editing ? (
-          <p className="editing-banner">
-            Editando comparação {editing.number}. Use <strong>Atualizar</strong> para gravar as
-            alterações
-          </p>
-        ) : null}
-        {savedList.length ? (
-          <div className="table-scroll saved-budgets-scroll">
-            <table className="saved-budgets-table">
-              <thead>
-                <tr>
-                  <th>Número</th>
-                  <th>Cliente</th>
-                  <th>Itens</th>
-                  <th>Dono</th>
-                  <th>Dia/horário</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {savedList.map((item) => {
-                  const isEditing =
-                    editing && (editing.id === item.id || editing.number === item.number)
-                  return (
-                    <tr key={item.id} className={isEditing ? 'is-editing' : undefined}>
-                      <td>{item.name}</td>
-                      <td>{item.clientName?.trim() || '—'}</td>
-                      <td>{item.itemCount}</td>
-                      <td>{item.owner?.name?.trim() || item.owner?.email?.trim() || '—'}</td>
-                      <td>
-                        {item.savedAt
-                          ? new Date(item.savedAt).toLocaleString('pt-BR')
-                          : '—'}
-                      </td>
-                      <td>
-                        <div className="saved-budget-actions">
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-compact"
-                            onClick={() => openSavedPdf(item)}
-                          >
-                            PDF
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-compact"
-                            onClick={() => editSaved(item)}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-danger btn-compact"
-                            onClick={() => deleteSaved(item)}
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="muted-note">Nenhuma comparação salva ainda. Use Salvar.</p>
-        )}
-      </section>
+      <SavedListSection
+        title="Comparações salvas"
+        items={savedListItems}
+        emptyNote="Nenhuma comparação salva ainda. Use Salvar."
+        entityLabel="comparação"
+        showCnpj={false}
+        logoUrl={`${window.location.origin}${import.meta.env.BASE_URL}liganer_favicon.webp`}
+        editingBanner={
+          editing ? (
+            <p className="editing-banner">
+              Editando comparação {editing.number}. Use <strong>Atualizar</strong> para gravar as
+              alterações
+            </p>
+          ) : null
+        }
+        onSituacaoChange={(item, situacao) => {
+          const original = savedList.find(
+            (row) => row.id === item.id || row.number === item.number,
+          )
+          if (original) updateSituacao(original, situacao)
+        }}
+        renderActions={(item) => {
+          const original = savedList.find(
+            (row) => row.id === item.id || row.number === item.number,
+          )
+          if (!original) return null
+          return (
+            <>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => openSavedPdf(original)}
+              >
+                PDF
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => editSaved(original)}
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger btn-compact"
+                onClick={() => deleteSaved(original)}
+              >
+                Excluir
+              </button>
+            </>
+          )
+        }}
+      />
 
       <p className={`status ${status.kind}`}>{status.text}</p>
     </div>

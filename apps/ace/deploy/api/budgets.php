@@ -96,6 +96,20 @@ if ($method === 'GET') {
             $name = '—';
         }
         $owner = is_array($data['owner'] ?? null) ? $data['owner'] : null;
+        $summary = is_array($data['summary'] ?? null) ? $data['summary'] : [];
+        $totalKg = isset($summary['totalKg']) && is_numeric($summary['totalKg'])
+            ? (float) $summary['totalKg']
+            : null;
+        $totalRs = isset($summary['total']) && is_numeric($summary['total'])
+            ? (float) $summary['total']
+            : null;
+        $situacaoRaw = strtolower(trim((string) ($data['situacao'] ?? 'analise')));
+        if ($situacaoRaw === 'análise' || $situacaoRaw === 'em analise' || $situacaoRaw === 'em análise') {
+            $situacaoRaw = 'analise';
+        }
+        if ($situacaoRaw !== 'perdido' && $situacaoRaw !== 'ganho' && $situacaoRaw !== 'analise') {
+            $situacaoRaw = 'analise';
+        }
         $items[] = [
             'id' => (string) ($data['id'] ?? basename($file, '.json')),
             'number' => $number !== '' ? $number : null,
@@ -112,13 +126,23 @@ if ($method === 'GET') {
                 'email' => (string) ($owner['email'] ?? ''),
                 'name' => (string) ($owner['name'] ?? $owner['email'] ?? ''),
             ] : null,
+            'totalKg' => $totalKg,
+            'totalRs' => $totalRs,
+            'situacao' => $situacaoRaw,
         ];
     }
 
     usort($items, static function (array $a, array $b): int {
-        $ta = (string) ($a['savedAt'] ?? $a['createdAt'] ?? '');
-        $tb = (string) ($b['savedAt'] ?? $b['createdAt'] ?? '');
-        return strcmp($tb, $ta);
+        // Ordem estável por criação (não por última atualização).
+        $ta = (string) ($a['createdAt'] ?? $a['savedAt'] ?? '');
+        $tb = (string) ($b['createdAt'] ?? $b['savedAt'] ?? '');
+        $cmp = strcmp($tb, $ta);
+        if ($cmp !== 0) {
+            return $cmp;
+        }
+        $na = (string) ($a['number'] ?? $a['name'] ?? '');
+        $nb = (string) ($b['number'] ?? $b['name'] ?? '');
+        return strnatcasecmp($nb, $na);
     });
 
     echo json_encode(['ok' => true, 'items' => $items], JSON_UNESCAPED_UNICODE);
@@ -169,6 +193,17 @@ $payload['savedAt'] = date('c');
 if (empty($payload['createdAt'])) {
     $payload['createdAt'] = $payload['savedAt'];
 }
+if ($updating && is_array($previous) && !empty($previous['situacao']) && empty($payload['situacao'])) {
+    $payload['situacao'] = $previous['situacao'];
+}
+$situacaoRaw = strtolower(trim((string) ($payload['situacao'] ?? 'analise')));
+if ($situacaoRaw === 'análise' || $situacaoRaw === 'em analise' || $situacaoRaw === 'em análise') {
+    $situacaoRaw = 'analise';
+}
+if ($situacaoRaw !== 'perdido' && $situacaoRaw !== 'ganho' && $situacaoRaw !== 'analise') {
+    $situacaoRaw = 'analise';
+}
+$payload['situacao'] = $situacaoRaw;
 $file = $dataDir . '/orcamento-' . $number . '.json';
 file_put_contents($file, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX);
 

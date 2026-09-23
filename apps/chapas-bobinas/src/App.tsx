@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { calculateRow, calculateSummary, isBobinaMaterial, numericValue, sheetUnitWeight, usesManualUnitWeight } from './lib/calc'
-import { exportExcel, exportPdf, exportSituacaoReportPdf } from './lib/export'
+import { exportExcel, exportPdf } from './lib/export'
 import {
   displayFieldValue,
   emptyRowDefaults,
@@ -29,12 +29,14 @@ import {
   saveBudgetRemote,
   saveDraft,
   savedBudgetsAsListItems,
+  toSavedListItem,
   uploadLocalBudgetsMissingRemote,
   upsertSavedBudget,
   type SyncConfig,
   normalizeBudgetSituacao,
-  compareBudgetListItemsDefault,
 } from './lib/storage'
+import { SavedListSection } from '@liganer/shared/react'
+import type { SavedListItem } from '@liganer/shared'
 import {
   getCatalogSelectOptions,
   loadPriceCatalogFromExcel,
@@ -50,102 +52,6 @@ import type {
   FieldDef,
   ItemRow,
 } from './lib/types'
-
-const SITUACAO_OPTIONS: {
-  value: BudgetSituacao
-  label: string
-  symbol: string
-}[] = [
-  { value: 'perdido', label: 'Perdido', symbol: '✕' },
-  { value: 'analise', label: 'Em análise', symbol: '!' },
-  { value: 'ganho', label: 'Ganho', symbol: '✓' },
-]
-
-const SAVED_PAGE_SIZE = 10
-
-const MONTH_OPTIONS = [
-  'Janeiro',
-  'Fevereiro',
-  'Março',
-  'Abril',
-  'Maio',
-  'Junho',
-  'Julho',
-  'Agosto',
-  'Setembro',
-  'Outubro',
-  'Novembro',
-  'Dezembro',
-] as const
-
-type SavedSortKey =
-  | 'number'
-  | 'client'
-  | 'cnpj'
-  | 'owner'
-  | 'totalKg'
-  | 'totalRs'
-  | 'situacao'
-  | 'when'
-
-type SavedSortState = { key: SavedSortKey; dir: 'asc' | 'desc' }
-
-const SITUACAO_SORT_ORDER: Record<BudgetSituacao, number> = {
-  perdido: 0,
-  analise: 1,
-  ganho: 2,
-}
-
-const SAVED_SORT_HEADERS: { key: SavedSortKey; label: string }[] = [
-  { key: 'number', label: 'Número' },
-  { key: 'client', label: 'Cliente' },
-  { key: 'cnpj', label: 'CNPJ' },
-  { key: 'owner', label: 'Dono' },
-  { key: 'totalKg', label: 'Total (Kg)' },
-  { key: 'totalRs', label: 'Total (R$)' },
-  { key: 'situacao', label: 'Situação' },
-  { key: 'when', label: 'Dia/horário' },
-]
-
-function compareSavedBudgetsForSort(
-  a: BudgetListItem,
-  b: BudgetListItem,
-  key: SavedSortKey,
-): number {
-  const situacaoRank = (item: BudgetListItem) =>
-    SITUACAO_SORT_ORDER[normalizeBudgetSituacao(item.situacao)]
-  switch (key) {
-    case 'number':
-      return String(a.number ?? a.name ?? '').localeCompare(String(b.number ?? b.name ?? ''), 'pt-BR', {
-        numeric: true,
-        sensitivity: 'base',
-      })
-    case 'client':
-      return String(a.client?.name ?? '').localeCompare(String(b.client?.name ?? ''), 'pt-BR', {
-        sensitivity: 'base',
-      })
-    case 'cnpj':
-      return String(a.client?.cnpj ?? '').localeCompare(String(b.client?.cnpj ?? ''), 'pt-BR')
-    case 'owner':
-      return String(a.owner?.name || a.owner?.email || '').localeCompare(
-        String(b.owner?.name || b.owner?.email || ''),
-        'pt-BR',
-        { sensitivity: 'base' },
-      )
-    case 'totalKg':
-      return (a.totalKg ?? -1) - (b.totalKg ?? -1)
-    case 'totalRs':
-      return (a.totalRs ?? -1) - (b.totalRs ?? -1)
-    case 'situacao':
-      return situacaoRank(a) - situacaoRank(b)
-    case 'when':
-      return String(a.savedAt || a.createdAt || '').localeCompare(
-        String(b.savedAt || b.createdAt || ''),
-      )
-    default:
-      return 0
-  }
-}
 
 function isCalculatedForRow(field: FieldDef, modelId: string, row: ItemRow): boolean {
   if (field.calculated) return true
@@ -358,11 +264,6 @@ export default function App() {
   const [teamSync, setTeamSync] = useState<'off' | 'ok' | 'error'>('off')
   const [teamSyncDetail, setTeamSyncDetail] = useState('')
   const [vendasUser, setVendasUser] = useState<VendasUser | null>(null)
-  const [savedSort, setSavedSort] = useState<SavedSortState | null>(null)
-  const [savedPage, setSavedPage] = useState(1)
-  const now = useMemo(() => new Date(), [])
-  const [reportMonth, setReportMonth] = useState(now.getMonth() + 1)
-  const [reportYear, setReportYear] = useState(now.getFullYear())
 
   const model = getModel(modelId)
   const baseFields = useMemo(() => itemFields(model), [model])
@@ -375,54 +276,19 @@ export default function App() {
     [modelId, rows, conditions, priceCatalogVersion],
   )
 
-  const sortedSavedBudgets = useMemo(() => {
-    const list = [...savedBudgets]
-    if (!savedSort) {
-      list.sort(compareBudgetListItemsDefault)
-      return list
-    }
-    list.sort((a, b) => {
-      const cmp = compareSavedBudgetsForSort(a, b, savedSort.key)
-      return savedSort.dir === 'asc' ? cmp : -cmp
-    })
-    return list
-  }, [savedBudgets, savedSort])
-
-  const savedPageCount = Math.max(1, Math.ceil(sortedSavedBudgets.length / SAVED_PAGE_SIZE))
-  const safeSavedPage = Math.min(savedPage, savedPageCount)
-  const pagedSavedBudgets = useMemo(() => {
-    const start = (safeSavedPage - 1) * SAVED_PAGE_SIZE
-    return sortedSavedBudgets.slice(start, start + SAVED_PAGE_SIZE)
-  }, [sortedSavedBudgets, safeSavedPage])
-
-  const reportYears = useMemo(() => {
-    const years = new Set<number>([now.getFullYear()])
-    for (const item of savedBudgets) {
-      const raw = item.createdAt || item.savedAt
-      if (!raw) continue
-      const year = new Date(raw).getFullYear()
-      if (Number.isFinite(year)) years.add(year)
-    }
-    return [...years].sort((a, b) => b - a)
-  }, [savedBudgets, now])
-
-  useEffect(() => {
-    setSavedPage(1)
-  }, [savedSort, savedBudgets.length])
-
-  useEffect(() => {
-    if (savedPage > savedPageCount) setSavedPage(savedPageCount)
-  }, [savedPage, savedPageCount])
+  const savedListItems = useMemo<SavedListItem[]>(
+    () =>
+      savedBudgets.map((item) => {
+        const isEditing = Boolean(
+          editingBudget &&
+            (editingBudget.id === item.id || editingBudget.number === item.number),
+        )
+        return { ...toSavedListItem(item), meta: { isEditing } }
+      }),
+    [savedBudgets, editingBudget],
+  )
 
   const safeRowIndex = rows.length ? Math.min(Math.max(activeRowIndex, 0), rows.length - 1) : 0
-
-  function toggleSavedSort(key: SavedSortKey) {
-    setSavedSort((prev) => {
-      if (!prev || prev.key !== key) return { key, dir: 'asc' }
-      if (prev.dir === 'asc') return { key, dir: 'desc' }
-      return null
-    })
-  }
 
   useEffect(() => {
     void loadConfig().then(setConfig)
@@ -1053,221 +919,97 @@ export default function App() {
         </div>
       </section>
 
-      <section className="card">
-        <div className="section-heading">
-          <h2>Orçamentos salvos</h2>
-          {config.syncSecret ? (
+      <SavedListSection
+        title="Orçamentos salvos"
+        items={savedListItems}
+        emptyNote="Nenhum orçamento salvo ainda. Use Salvar."
+        entityLabel="orçamento"
+        logoUrl={`${window.location.origin}${import.meta.env.BASE_URL}liganer_favicon.webp`}
+        editingBanner={
+          editingBudget ? (
+            <p className="editing-banner">
+              Editando orçamento <strong>{editingBudget.number}</strong>. Use{' '}
+              <strong>Atualizar</strong> para gravar as alterações
+            </p>
+          ) : null
+        }
+        syncNote={
+          <p
+            className={`sync-note${teamSync === 'error' ? ' sync-note-error' : teamSync === 'ok' ? ' sync-note-ok' : ''}`}
+          >
+            {teamSyncDetail ||
+              (config.syncSecret
+                ? 'Sincronizando com o servidor…'
+                : 'Salvos só neste navegador.')}
+          </p>
+        }
+        headingExtra={
+          config.syncSecret ? (
             <button
               type="button"
               className="btn btn-secondary btn-compact"
-              onClick={() => void refreshSavedBudgetsList().then(() => setStatus({ text: 'Lista atualizada.', kind: 'ok' }))}
+              onClick={() =>
+                void refreshSavedBudgetsList().then(() =>
+                  setStatus({ text: 'Lista atualizada.', kind: 'ok' }),
+                )
+              }
             >
               Atualizar lista
             </button>
-          ) : null}
-        </div>
-        <p
-          className={`sync-note${teamSync === 'error' ? ' sync-note-error' : teamSync === 'ok' ? ' sync-note-ok' : ''}`}
-        >
-          {teamSyncDetail ||
-            (config.syncSecret
-              ? 'Sincronizando com o servidor…'
-              : 'Salvos só neste navegador.')}
-        </p>
-        <div className="report-bar">
-          <div className="report-fields">
-            <label>
-              Mês
-              <select
-                value={reportMonth}
-                onChange={(e) => setReportMonth(Number(e.target.value))}
+          ) : null
+        }
+        onSituacaoChange={(item, situacao) => {
+          const original = savedBudgets.find(
+            (row) => row.id === item.id || (item.number && row.number === item.number),
+          )
+          if (original) void updateBudgetSituacao(original, situacao)
+        }}
+        renderActions={(item) => {
+          const original = savedBudgets.find(
+            (row) => row.id === item.id || (item.number && row.number === item.number),
+          )
+          if (!original) return null
+          return (
+            <>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => void openSavedPdfCliente(original)}
               >
-                {MONTH_OPTIONS.map((label, index) => (
-                  <option key={label} value={index + 1}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Ano
-              <select
-                value={reportYear}
-                onChange={(e) => setReportYear(Number(e.target.value))}
+                PDF cliente
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => void openSavedPdfLiganer(original)}
               >
-                {reportYears.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <button
-            type="button"
-            className="btn btn-secondary btn-compact"
-            onClick={() => {
-              exportSituacaoReportPdf(savedBudgets, reportMonth, reportYear)
-              setStatus({
-                text: `Relatório de situações ${MONTH_OPTIONS[reportMonth - 1]}/${reportYear} aberto.`,
-                kind: 'ok',
-              })
-            }}
-          >
-            Relatório PDF
-          </button>
-        </div>
-        {editingBudget ? (
-          <p className="editing-banner">
-            Editando orçamento <strong>{editingBudget.number}</strong>. Use{' '}
-            <strong>Atualizar</strong> para gravar as alterações
-          </p>
-        ) : null}
-        {savedBudgets.length ? (
-          <>
-            <div className="table-scroll saved-budgets-scroll">
-              <table className="saved-budgets-table">
-                <thead>
-                  <tr>
-                    {SAVED_SORT_HEADERS.map((header) => {
-                      const active = savedSort?.key === header.key
-                      const ariaSort = !active
-                        ? 'none'
-                        : savedSort.dir === 'asc'
-                          ? 'ascending'
-                          : 'descending'
-                      return (
-                        <th key={header.key} aria-sort={ariaSort}>
-                          <button
-                            type="button"
-                            className={`sort-header${active ? ' is-active' : ''}`}
-                            onClick={() => toggleSavedSort(header.key)}
-                          >
-                            <span>{header.label}</span>
-                            <span className="sort-marker" aria-hidden="true">
-                              {active ? (savedSort.dir === 'asc' ? '↑' : '↓') : '↕'}
-                            </span>
-                          </button>
-                        </th>
-                      )
-                    })}
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagedSavedBudgets.map((item) => {
-                    const when = item.savedAt || item.createdAt
-                    const isEditing =
-                      editingBudget &&
-                      (editingBudget.id === item.id || editingBudget.number === item.number)
-                    const situacao = normalizeBudgetSituacao(item.situacao)
-                    return (
-                      <tr key={item.id} className={isEditing ? 'is-editing' : undefined}>
-                        <td>{item.name}</td>
-                        <td>{item.client.name?.trim() || '—'}</td>
-                        <td>{item.client.cnpj?.trim() || '—'}</td>
-                        <td>{item.owner?.name?.trim() || item.owner?.email?.trim() || '—'}</td>
-                        <td>
-                          {typeof item.totalKg === 'number'
-                            ? `${formatNumber(item.totalKg, 0)} Kg`
-                            : '—'}
-                        </td>
-                        <td>
-                          {typeof item.totalRs === 'number' ? formatCurrency(item.totalRs) : '—'}
-                        </td>
-                        <td>
-                          <div className="situacao-group" role="group" aria-label="Situação do orçamento">
-                            {SITUACAO_OPTIONS.map((option) => (
-                              <button
-                                key={option.value}
-                                type="button"
-                                className={`situacao-btn situacao-${option.value}${
-                                  situacao === option.value ? ' is-active' : ''
-                                }`}
-                                title={option.label}
-                                aria-label={option.label}
-                                aria-pressed={situacao === option.value}
-                                onClick={() => void updateBudgetSituacao(item, option.value)}
-                              >
-                                <span aria-hidden="true">{option.symbol}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </td>
-                        <td>{when ? new Date(when).toLocaleString('pt-BR') : '—'}</td>
-                        <td>
-                          <div className="saved-budget-actions">
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-compact"
-                              onClick={() => void openSavedPdfCliente(item)}
-                            >
-                              PDF cliente
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-compact"
-                              onClick={() => void openSavedPdfLiganer(item)}
-                            >
-                              PDF Liganer
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-compact"
-                              onClick={() => void exportSavedXlsx(item)}
-                            >
-                              XLSX
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-compact"
-                              onClick={() => void editSavedBudget(item)}
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-danger btn-compact"
-                              onClick={() => void deleteSavedBudget(item)}
-                            >
-                              Excluir
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {sortedSavedBudgets.length > SAVED_PAGE_SIZE ? (
-              <div className="pager">
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-compact"
-                  disabled={safeSavedPage <= 1}
-                  onClick={() => setSavedPage((page) => Math.max(1, page - 1))}
-                >
-                  Anterior
-                </button>
-                <span>
-                  Página {safeSavedPage} de {savedPageCount}
-                </span>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-compact"
-                  disabled={safeSavedPage >= savedPageCount}
-                  onClick={() => setSavedPage((page) => Math.min(savedPageCount, page + 1))}
-                >
-                  Próxima
-                </button>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <p className="muted-note">Nenhum orçamento salvo ainda. Use Salvar.</p>
-        )}
-      </section>
+                PDF Liganer
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => void exportSavedXlsx(original)}
+              >
+                XLSX
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => void editSavedBudget(original)}
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger btn-compact"
+                onClick={() => void deleteSavedBudget(original)}
+              >
+                Excluir
+              </button>
+            </>
+          )
+        }}
+      />
 
       <p className={`status ${status.kind || ''}`}>{status.text}</p>
     </div>

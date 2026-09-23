@@ -1,6 +1,9 @@
 import {
   budgetDisplayName,
+  compareBudgetListItemsDefault,
+  listTotalsFromSummary,
   newBudgetId,
+  normalizeBudgetSituacao,
   type AppConfig,
   type BudgetListItem,
   type BudgetRecord,
@@ -158,6 +161,7 @@ function normalizeBudget(raw: Partial<BudgetRecord> | null | undefined): BudgetR
     savedAt: String(raw.savedAt ?? now),
     source,
     owner: normalizeVendasUser(raw.owner),
+    situacao: normalizeBudgetSituacao(raw.situacao),
   };
 }
 
@@ -227,17 +231,25 @@ export function removeSavedBudget(idOrNumber: string): void {
 }
 
 export function savedBudgetsAsListItems(budgets: BudgetRecord[] = loadSavedBudgets()): BudgetListItem[] {
-  return budgets.map((b) => ({
-    id: b.id,
-    number: b.number,
-    name: budgetDisplayName(b),
-    client: b.client.name ?? "",
-    cnpj: b.client.cnpj ?? "",
-    createdAt: b.createdAt,
-    savedAt: b.savedAt,
-    source: b.source,
-    owner: b.owner ?? null,
-  }));
+  return budgets
+    .map((b) => {
+      const totals = listTotalsFromSummary(b.summary);
+      return {
+        id: b.id,
+        number: b.number,
+        name: budgetDisplayName(b),
+        client: b.client.name ?? "",
+        cnpj: b.client.cnpj ?? "",
+        createdAt: b.createdAt,
+        savedAt: b.savedAt,
+        source: b.source,
+        owner: b.owner ?? null,
+        totalKg: totals.totalKg,
+        totalRs: totals.totalRs,
+        situacao: normalizeBudgetSituacao(b.situacao),
+      };
+    })
+    .sort(compareBudgetListItemsDefault);
 }
 
 export function mergeBudgetLists(
@@ -247,15 +259,34 @@ export function mergeBudgetLists(
   const map = new Map<string, BudgetListItem>();
   for (const item of local) {
     if (!item.number) continue;
-    map.set(item.number, item);
+    map.set(item.number, {
+      ...item,
+      situacao: normalizeBudgetSituacao(item.situacao),
+    });
   }
   for (const item of remote) {
     if (!item.number) continue;
-    map.set(item.number, { ...item, source: "remote" });
+    const previous = map.get(item.number);
+    map.set(item.number, {
+      ...previous,
+      ...item,
+      source: "remote",
+      situacao: normalizeBudgetSituacao(item.situacao ?? previous?.situacao),
+      totalKg:
+        typeof item.totalKg === "number"
+          ? item.totalKg
+          : typeof previous?.totalKg === "number"
+            ? previous.totalKg
+            : null,
+      totalRs:
+        typeof item.totalRs === "number"
+          ? item.totalRs
+          : typeof previous?.totalRs === "number"
+            ? previous.totalRs
+            : null,
+    });
   }
-  return [...map.values()].sort((a, b) =>
-    String(b.savedAt || b.createdAt).localeCompare(String(a.savedAt || a.createdAt)),
-  );
+  return [...map.values()].sort(compareBudgetListItemsDefault);
 }
 
 export async function loadAppConfig(): Promise<AppConfig> {

@@ -1,9 +1,37 @@
+import {
+  compareSavedListItemsDefault,
+  normalizeBudgetSituacao,
+  pickFiniteNumber,
+  type SavedListItem,
+} from '@liganer/shared'
 import type { BudgetListItem, BudgetRecord, Conditions, ItemRow } from './types'
+
+export { normalizeBudgetSituacao } from '@liganer/shared'
 
 const STORAGE_KEY = 'liganer-ace-draft-v1'
 const SAVED_KEY = 'liganer-ace-saved-v1'
 
 const memory: Record<string, string> = {}
+
+export function toSavedListItem(item: BudgetListItem): SavedListItem {
+  return {
+    id: item.id,
+    name: item.name,
+    number: item.number,
+    clientName: item.client?.name ?? '',
+    cnpj: item.client?.cnpj ?? '',
+    createdAt: item.createdAt,
+    savedAt: item.savedAt,
+    owner: item.owner,
+    totalKg: item.totalKg ?? null,
+    totalRs: item.totalRs ?? null,
+    situacao: normalizeBudgetSituacao(item.situacao),
+  }
+}
+
+export function compareBudgetListItemsDefault(a: BudgetListItem, b: BudgetListItem): number {
+  return compareSavedListItemsDefault(toSavedListItem(a), toSavedListItem(b))
+}
 
 function getItem(key: string, fallback = ''): string {
   try {
@@ -134,8 +162,11 @@ export function savedBudgetsAsListItems(records: BudgetRecord[] = loadSavedBudge
             name: record.owner.name,
           }
         : null,
+      totalKg: pickFiniteNumber(record.summary?.totalKg),
+      totalRs: pickFiniteNumber(record.summary?.total),
+      situacao: normalizeBudgetSituacao(record.situacao),
     }))
-    .sort((a, b) => String(b.savedAt ?? '').localeCompare(String(a.savedAt ?? '')))
+    .sort(compareBudgetListItemsDefault)
 }
 
 export type SyncConfig = {
@@ -283,18 +314,34 @@ export function mergeBudgetLists(
     byKey.set(key, {
       ...item,
       name: budgetDisplayName(item),
+      situacao: normalizeBudgetSituacao(item.situacao),
+      totalKg: typeof item.totalKg === 'number' ? item.totalKg : item.totalKg ?? null,
+      totalRs: typeof item.totalRs === 'number' ? item.totalRs : item.totalRs ?? null,
     })
   }
   for (const item of remote) {
     const key = item.number ? `n:${item.number}` : `id:${item.id}`
+    const previous = byKey.get(key)
     byKey.set(key, {
+      ...previous,
       ...item,
       name: budgetDisplayName(item),
+      situacao: normalizeBudgetSituacao(item.situacao ?? previous?.situacao),
+      totalKg:
+        typeof item.totalKg === 'number'
+          ? item.totalKg
+          : typeof previous?.totalKg === 'number'
+            ? previous.totalKg
+            : null,
+      totalRs:
+        typeof item.totalRs === 'number'
+          ? item.totalRs
+          : typeof previous?.totalRs === 'number'
+            ? previous.totalRs
+            : null,
     })
   }
-  return [...byKey.values()].sort((a, b) =>
-    String(b.savedAt ?? b.createdAt ?? '').localeCompare(String(a.savedAt ?? a.createdAt ?? '')),
-  )
+  return [...byKey.values()].sort(compareBudgetListItemsDefault)
 }
 
 export function localPrintNumber(): string {

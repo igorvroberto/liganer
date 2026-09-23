@@ -1,0 +1,121 @@
+.situacao-group {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.situacao-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--line, #d8dfd9);
+  background: #fff;
+  color: var(--muted, #56635d);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.situacao-btn:hover {
+  border-color: rgba(23, 33, 29, 0.35);
+}
+
+.situacao-btn.situacao-perdido.is-active {
+  color: #c60000;
+  border-color: rgba(198, 0, 0, 0.45);
+  background: rgba(198, 0, 0, 0.08);
+}
+
+.situacao-btn.situacao-analise.is-active {
+  color: #b8860b;
+  border-color: rgba(184, 134, 11, 0.45);
+  background: rgba(255, 193, 7, 0.16);
+}
+
+.situacao-btn.situacao-ganho.is-active {
+  color: #2f6b4f;
+  border-color: rgba(47, 107, 79, 0.45);
+  background: rgba(47, 107, 79, 0.1);
+}
+
+.sort-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sort-header .sort-marker {
+  opacity: 0.45;
+  font-size: 0.75rem;
+}
+
+.sort-header.is-active .sort-marker,
+.sort-header:hover .sort-marker {
+  opacity: 1;
+}
+
+.report-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 0 0 14px;
+}
+
+.report-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.report-fields label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted, #56635d);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.report-fields select {
+  min-width: 140px;
+  border: 1px solid var(--line, #d8dfd9);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--ink, #17211d);
+  background: #fff;
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 12px;
+  color: var(--muted, #56635d);
+  font-size: 0.88rem;
+}
+
+.pager button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

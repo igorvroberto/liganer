@@ -1,3 +1,7 @@
+import type { BudgetSituacao } from '@liganer/shared'
+
+export type { BudgetSituacao } from '@liganer/shared'
+
 export type FieldType = 'number' | 'currency' | 'percent' | 'boolean' | 'text'
 
 export type FieldDef = {
@@ -69,9 +73,6 @@ export type Summary = {
   total: number
   frete: number
 }
-
-/** Situação comercial do orçamento na lista salva. */
-export type BudgetSituacao = 'perdido' | 'analise' | 'ganho'
 
 export type BudgetRecord = {
   id: string
