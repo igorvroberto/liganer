@@ -1,0 +1,80 @@
+name: Deploy to vendas.liganer.com.br/orcamento/chapas-bobinas
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-orcamento-chapas-bobinas
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Prepare publish folder
+        run: |
+          mkdir -p dist/api
+          cp deploy/api/budgets.php dist/api/budgets.php
+          # Publica config.json (sync da equipe). data/ permanece só no host.
+          if [ -n "${{ secrets.ORCAMENTO_SYNC_SECRET }}" ]; then
+            python3 - <<'PY'
+          import json
+          secret = """${{ secrets.ORCAMENTO_SYNC_SECRET }}""".strip()
+          cfg = {
+              "saveUrl": "/orcamento/chapas-bobinas/api/budgets.php",
+              "printNumberUrl": "",
+              "syncSecret": secret,
+          }
+          with open("dist/config.json", "w", encoding="utf-8") as fh:
+              json.dump(cfg, fh, ensure_ascii=False, indent=2)
+              fh.write("\n")
+          print("config.json gerado com ORCAMENTO_SYNC_SECRET")
+          PY
+          elif [ ! -f dist/config.json ]; then
+            echo "AVISO: sem dist/config.json — sync da equipe ficará desligado"
+          else
+            echo "Usando public/config.json do build"
+          fi
+          rm -rf dist/data
+
+      - name: Normalize FTP server dir
+        run: |
+          DIR="${{ secrets.FTP_SERVER_DIR }}"
+          case "$DIR" in
+            */) ;;
+            *) DIR="${DIR}/" ;;
+          esac
+          echo "FTP_SERVER_DIR=$DIR" >> "$GITHUB_ENV"
+
+      - name: Deploy via FTP/FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./dist/
+          server-dir: ${{ env.FTP_SERVER_DIR }}
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/data/**

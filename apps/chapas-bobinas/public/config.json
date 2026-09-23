@@ -1,0 +1,6 @@
+{
+  "_comment": "Sync da equipe em vendas.liganer.com.br. O deploy publica este arquivo; a pasta data/ no host guarda os JSON.",
+  "saveUrl": "/orcamento/chapas-bobinas/api/budgets.php",
+  "printNumberUrl": "",
+  "syncSecret": "Ig0r-AcessO"
+}

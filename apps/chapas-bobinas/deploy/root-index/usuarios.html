@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/webp" href="/liganer_favicon.webp" />
+    <title>Usuários · Liganer Vendas</title>
+    <script src="/auth/guard.js"></script>
+    <style>
+      :root {
+        --bg: #f2f2f2;
+        --paper: #ffffff;
+        --ink: #17211d;
+        --muted: #56635d;
+        --brand: #c60000;
+        --line: #d8dfd9;
+        --shadow: 0 16px 40px rgba(20, 37, 31, 0.11);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        background: linear-gradient(180deg, rgba(198, 0, 0, 0.08), transparent 260px), var(--bg);
+      }
+      body.booting main { opacity: 0; }
+      main {
+        width: min(980px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 40px 0 56px;
+        transition: opacity 120ms ease;
+      }
+      .card {
+        background: var(--paper);
+        border: 1px solid rgba(216, 223, 217, 0.9);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        padding: 22px;
+        margin-bottom: 16px;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 18px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand img {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        object-fit: contain;
+        background: #fff;
+      }
+      .brand strong {
+        display: block;
+        color: var(--brand);
+        font-size: 1.35rem;
+        font-weight: 800;
+      }
+      .brand span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 1.35rem;
+      }
+      .lede {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      button, .btn {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        padding: 8px 12px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+      }
+      button.primary, .btn.primary {
+        border-color: var(--brand);
+        background: var(--brand);
+        color: #fff;
+      }
+      button.danger {
+        border-color: rgba(198, 0, 0, 0.35);
+        color: var(--brand);
+      }
+      button:disabled { opacity: 0.6; cursor: wait; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        font-size: 0.92rem;
+        vertical-align: middle;
+      }
+      th {
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 720px) {
+        .form-grid { grid-template-columns: 1fr; }
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 700;
+      }
+      input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font: inherit;
+        color: var(--ink);
+        background: #fff;
+      }
+      .status {
+        min-height: 1.2em;
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .status.error { color: var(--brand); }
+      .status.ok { color: #2f6b4f; }
+      .hint {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      dialog {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0;
+        width: min(520px, calc(100vw - 32px));
+        box-shadow: var(--shadow);
+      }
+      dialog::backdrop { background: rgba(23, 33, 29, 0.35); }
+      .dialog-body { padding: 20px; }
+      .dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body class="booting">
+    <main>
+      <section class="card">
+        <div class="top">
+          <div class="brand">
+            <img src="/liganer_favicon.webp" alt="Liganer" width="48" height="48" />
+            <div>
+              <strong>Liganer</strong>
+              <span>Usuários</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="primary" id="btn-add">Adicionar usuário</button>
+          </div>
+        </div>
+        <h1>Editar usuários</h1>
+        <p class="lede">Lista de quem pode entrar em vendas.liganer.com.br.</p>
+      </section>
+
+      <section class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="users-body">
+              <tr><td colspan="3">Carregando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="status" id="status"></p>
+      </section>
+    </main>
+
+    <dialog id="user-dialog">
+      <form class="dialog-body" id="user-form">
+        <h1 id="dialog-title" style="font-size:1.15rem;margin:0 0 12px">Usuário</h1>
+        <p class="hint" id="dialog-hint"></p>
+        <input type="hidden" id="user-id" />
+        <div class="form-grid">
+          <label>
+            Nome
+            <input id="user-name" name="name" required autocomplete="name" />
+          </label>
+          <label>
+            E-mail
+            <input id="user-email" name="email" type="email" required autocomplete="username" />
+          </label>
+        </div>
+        <label style="margin-top:12px">
+          Senha <span id="password-optional" hidden>(opcional ao editar)</span>
+          <input id="user-password" name="password" type="password" autocomplete="new-password" />
+        </label>
+        <div class="dialog-actions">
+          <button type="button" id="dialog-cancel">Cancelar</button>
+          <button type="submit" class="primary" id="dialog-save">Salvar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script>
+      const ADMIN_EMAIL = 'igor.roberto@liganer.com.br'
+      const statusEl = document.getElementById('status')
+      const bodyEl = document.getElementById('users-body')
+      const dialog = document.getElementById('user-dialog')
+      const form = document.getElementById('user-form')
+      let users = []
+      let mode = 'create'
+
+      function setStatus(text, kind) {
+        statusEl.textContent = text || ''
+        statusEl.className = 'status' + (kind ? ' ' + kind : '')
+      }
+
+      async function requireAdmin() {
+        const res = await fetch('/auth/me.php', { credentials: 'same-origin', cache: 'no-store' })
+        if (!res.ok) {
+          location.replace('/login.html?next=' + encodeURIComponent('/usuarios.html'))
+          return null
+        }
+        const data = await res.json()
+        if (!data.admin && String(data.user?.email || '').toLowerCase() !== ADMIN_EMAIL) {
+          location.replace('/')
+          return null
+        }
+        document.body.classList.remove('booting')
+        return data.user
+      }
+
+      async function loadUsers() {
+        setStatus('Carregando…')
+        const res = await fetch('/auth/users.php', {
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !data.ok) {
+          bodyEl.innerHTML = '<tr><td colspan="3">Não foi possível listar.</td></tr>'
+          setStatus(data.error || 'Falha ao listar usuários.', 'error')
+          return
+        }
+        users = Array.isArray(data.users) ? data.users : []
+        renderUsers()
+        setStatus(users.length ? '' : 'Nenhum usuário cadastrado.')
+      }
+
+      function renderUsers() {
+        if (!users.length) {
+          bodyEl.innerHTML = '<tr><td colspan="3">Nenhum usuário.</td></tr>'
+          return
+        }
+        bodyEl.innerHTML = users
+          .map((user) => {
+            const protectedAdmin = String(user.email).toLowerCase() === ADMIN_EMAIL
+            return `
+              <tr>
+                <td>${escapeHtml(user.name)}</td>
+                <td>${escapeHtml(user.email)}</td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" data-edit="${escapeHtml(user.id)}">Editar</button>
+                    <button type="button" class="danger" data-delete="${escapeHtml(user.id)}" ${protectedAdmin ? 'disabled title="Administrador protegido"' : ''}>Excluir</button>
+                  </div>
+                </td>
+              </tr>`
+          })
+          .join('')
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+      }
+
+      function openCreate() {
+        mode = 'create'
+        document.getElementById('dialog-title').textContent = 'Adicionar usuário'
+        document.getElementById('dialog-hint').textContent = 'A senha será usada no login da raiz.'
+        document.getElementById('password-optional').hidden = true
+        document.getElementById('user-id').value = ''
+        document.getElementById('user-name').value = ''
+        document.getElementById('user-email').value = ''
+        document.getElementById('user-email').disabled = false
+        document.getElementById('user-password').value = ''
+        document.getElementById('user-password').required = true
+        dialog.showModal()
+      }
+
+      function openEdit(id) {
+        const user = users.find((item) => item.id === id)
+        if (!user) return
+        mode = 'edit'
+        const protectedAdmin = String(user.email).toLowerCase() === ADMIN_EMAIL
+        document.getElementById('dialog-title').textContent = 'Editar usuário'
+        document.getElementById('dialog-hint').textContent = protectedAdmin
+          ? 'O e-mail do administrador não pode ser alterado.'
+          : 'Deixe a senha em branco para manter a atual.'
+        document.getElementById('password-optional').hidden = false
+        document.getElementById('user-id').value = user.id
+        document.getElementById('user-name').value = user.name
+        document.getElementById('user-email').value = user.email
+        document.getElementById('user-email').disabled = protectedAdmin
+        document.getElementById('user-password').value = ''
+        document.getElementById('user-password').required = false
+        dialog.showModal()
+      }
+
+      async function removeUser(id) {
+        const user = users.find((item) => item.id === id)
+        if (!user) return
+        if (String(user.email).toLowerCase() === ADMIN_EMAIL) {
+          setStatus('Não é permitido excluir o administrador.', 'error')
+          return
+        }
+        if (!window.confirm(`Excluir ${user.name} (${user.email})?`)) return
+        const res = await fetch('/auth/users.php?id=' + encodeURIComponent(id), {
+          method: 'DELETE',
+          credentials: 'same-origin',
+          headers: { Accept: 'application/json' },
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !data.ok) {
+          setStatus(data.error || 'Falha ao excluir.', 'error')
+          return
+        }
+        setStatus('Usuário excluído.', 'ok')
+        await loadUsers()
+      }
+
+      bodyEl.addEventListener('click', (event) => {
+        const editId = event.target.getAttribute?.('data-edit')
+        const deleteId = event.target.getAttribute?.('data-delete')
+        if (editId) openEdit(editId)
+        if (deleteId) void removeUser(deleteId)
+      })
+
+      document.getElementById('btn-add').addEventListener('click', openCreate)
+      document.getElementById('dialog-cancel').addEventListener('click', () => dialog.close())
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault()
+        const saveBtn = document.getElementById('dialog-save')
+        saveBtn.disabled = true
+        const payload = {
+          id: document.getElementById('user-id').value,
+          name: document.getElementById('user-name').value.trim(),
+          email: document.getElementById('user-email').value.trim(),
+          password: document.getElementById('user-password').value,
+        }
+        try {
+          const res = await fetch('/auth/users.php', {
+            method: mode === 'create' ? 'POST' : 'PUT',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify(
+              mode === 'create'
+                ? { name: payload.name, email: payload.email, password: payload.password }
+                : {
+                    id: payload.id,
+                    name: payload.name,
+                    email: payload.email,
+                    ...(payload.password ? { password: payload.password } : {}),
+                  },
+            ),
+          })
+          const data = await res.json().catch(() => ({}))
+          if (!res.ok || !data.ok) {
+            setStatus(data.error || 'Não foi possível salvar.', 'error')
+            return
+          }
+          dialog.close()
+          setStatus(mode === 'create' ? 'Usuário adicionado.' : 'Usuário atualizado.', 'ok')
+          await loadUsers()
+        } catch (_) {
+          setStatus('Falha de rede.', 'error')
+        } finally {
+          saveBtn.disabled = false
+        }
+      })
+
+      requireAdmin()
+        .then((user) => {
+          if (user) return loadUsers()
+        })
+        .catch(() => location.replace('/login.html?next=' + encodeURIComponent('/usuarios.html')))
+    </script>
+  </body>
+</html>

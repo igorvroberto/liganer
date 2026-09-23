@@ -1,0 +1,61 @@
+name: Deploy root index to vendas.liganer.com.br
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/root-index/**'
+      - 'scripts/inject-vendas-auth-guard.mjs'
+      - '.github/workflows/deploy-root-index.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-root-index
+  cancel-in-progress: true
+
+jobs:
+  deploy-root-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Prepare publish folder (root + injected SPA indexes)
+        run: |
+          mkdir -p root-dist/auth root-dist/data
+          cp deploy/root-index/index.html root-dist/index.html
+          cp deploy/root-index/login.html root-dist/login.html
+          cp deploy/root-index/usuarios.html root-dist/usuarios.html
+          cp deploy/root-index/liganer_favicon.webp root-dist/liganer_favicon.webp
+          cp deploy/root-index/auth/*.php root-dist/auth/
+          cp deploy/root-index/auth/guard.js root-dist/auth/guard.js
+          cp deploy/root-index/data/.htaccess root-dist/data/.htaccess
+          # Inject guard into sibling SPA indexes, then merge into the SAME
+          # publish folder. A second FTP-Deploy with a different local-dir
+          # reuses .ftp-deploy-sync-state.json and deletes root login/auth.
+          node scripts/inject-vendas-auth-guard.mjs
+          if [ -d inject-dist ]; then
+            cp -a inject-dist/. root-dist/
+          fi
+
+      - name: Deploy root index via FTP/FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./root-dist/
+          server-dir: /vendas.liganer.com.br/
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/data/users.json
+            **/data/*.json

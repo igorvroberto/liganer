@@ -1,0 +1,97 @@
+# Deploy — Orçamento Chapas/Bobinas
+
+Publicar em `https://vendas.liganer.com.br/orcamento/chapas-bobinas/`.
+
+## Deploy automático (GitHub → HostGator)
+
+1. Usuário FTP no cPanel / HostGator.
+2. Guardar host, usuário, senha e pasta remota como **GitHub Secrets**.
+3. Em cada push na `main`, o Action faz `npm run build` e envia `dist/` para `/orcamento/chapas-bobinas/`.
+
+### Caminho FTP deste projeto
+
+```
+ftp://acesso@liganer.com.br@ftp.liganer.com.br/vendas.liganer.com.br/orcamento/chapas-bobinas
+```
+
+| Secret | Valor |
+| --- | --- |
+| `FTP_SERVER` | `ftp.liganer.com.br` |
+| `FTP_USERNAME` | `acesso@liganer.com.br` |
+| `FTP_PASSWORD` | *(senha FTP — só no GitHub Secrets)* |
+| `FTP_SERVER_DIR` | `/vendas.liganer.com.br/orcamento/chapas-bobinas/` |
+
+`FTP_SERVER_DIR` deve terminar com `/` e apontar para dentro da pasta do app (onde ficará o `index.html`).
+
+### Secrets no GitHub
+
+No repositório:
+
+**Settings → Secrets and variables → Actions → New repository secret**
+
+Prefira **FTPS**. Se o HostGator só aceitar FTP puro, edite `.github/workflows/deploy.yml` e troque `protocol: ftps` por `protocol: ftp`.
+
+**Não cole a senha no chat nem no código.** Só nos Secrets.
+
+### Home simples em `vendas.liganer.com.br/`
+
+Há um workflow separado: **Deploy root index to vendas.liganer.com.br**.
+
+- Fonte: `deploy/root-index/` (`index.html`, `login.html`, `usuarios.html`, `auth/*`, favicon)
+- Destino FTP: `/vendas.liganer.com.br/`
+- Publica o portal + **login compartilhado** + admin de usuários.
+- Também injeta `/auth/guard.js` nos SPAs irmãos (prospecção, blanks, ACE, comparador) para exigir login.
+- Não mexe no restante de `/orcamento/chapas-bobinas/` nem em `/data/` (usuários).
+- Ver [root-index/AUTH.md](root-index/AUTH.md).
+
+Roda automaticamente no push da `main` quando `deploy/root-index/` (ou o próprio workflow) muda. Também dá para disparar em **Actions → Run workflow**.
+
+### Atualizar preços (planilha Excel)
+
+Fonte compartilhada (fora deste app):
+
+`/vendas.liganer.com.br/orcamento/tabelas/precos-chapas-bobinas.xlsx`
+
+URL pública: `https://vendas.liganer.com.br/orcamento/tabelas/precos-chapas-bobinas.xlsx`
+
+- Substitua só esse arquivo no FTP e dê hard-refresh nos apps — sem rebuild.
+- O build deste repo só regenera o JSON de fallback embutido (`npm run sync:prices`).
+- Tipo, acabamento, PVC e espessura do formulário vêm dos valores/colunas dessa planilha.
+
+### Primeira publicação
+
+1. Confirme que a pasta `orcamento/chapas-bobinas` existe no servidor (File Manager).
+2. A pasta `orcamento/chapas-bobinas/data/` é criada pelo PHP no primeiro save (ou crie manualmente, gravável).
+3. Merge do PR / push na `main`, ou **Actions → Deploy… → Run workflow**.
+4. O deploy publica `config.json` com `syncSecret` (de `public/config.json`, ou do secret `ORCAMENTO_SYNC_SECRET` se existir). Assim a lista **Orçamentos salvos** fica compartilhada pela equipe.
+
+```json
+{
+  "saveUrl": "/orcamento/chapas-bobinas/api/budgets.php",
+  "syncSecret": "SEU_SEGREDO"
+}
+```
+
+### O que o Action envia
+
+- Conteúdo de `dist/` (HTML/JS/CSS do Vite), incluindo `config.json`
+- `api/budgets.php`
+- **Não** apaga o servidor inteiro (`dangerous-clean-slate: false`)
+- **Não** apaga arquivos em `data/` (orçamentos da equipe)
+
+## Build local
+
+```bash
+npm ci
+npm run build
+```
+
+A pasta `dist/` sai com `base: /orcamento/chapas-bobinas/`.
+
+## Checklist
+
+- [ ] Secrets FTP preenchidos no GitHub (`FTP_SERVER_DIR` = `/vendas.liganer.com.br/orcamento/chapas-bobinas/`)
+- [ ] Pasta `orcamento/chapas-bobinas/` existe no host
+- [ ] Workflow verde em Actions após push na `main`
+- [ ] `https://vendas.liganer.com.br/orcamento/chapas-bobinas/` abre com título `Liganer · Orçamento`
+- [ ] `config.json` acessível e Salvar grava em `data/` (lista da equipe)

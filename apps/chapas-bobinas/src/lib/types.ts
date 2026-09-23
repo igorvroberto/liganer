@@ -1,0 +1,117 @@
+export type FieldType = 'number' | 'currency' | 'percent' | 'boolean' | 'text'
+
+export type FieldDef = {
+  key: string
+  label: string
+  aliases?: string[]
+  type?: FieldType
+  options?: string[]
+  customOptionLabel?: string
+  default?: string | number | boolean
+  locked?: boolean
+  hiddenInApp?: boolean
+  askWhenNew?: boolean
+  section?: 'Rodapé'
+  virtual?: boolean
+  calculated?: boolean
+  /** Peso unitário: calculado/bloqueado para Chapa, editável para Bobina inteira/reduzida */
+  weightByMaterial?: boolean
+  /** Casas decimais na exibição (padrão 2). Use 0 para inteiros. */
+  fractionDigits?: number
+  /** Separador de milhar (padrão true). */
+  useGrouping?: boolean
+  calc?: keyof RowCalculation
+}
+
+export type ModelDef = {
+  id: string
+  name: string
+  status: 'configured' | 'pending'
+  fields: FieldDef[]
+  sheet?: string
+  rowRange?: string
+  formulaNote?: string
+}
+
+export type ItemRow = Record<string, string | number | boolean | undefined>
+
+export type Conditions = Record<string, string | number | boolean | undefined>
+
+export type ClientInfo = {
+  name: string
+  cnpj: string
+}
+
+export type RowCalculation = {
+  pesoUnitario: number
+  pesoTotal: number
+  precoFator100: number
+  precoFatorUtilizado: number
+  precoBobinaFator100: number
+  precoBobinaFatorUtilizado: number
+  precoTotal: number
+  precoSemIpi: number
+  subtotal: number
+  pesoNecessario: number
+  quantidadeCortes: number
+  perdaMm: number
+  perdaPercentual: number
+  acrescimoPerdaPercentual: number
+  acrescimoPerdaValor: number
+  /** Alíquota ICMS da planilha (ex.: 0.04 = 4%). */
+  icms: number
+}
+
+export type Summary = {
+  totalKg: number
+  subtotal: number
+  ipi: number
+  total: number
+  frete: number
+}
+
+/** Situação comercial do orçamento na lista salva. */
+export type BudgetSituacao = 'perdido' | 'analise' | 'ganho'
+
+export type BudgetRecord = {
+  id: string
+  createdAt: string
+  modelId: string
+  modelName: string
+  client: ClientInfo
+  rows: ItemRow[]
+  conditions: Conditions
+  summary: Summary
+  number?: string
+  /** Nome exibido na lista de orçamentos salvos. */
+  name?: string
+  savedAt?: string
+  /** Origem do salvamento, ex.: botão Salvar. */
+  source?: string
+  /** Usuário logado em vendas.liganer.com.br que salvou. */
+  owner?: {
+    id: string
+    email: string
+    name: string
+  } | null
+  /** Perdido / em análise / ganho — padrão: análise. */
+  situacao?: BudgetSituacao
+}
+
+export type BudgetListItem = {
+  id: string
+  name: string
+  number?: string | null
+  client: ClientInfo
+  createdAt?: string | null
+  savedAt?: string | null
+  source?: string | null
+  owner?: {
+    id: string
+    email: string
+    name: string
+  } | null
+  totalKg?: number | null
+  totalRs?: number | null
+  situacao?: BudgetSituacao | null
+}
