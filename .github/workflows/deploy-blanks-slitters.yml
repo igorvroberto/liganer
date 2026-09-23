@@ -1,0 +1,64 @@
+name: Deploy blanks-slitters
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/blanks-slitters/**'
+      - 'packages/shared/**'
+      - '.github/workflows/deploy-blanks-slitters.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-orcamento-blanks-slitters
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/blanks-slitters
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/blanks-slitters/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Prepare publish folder
+        run: |
+          if [ -f deploy/api/budgets.php ]; then
+            mkdir -p dist/api
+            cp deploy/api/budgets.php dist/api/budgets.php
+          fi
+          rm -f dist/config.json
+          rm -rf dist/data
+
+      - name: Deploy via FTP/FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./apps/blanks-slitters/dist/
+          server-dir: /vendas.liganer.com.br/orcamento/blanks-slitters/
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/config.json
+            **/data/**
+            **/config.example.json

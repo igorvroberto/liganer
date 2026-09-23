@@ -1,17 +1,24 @@
-name: Deploy to vendas.liganer.com.br/comparador-preco
+name: Deploy ACE
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'apps/ace/**'
+      - 'packages/shared/**'
+      - '.github/workflows/deploy-ace.yml'
   workflow_dispatch:
 
 concurrency:
-  group: deploy-comparador-preco
+  group: deploy-orcamento-ace
   cancel-in-progress: true
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/ace
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,30 +28,34 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+          cache-dependency-path: apps/ace/package-lock.json
 
       - name: Install
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Test
-        run: npm test
-
       - name: Build
         run: npm run build
+
+      - name: Prepare publish folder
+        run: |
+          mkdir -p dist/api
+          cp deploy/api/budgets.php dist/api/budgets.php
+          rm -f dist/config.json
+          rm -rf dist/data
 
       - name: Deploy via FTP/FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ftp.liganer.com.br
-          username: acesso@liganer.com.br
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           port: 21
-          local-dir: ./dist/
-          server-dir: /vendas.liganer.com.br/comparador-preco/
+          local-dir: ./apps/ace/dist/
+          server-dir: /vendas.liganer.com.br/orcamento/ace/
           dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.git*/**
+            **/config.json
+            **/data/**

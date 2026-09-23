@@ -1,24 +1,40 @@
-# liganer
+# Liganer (monorepo)
 
-Monorepo dos apps de vendas Liganer (`vendas.liganer.com.br`).
+Código e deploy de **https://vendas.liganer.com.br**
 
 ## Apps
 
-| Pasta | Destino |
+| Pasta | URL |
 | --- | --- |
-| `apps/root-index/` | Raiz do domínio — home, login, auth (`/`, `/login.html`, `/auth/*`) |
+| `apps/root-index/` | `/` (home, login, auth, usuários) |
 | `apps/chapas-bobinas/` | `/orcamento/chapas-bobinas/` |
-| `apps/ace/` | `/orcamento/ace/` |
 | `apps/blanks-slitters/` | `/orcamento/blanks-slitters/` |
+| `apps/ace/` | `/orcamento/ace/` |
 | `apps/comparador-preco/` | `/comparador-preco/` |
 | `apps/prospeccao/` | `/prospeccao/` |
+| `packages/shared/` | código compartilhado |
 
-## Home / login / auth
+## Deploy (só este repositório)
 
-Fonte oficial: **`apps/root-index/`**.
+Workflows na raiz (`.github/workflows/`):
 
-Deploy: workflow da raiz do monorepo
-[`.github/workflows/deploy-root-index.yml`](.github/workflows/deploy-root-index.yml)
-(secrets `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`).
+- `deploy-root-index.yml`
+- `deploy-chapas-bobinas.yml`
+- `deploy-blanks-slitters.yml`
+- `deploy-ace.yml`
+- `deploy-comparador-preco.yml`
+- `deploy-prospeccao.yml`
 
-Documentação: [`apps/root-index/AUTH.md`](apps/root-index/AUTH.md).
+Push em `main` (com paths do app) ou **Actions → Run workflow**.
+
+### Secrets necessários
+
+| Secret | Uso |
+| --- | --- |
+| `FTP_SERVER` | `ftp.liganer.com.br` |
+| `FTP_USERNAME` | usuário FTP |
+| `FTP_PASSWORD` | senha FTP |
+| `ORCAMENTO_SYNC_SECRET` | sync de orçamentos (chapas) |
+| `LEADS_SYNC_SECRET` / `LEADS_GITHUB_TOKEN` | sync de leads (prospecção, opcional) |
+
+Repos antigos **não** devem ter Actions ativos — senão publicam em cima do monorepo.

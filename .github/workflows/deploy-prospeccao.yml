@@ -1,33 +1,35 @@
-name: Deploy prospecção → FTP
+name: Deploy prospeccao
 
-# Tudo automático:
-# - mudou web/ ou LEADS.csv → build → FTP do site inteiro (/prospeccao)
-# - se LEADS_SYNC_* estiverem setados, gera api/config.local.php + syncSecret
-# Fonte dos leads: radar-comercial/LEADS.csv (GitHub) → entra no dist/data/leads.csv
+# Build web/ + sync leads → FTP /vendas.liganer.com.br/prospeccao/
 
 on:
   push:
     branches: [main]
     paths:
-      - 'radar-comercial/**'
-      - 'web/**'
-      - 'scripts/**'
-      - '.github/workflows/deploy-ftp.yml'
+      - 'apps/prospeccao/**'
+      - '.github/workflows/deploy-prospeccao.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: deploy-prospeccao
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/prospeccao
     env:
-      FTP_HOST: ${{ secrets.FTP_HOST }}
-      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_HOST: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USERNAME }}
       FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
       LEADS_SYNC_SECRET: ${{ secrets.LEADS_SYNC_SECRET }}
       LEADS_GITHUB_TOKEN: ${{ secrets.LEADS_GITHUB_TOKEN }}
-      LEADS_GITHUB_REPO: ${{ secrets.LEADS_GITHUB_REPO || 'igorvroberto/liganer-prospeccao' }}
+      LEADS_GITHUB_REPO: ${{ secrets.LEADS_GITHUB_REPO || 'igorvroberto/liganer' }}
       LEADS_GITHUB_BRANCH: ${{ secrets.LEADS_GITHUB_BRANCH || 'main' }}
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +38,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: apps/prospeccao/web/package-lock.json
 
       - name: Sync leads + build
         run: |
@@ -45,14 +47,15 @@ jobs:
           npm ci
           npm run build
 
-      - name: Upload artifact (sempre)
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: prospeccao-dist
-          path: web/dist
+          path: apps/prospeccao/web/dist
           retention-days: 14
 
       - name: Write sync API config into dist
+        working-directory: apps/prospeccao
         run: |
           if [ -z "$LEADS_SYNC_SECRET" ] || [ -z "$LEADS_GITHUB_TOKEN" ]; then
             echo "::warning::LEADS_SYNC_SECRET / LEADS_GITHUB_TOKEN ausentes — sync automático desligado."
@@ -64,7 +67,7 @@ jobs:
 
           secret = os.environ["LEADS_SYNC_SECRET"]
           token = os.environ["LEADS_GITHUB_TOKEN"].strip()
-          repo = (os.environ.get("LEADS_GITHUB_REPO") or "igorvroberto/liganer-prospeccao").strip()
+          repo = (os.environ.get("LEADS_GITHUB_REPO") or "igorvroberto/liganer").strip()
           branch = (os.environ.get("LEADS_GITHUB_BRANCH") or "main").strip()
 
           if "/" not in repo:
@@ -87,18 +90,13 @@ jobs:
               body = e.read().decode(errors="replace")
               print(
                   f"::error::LEADS_GITHUB_TOKEN não acessa {repo} "
-                  f"(HTTP {e.code}). Crie um PAT classic com escopo repo "
-                  f"(ou fine-grained Contents: Read and write neste repo), "
-                  f"atualize o secret e rode o deploy de novo. Resposta: {body[:300]}"
+                  f"(HTTP {e.code}). Resposta: {body[:300]}"
               )
               sys.exit(1)
 
           perms = meta.get("permissions") or {}
           if "push" in perms and not perms.get("push"):
-              print(
-                  f"::error::Token acessa {repo} mas sem push. "
-                  "Ajuste o PAT para Contents: Read and write (ou classic repo)."
-              )
+              print(f"::error::Token acessa {repo} mas sem push.")
               sys.exit(1)
 
           print(f"Token OK para {repo} (push={perms.get('push', 'n/a')})")
@@ -110,7 +108,7 @@ jobs:
               + f"    'github_token' => {json.dumps(token)},\n"
               + f"    'github_repo' => {json.dumps(repo)},\n"
               + f"    'github_branch' => {json.dumps(branch)},\n"
-              + "    'github_csv_path' => 'radar-comercial/LEADS.csv',\n"
+              + "    'github_csv_path' => 'apps/prospeccao/radar-comercial/LEADS.csv',\n"
               + "];\n",
               encoding="utf-8",
           )
@@ -128,21 +126,22 @@ jobs:
       - name: Check FTP secrets
         id: ftp
         run: |
-          if [ -n "$FTP_HOST" ] && [ -n "$FTP_USER" ] && [ -n "$FTP_PASSWORD" ]; then
+          if [ -n "${{ secrets.FTP_SERVER }}" ] && [ -n "${{ secrets.FTP_USERNAME }}" ] && [ -n "${{ secrets.FTP_PASSWORD }}" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Secrets FTP_HOST / FTP_USER / FTP_PASSWORD ausentes — só gerou artifact."
+            echo "::warning::Secrets FTP_SERVER / FTP_USERNAME / FTP_PASSWORD ausentes — só gerou artifact."
           fi
 
-      - name: Deploy via FTP
+      - name: Deploy via FTP/FTPS
         if: steps.ftp.outputs.ready == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ${{ secrets.FTP_PROTOCOL || 'ftp' }}
-          local-dir: ./web/dist/
-          server-dir: ${{ secrets.FTP_SERVER_DIR || '/public_html/prospeccao/' }}
+          protocol: ftps
+          port: 21
+          local-dir: ./apps/prospeccao/web/dist/
+          server-dir: /vendas.liganer.com.br/prospeccao/
           dangerous-clean-slate: false

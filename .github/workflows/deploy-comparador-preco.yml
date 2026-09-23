@@ -1,17 +1,24 @@
-name: Deploy to vendas.liganer.com.br/orcamento/ace
+name: Deploy comparador-preco
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'apps/comparador-preco/**'
+      - 'packages/shared/**'
+      - '.github/workflows/deploy-comparador-preco.yml'
   workflow_dispatch:
 
 concurrency:
-  group: deploy-orcamento-ace
+  group: deploy-comparador-preco
   cancel-in-progress: true
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/comparador-preco
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,29 +28,19 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+          cache-dependency-path: apps/comparador-preco/package-lock.json
 
       - name: Install
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
-
-      - name: Prepare publish folder
-        run: |
-          mkdir -p dist/api
-          cp deploy/api/budgets.php dist/api/budgets.php
-          # Não publica config.json nem pasta data/ (criada uma vez no host).
-          rm -f dist/config.json
-          rm -rf dist/data
-
-      - name: Normalize FTP server dir
-        run: |
-          DIR="${{ secrets.FTP_SERVER_DIR }}"
-          case "$DIR" in
-            */) ;;
-            *) DIR="${DIR}/" ;;
-          esac
-          echo "FTP_SERVER_DIR=$DIR" >> "$GITHUB_ENV"
 
       - name: Deploy via FTP/FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -53,11 +50,9 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           port: 21
-          local-dir: ./dist/
-          server-dir: ${{ env.FTP_SERVER_DIR }}
+          local-dir: ./apps/comparador-preco/dist/
+          server-dir: /vendas.liganer.com.br/comparador-preco/
           dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.git*/**
-            **/config.json
-            **/data/**
