@@ -99,6 +99,20 @@ function list_item_from_budget(array $budget, string $fallbackNumber): array
     $clientName = is_array($client) ? (string)($client['name'] ?? '') : '';
     $cnpj = is_array($client) ? (string)($client['cnpj'] ?? '') : '';
     $owner = is_array($budget['owner'] ?? null) ? $budget['owner'] : null;
+    $summary = is_array($budget['summary'] ?? null) ? $budget['summary'] : [];
+    $totalKg = isset($summary['totalKg']) && is_numeric($summary['totalKg'])
+        ? (float) $summary['totalKg']
+        : null;
+    $totalRs = isset($summary['total']) && is_numeric($summary['total'])
+        ? (float) $summary['total']
+        : null;
+    $situacaoRaw = strtolower(trim((string) ($budget['situacao'] ?? 'analise')));
+    if ($situacaoRaw === 'análise' || $situacaoRaw === 'em analise' || $situacaoRaw === 'em análise') {
+        $situacaoRaw = 'analise';
+    }
+    if ($situacaoRaw !== 'perdido' && $situacaoRaw !== 'ganho' && $situacaoRaw !== 'analise') {
+        $situacaoRaw = 'analise';
+    }
     return [
         'id' => (string)($budget['id'] ?? $number),
         'number' => $number,
@@ -113,6 +127,9 @@ function list_item_from_budget(array $budget, string $fallbackNumber): array
             'email' => (string)($owner['email'] ?? ''),
             'name' => (string)($owner['name'] ?? $owner['email'] ?? ''),
         ] : null,
+        'totalKg' => $totalKg,
+        'totalRs' => $totalRs,
+        'situacao' => $situacaoRaw,
     ];
 }
 
@@ -145,7 +162,13 @@ if ($method === 'GET') {
         $items[] = list_item_from_budget($budget, $m[1]);
     }
     usort($items, static function (array $a, array $b): int {
-        return strcmp((string)($b['savedAt'] ?? ''), (string)($a['savedAt'] ?? ''));
+        $ta = (string)($a['createdAt'] ?? $a['savedAt'] ?? '');
+        $tb = (string)($b['createdAt'] ?? $b['savedAt'] ?? '');
+        $cmp = strcmp($tb, $ta);
+        if ($cmp !== 0) {
+            return $cmp;
+        }
+        return strnatcasecmp((string)($b['number'] ?? ''), (string)($a['number'] ?? ''));
     });
     respond(200, ['ok' => true, 'items' => $items]);
 }
@@ -199,6 +222,18 @@ if ($method === 'POST') {
     $payload['name'] = $number;
     $payload['savedAt'] = $now;
     $payload['source'] = 'remote';
+
+    if (isset($existing) && is_array($existing) && !empty($existing['situacao']) && empty($payload['situacao'])) {
+        $payload['situacao'] = $existing['situacao'];
+    }
+    $situacaoRaw = strtolower(trim((string) ($payload['situacao'] ?? 'analise')));
+    if ($situacaoRaw === 'análise' || $situacaoRaw === 'em analise' || $situacaoRaw === 'em análise') {
+        $situacaoRaw = 'analise';
+    }
+    if ($situacaoRaw !== 'perdido' && $situacaoRaw !== 'ganho' && $situacaoRaw !== 'analise') {
+        $situacaoRaw = 'analise';
+    }
+    $payload['situacao'] = $situacaoRaw;
 
     $encoded = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     if ($encoded === false || file_put_contents($path, $encoded . "\n", LOCK_EX) === false) {

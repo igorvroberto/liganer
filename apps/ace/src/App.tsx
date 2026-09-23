@@ -24,13 +24,17 @@ import {
   loadDraft,
   localPrintNumber,
   mergeBudgetLists,
+  normalizeBudgetSituacao,
   removeSavedBudget,
   saveBudgetRemote,
   saveDraft,
   savedBudgetsAsListItems,
+  toSavedListItem,
   upsertSavedBudget,
   type SyncConfig,
 } from './lib/storage'
+import { SavedListSection } from '@liganer/shared/react'
+import type { BudgetSituacao, SavedListItem } from '@liganer/shared'
 import {
   applyCatalogMaterial,
   loadPriceCatalogFromExcel,
@@ -294,6 +298,7 @@ export default function App() {
     number: string
     createdAt?: string
     owner?: VendasUser | null
+    situacao?: BudgetSituacao
   } | null>(null)
   const [priceCatalogVersion, setPriceCatalogVersion] = useState(0)
   const [activeRowIndex, setActiveRowIndex] = useState(0)
@@ -308,6 +313,18 @@ export default function App() {
     void priceCatalogVersion
     return calculateSummary(modelId, rows, conditions)
   }, [modelId, rows, conditions, priceCatalogVersion])
+
+  const savedListItems = useMemo<SavedListItem[]>(
+    () =>
+      savedBudgets.map((item) => {
+        const isEditing = Boolean(
+          editingBudget &&
+            (editingBudget.id === item.id || editingBudget.number === item.number),
+        )
+        return { ...toSavedListItem(item), meta: { isEditing } }
+      }),
+    [savedBudgets, editingBudget],
+  )
 
   const safeRowIndex = rows.length ? Math.min(Math.max(activeRowIndex, 0), rows.length - 1) : 0
 
@@ -431,6 +448,63 @@ export default function App() {
     return record
   }
 
+
+  async function updateBudgetSituacao(item: BudgetListItem, situacao: BudgetSituacao) {
+    const current = normalizeBudgetSituacao(item.situacao)
+    if (current === situacao) return
+
+    const record = await resolveSavedRecord(item)
+    if (!record) {
+      setStatus({ text: 'Orçamento não encontrado para atualizar a situação.', kind: 'error' })
+      return
+    }
+
+    const next: BudgetRecord = {
+      ...record,
+      situacao,
+      savedAt: record.savedAt || record.createdAt || new Date().toISOString(),
+    }
+    upsertSavedBudget(next)
+
+    if (editingBudget && (editingBudget.id === item.id || editingBudget.number === item.number)) {
+      setEditingBudget({ ...editingBudget, situacao })
+    }
+
+    setSavedBudgets((prev) =>
+      prev.map((row) =>
+        row.id === item.id || (item.number && row.number === item.number)
+          ? {
+              ...row,
+              situacao,
+              totalKg: next.summary?.totalKg ?? row.totalKg,
+              totalRs: next.summary?.total ?? row.totalRs,
+            }
+          : row,
+      ),
+    )
+
+    if (config.syncSecret) {
+      const remote = await saveBudgetRemote(next, config)
+      if (!remote.ok) {
+        setStatus({
+          text: `Situação atualizada neste navegador${remote.error ? ` — ${remote.error}` : ''}.`,
+          kind: 'error',
+        })
+        await refreshSavedBudgetsList()
+        return
+      }
+      if (remote.number) {
+        upsertSavedBudget({ ...next, number: remote.number, name: remote.number })
+      }
+    }
+
+    setStatus({
+      text: `Situação do orçamento ${item.name} atualizada.`,
+      kind: 'ok',
+    })
+    await refreshSavedBudgetsList()
+  }
+
   function cancelEditingBudget() {
     setEditingBudget(null)
     setStatus({ text: 'Edição cancelada.', kind: 'ok' })
@@ -453,6 +527,7 @@ export default function App() {
       number,
       createdAt: record.createdAt,
       owner: record.owner || item.owner || null,
+      situacao: normalizeBudgetSituacao(record.situacao ?? item.situacao),
     })
     setActiveRowIndex(0)
     setStatus({ text: `Editando orçamento ${number}.`, kind: 'ok' })
@@ -549,6 +624,7 @@ export default function App() {
       name: number,
       source: 'salvar',
       owner: owner || null,
+      situacao: normalizeBudgetSituacao(editingBudget?.situacao),
     }
     upsertSavedBudget(record)
     if (config.syncSecret) {
@@ -558,7 +634,13 @@ export default function App() {
       }
     }
     await refreshSavedBudgetsList()
-    setEditingBudget({ id: record.id, number, createdAt, owner: record.owner || null })
+    setEditingBudget({
+      id: record.id,
+      number,
+      createdAt,
+      owner: record.owner || null,
+      situacao: record.situacao,
+    })
     setStatus({ text: `Orçamento ${number} salvo.`, kind: 'ok' })
   }
 
@@ -769,96 +851,79 @@ export default function App() {
         </div>
       </section>
 
-      <section className="card">
-        <h2>Orçamentos salvos</h2>
-        {editingBudget ? (
-          <p className="editing-banner">
-            Editando orçamento <strong>{editingBudget.number}</strong>. Use <strong>Atualizar</strong> para
-            gravar as alterações
-          </p>
-        ) : null}
-        {savedBudgets.length ? (
-          <div className="table-scroll saved-budgets-scroll">
-            <table className="saved-budgets-table">
-              <thead>
-                <tr>
-                  <th>Número</th>
-                  <th>Cliente</th>
-                  <th>CNPJ</th>
-                  <th>Dono</th>
-                  <th>Dia/horário</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {savedBudgets.map((item) => {
-                  const when = item.savedAt || item.createdAt
-                  const isEditing =
-                    editingBudget &&
-                    (editingBudget.id === item.id || editingBudget.number === item.number)
-                  return (
-                    <tr key={item.id} className={isEditing ? 'is-editing' : undefined}>
-                      <td>{item.number || item.name}</td>
-                      <td>{item.client.name?.trim() || '—'}</td>
-                      <td>{item.client.cnpj?.trim() || '—'}</td>
-                      <td>{item.owner?.name?.trim() || item.owner?.email?.trim() || '—'}</td>
-                      <td>{when ? new Date(when).toLocaleString('pt-BR') : '—'}</td>
-                      <td>
-                        <div className="saved-budget-actions">
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-compact"
-                            onClick={() => void openSavedPdfCliente(item, 'cliente18')}
-                          >
-                            PDF 18%
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-compact"
-                            onClick={() => void openSavedPdfCliente(item, 'cliente4')}
-                          >
-                            PDF 4%
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-compact"
-                            onClick={() => void openSavedPdfLiganer(item)}
-                          >
-                            PDF Liganer
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-compact"
-                            onClick={() => void exportSavedXlsx(item)}
-                          >
-                            XLSX
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-compact"
-                            onClick={() => void editSavedBudget(item)}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-danger btn-compact"
-                            onClick={() => void deleteSavedBudget(item)}
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="muted-note">Nenhum orçamento salvo ainda. Use Salvar abaixo de Condições.</p>
-        )}
-      </section>
+      <SavedListSection
+        title="Orçamentos salvos"
+        items={savedListItems}
+        emptyNote="Nenhum orçamento salvo ainda. Use Salvar abaixo de Condições."
+        entityLabel="orçamento"
+        logoUrl={`${window.location.origin}${import.meta.env.BASE_URL}liganer_favicon.webp`}
+        editingBanner={
+          editingBudget ? (
+            <p className="editing-banner">
+              Editando orçamento <strong>{editingBudget.number}</strong>. Use{' '}
+              <strong>Atualizar</strong> para gravar as alterações
+            </p>
+          ) : null
+        }
+        onSituacaoChange={(item, situacao) => {
+          const original = savedBudgets.find(
+            (row) => row.id === item.id || (item.number && row.number === item.number),
+          )
+          if (original) void updateBudgetSituacao(original, situacao)
+        }}
+        renderActions={(item) => {
+          const original = savedBudgets.find(
+            (row) => row.id === item.id || (item.number && row.number === item.number),
+          )
+          if (!original) return null
+          return (
+            <>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => void openSavedPdfCliente(original, 'cliente18')}
+              >
+                PDF 18%
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => void openSavedPdfCliente(original, 'cliente4')}
+              >
+                PDF 4%
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => void openSavedPdfLiganer(original)}
+              >
+                PDF Liganer
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => void exportSavedXlsx(original)}
+              >
+                XLSX
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-compact"
+                onClick={() => void editSavedBudget(original)}
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger btn-compact"
+                onClick={() => void deleteSavedBudget(original)}
+              >
+                Excluir
+              </button>
+            </>
+          )
+        }}
+      />
 
       <p className={`status ${status.kind || ''}`}>{status.text}</p>
     </div>

@@ -1,5 +1,10 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const sharedSrc = path.resolve(__dirname, '../../packages/shared/src')
 
 /** Mock do login compartilhado só no `vite`/`preview` local (produção usa /auth/me.php real). */
 function mockVendasAuth(): Plugin {
@@ -16,8 +21,8 @@ function mockVendasAuth(): Plugin {
     res: { setHeader: (k: string, v: string) => void; end: (b: string) => void },
     next: () => void,
   ) => {
-    const path = req.url?.split('?')[0]
-    if (path === '/auth/me.php' && (req.method === 'GET' || req.method === 'HEAD')) {
+    const reqPath = req.url?.split('?')[0]
+    if (reqPath === '/auth/me.php' && (req.method === 'GET' || req.method === 'HEAD')) {
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify(mockUser))
       return
@@ -39,4 +44,11 @@ function mockVendasAuth(): Plugin {
 export default defineConfig({
   plugins: [react(), mockVendasAuth()],
   base: '/comparador-preco/',
+  resolve: {
+    alias: {
+      '@liganer/shared/react': path.join(sharedSrc, 'react'),
+      '@liganer/shared/saved-list.css': path.join(sharedSrc, 'react/saved-list.css'),
+      '@liganer/shared': sharedSrc,
+    },
+  },
 })

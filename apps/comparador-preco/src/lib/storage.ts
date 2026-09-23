@@ -1,18 +1,40 @@
+import {
+  compareSavedListItemsDefault,
+  normalizeBudgetSituacao,
+  type SavedListItem,
+} from '@liganer/shared'
 import type {
   CompareRowInput,
   CompareSession,
   SavedComparison,
   SavedComparisonListItem,
 } from './types'
-import { DEFAULT_PIS_COFINS } from './types'
+import { comparisonListTotals, DEFAULT_PIS_COFINS } from './types'
 import { createEmptyRow } from './calc'
 import sampleRows from '../data/sample-rows.json'
+
+export { normalizeBudgetSituacao } from '@liganer/shared'
 
 const STORAGE_KEY = 'liganer-comparador-preco-draft-v1'
 const SAVED_KEY = 'liganer-comparador-preco-saved-v1'
 
 const memory: Record<string, string> = {}
 
+export function toSavedListItem(item: SavedComparisonListItem): SavedListItem {
+  return {
+    id: item.id,
+    name: item.name,
+    number: item.number,
+    clientName: item.clientName ?? '',
+    cnpj: null,
+    createdAt: item.createdAt,
+    savedAt: item.savedAt,
+    owner: item.owner,
+    totalKg: item.totalKg ?? null,
+    totalRs: item.totalRs ?? null,
+    situacao: normalizeBudgetSituacao(item.situacao),
+  }
+}
 function getItem(key: string, fallback = ''): string {
   try {
     return window.localStorage?.getItem(key) ?? fallback
@@ -98,6 +120,7 @@ export function loadSavedComparisons(): SavedComparison[] {
     const list = JSON.parse(getItem(SAVED_KEY, '[]')) as SavedComparison[]
     return list.map((item) => ({
       ...item,
+      situacao: normalizeBudgetSituacao(item.situacao),
       rows: (item.rows ?? []).map((row) => normalizeRow(row)),
     }))
   } catch {
@@ -142,21 +165,29 @@ export function savedComparisonsAsListItems(
   records: SavedComparison[] = loadSavedComparisons(),
 ): SavedComparisonListItem[] {
   return records
-    .map((record) => ({
-      id: record.id,
-      number: record.number,
-      name: record.name || record.number,
-      clientName: record.clientName ?? '',
-      savedAt: record.savedAt ?? record.createdAt,
-      createdAt: record.createdAt,
-      itemCount: record.rows?.length ?? 0,
-      owner: record.owner
-        ? {
-            id: record.owner.id,
-            email: record.owner.email,
-            name: record.owner.name,
-          }
-        : null,
-    }))
-    .sort((a, b) => String(b.savedAt ?? '').localeCompare(String(a.savedAt ?? '')))
+    .map((record) => {
+      const totals = comparisonListTotals(record.rows)
+      return {
+        id: record.id,
+        number: record.number,
+        name: record.name || record.number,
+        clientName: record.clientName ?? '',
+        savedAt: record.savedAt ?? record.createdAt,
+        createdAt: record.createdAt,
+        itemCount: record.rows?.length ?? 0,
+        owner: record.owner
+          ? {
+              id: record.owner.id,
+              email: record.owner.email,
+              name: record.owner.name,
+            }
+          : null,
+        totalKg: totals.totalKg,
+        totalRs: totals.totalRs,
+        situacao: normalizeBudgetSituacao(record.situacao),
+      }
+    })
+    .sort((a, b) =>
+      compareSavedListItemsDefault(toSavedListItem(a), toSavedListItem(b)),
+    )
 }

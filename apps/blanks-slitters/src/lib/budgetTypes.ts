@@ -1,7 +1,15 @@
+import type { BudgetSituacao, SavedListItem } from "@liganer/shared";
+import {
+  compareSavedListItemsDefault,
+  normalizeBudgetSituacao,
+  pickFiniteNumber,
+} from "@liganer/shared";
 import type { QuoteClientInfo } from "./quoteClient";
 import type { QuoteConditions, QuoteSummary } from "./quoteSummary";
 import type { BlankInput } from "./types";
 import type { VendasUser } from "./vendasAuth";
+
+export type { BudgetSituacao };
 
 export type BudgetSource = "local" | "remote";
 
@@ -22,6 +30,7 @@ export type BudgetRecord = {
   source: BudgetSource;
   /** Usuário que criou o orçamento (não muda na edição). */
   owner?: VendasUser | null;
+  situacao?: BudgetSituacao;
 };
 
 /** Linha da lista Orçamentos salvos. */
@@ -35,6 +44,9 @@ export type BudgetListItem = {
   savedAt: string;
   source: BudgetSource;
   owner?: VendasUser | null;
+  totalKg?: number | null;
+  totalRs?: number | null;
+  situacao?: BudgetSituacao | null;
 };
 
 export type AppConfig = {
@@ -57,3 +69,35 @@ export function newBudgetId(): string {
   }
   return `budget-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
+
+export function toSavedListItem(item: BudgetListItem): SavedListItem {
+  return {
+    id: item.id,
+    name: item.name,
+    number: item.number,
+    clientName: item.client ?? "",
+    cnpj: item.cnpj ?? "",
+    createdAt: item.createdAt,
+    savedAt: item.savedAt,
+    owner: item.owner,
+    totalKg: item.totalKg ?? null,
+    totalRs: item.totalRs ?? null,
+    situacao: normalizeBudgetSituacao(item.situacao),
+  };
+}
+
+export function compareBudgetListItemsDefault(a: BudgetListItem, b: BudgetListItem): number {
+  return compareSavedListItemsDefault(toSavedListItem(a), toSavedListItem(b));
+}
+
+export function listTotalsFromSummary(summary: QuoteSummary | undefined | null): {
+  totalKg: number | null;
+  totalRs: number | null;
+} {
+  return {
+    totalKg: pickFiniteNumber(summary?.totalKg),
+    totalRs: pickFiniteNumber(summary?.total),
+  };
+}
+
+export { normalizeBudgetSituacao };

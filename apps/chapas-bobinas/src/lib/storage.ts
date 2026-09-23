@@ -1,19 +1,35 @@
-import type { BudgetListItem, BudgetRecord, BudgetSituacao, Conditions, ItemRow } from './types'
+import {
+  compareSavedListItemsDefault,
+  normalizeBudgetSituacao,
+  pickFiniteNumber,
+  type SavedListItem,
+} from '@liganer/shared'
+import type { BudgetListItem, BudgetRecord, Conditions, ItemRow } from './types'
+
+export {
+  BUDGET_SITUACOES,
+  normalizeBudgetSituacao,
+} from '@liganer/shared'
 
 const STORAGE_KEY = 'liganer-orcamento-draft-v1'
 const SAVED_KEY = 'liganer-orcamento-saved-v1'
 
 const memory: Record<string, string> = {}
 
-export const BUDGET_SITUACOES: BudgetSituacao[] = ['perdido', 'analise', 'ganho']
-
-export function normalizeBudgetSituacao(value: unknown): BudgetSituacao {
-  const raw = String(value ?? '')
-    .trim()
-    .toLowerCase()
-  if (raw === 'perdido' || raw === 'ganho' || raw === 'analise') return raw
-  if (raw === 'análise' || raw === 'em analise' || raw === 'em análise') return 'analise'
-  return 'analise'
+export function toSavedListItem(item: BudgetListItem): SavedListItem {
+  return {
+    id: item.id,
+    name: item.name,
+    number: item.number,
+    clientName: item.client?.name ?? '',
+    cnpj: item.client?.cnpj ?? '',
+    createdAt: item.createdAt,
+    savedAt: item.savedAt,
+    owner: item.owner,
+    totalKg: item.totalKg ?? null,
+    totalRs: item.totalRs ?? null,
+    situacao: normalizeBudgetSituacao(item.situacao),
+  }
 }
 
 function getItem(key: string, fallback = ''): string {
@@ -124,14 +140,8 @@ export function savedBudgetsAsListItems(records: BudgetRecord[] = loadSavedBudge
             name: record.owner.name,
           }
         : null,
-      totalKg:
-        typeof record.summary?.totalKg === 'number' && Number.isFinite(record.summary.totalKg)
-          ? record.summary.totalKg
-          : null,
-      totalRs:
-        typeof record.summary?.total === 'number' && Number.isFinite(record.summary.total)
-          ? record.summary.total
-          : null,
+      totalKg: pickFiniteNumber(record.summary?.totalKg),
+      totalRs: pickFiniteNumber(record.summary?.total),
       situacao: normalizeBudgetSituacao(record.situacao),
     }))
     .sort(compareBudgetListItemsDefault)
@@ -139,14 +149,7 @@ export function savedBudgetsAsListItems(records: BudgetRecord[] = loadSavedBudge
 
 /** Ordem estável da lista: criação (mais recente primeiro), depois número. Atualizações não reordenam. */
 export function compareBudgetListItemsDefault(a: BudgetListItem, b: BudgetListItem): number {
-  const created = String(b.createdAt ?? b.savedAt ?? '').localeCompare(
-    String(a.createdAt ?? a.savedAt ?? ''),
-  )
-  if (created !== 0) return created
-  return String(b.number ?? b.name ?? '').localeCompare(String(a.number ?? a.name ?? ''), 'pt-BR', {
-    numeric: true,
-    sensitivity: 'base',
-  })
+  return compareSavedListItemsDefault(toSavedListItem(a), toSavedListItem(b))
 }
 
 export type SyncConfig = {

@@ -1,4 +1,11 @@
-import type { BudgetListItem } from "../lib/budgetTypes";
+import { SavedListSection } from "@liganer/shared/react";
+import type { BudgetSituacao, SavedListItem } from "@liganer/shared";
+import { useMemo } from "react";
+import {
+  normalizeBudgetSituacao,
+  toSavedListItem,
+  type BudgetListItem,
+} from "../lib/budgetTypes";
 
 type Props = {
   items: BudgetListItem[];
@@ -10,22 +17,8 @@ type Props = {
   onXlsx: (number: string) => void;
   onEdit: (item: BudgetListItem) => void;
   onDelete: (item: BudgetListItem) => void;
+  onSituacaoChange: (item: BudgetListItem, situacao: BudgetSituacao) => void;
 };
-
-function formatWhen(iso: string): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("pt-BR");
-}
-
-function ownerLabel(item: BudgetListItem): string {
-  const name = item.owner?.name?.trim();
-  if (name) return name;
-  const email = item.owner?.email?.trim();
-  if (email) return email;
-  return "—";
-}
 
 export default function SavedBudgetsList({
   items,
@@ -37,103 +30,96 @@ export default function SavedBudgetsList({
   onXlsx,
   onEdit,
   onDelete,
+  onSituacaoChange,
 }: Props) {
+  const savedListItems = useMemo<SavedListItem[]>(
+    () =>
+      items.map((item) => {
+        const isEditing = Boolean(
+          editingNumber && (item.number === editingNumber || item.name === editingNumber),
+        );
+        return { ...toSavedListItem(item), meta: { isEditing, source: item.source } };
+      }),
+    [items, editingNumber],
+  );
+
   return (
-    <section className="card span-all saved-budgets">
-      <div className="section-head">
-        <h2>Orçamentos salvos</h2>
-      </div>
-      {loading ? <p className="note">Carregando orçamentos…</p> : null}
-      {!loading && items.length === 0 ? (
-        <p className="note">Nenhum orçamento salvo ainda. Use Salvar nas Condições.</p>
-      ) : null}
-      {editingNumber ? (
-        <p className="editing-banner">
-          Editando orçamento <strong>{editingNumber}</strong>. Use <strong>Atualizar</strong> para
-          gravar as alterações
-        </p>
-      ) : null}
-      {items.length > 0 ? (
-        <div className="table-scroll saved-budgets-scroll">
-          <table className="saved-budgets-table">
-            <thead>
-              <tr>
-                <th>Número</th>
-                <th>Cliente</th>
-                <th>CNPJ</th>
-                <th>Dono</th>
-                <th>Dia/horário</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((row) => {
-                const isEditing = Boolean(
-                  editingNumber && (row.number === editingNumber || row.name === editingNumber),
-                );
-                return (
-                  <tr
-                    key={`${row.source}-${row.number}`}
-                    className={isEditing ? "is-editing" : undefined}
-                  >
-                    <td>{row.number}</td>
-                    <td>{row.client || "—"}</td>
-                    <td>{row.cnpj || "—"}</td>
-                    <td>{ownerLabel(row)}</td>
-                    <td>{formatWhen(row.savedAt || row.createdAt)}</td>
-                    <td>
-                      <div className="saved-budget-actions">
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-compact"
-                          onClick={() => onPdfCliente(row.number)}
-                        >
-                          PDF cliente
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-compact"
-                          onClick={() => onPdfLiganer(row.number)}
-                        >
-                          PDF Liganer
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-compact"
-                          onClick={() => onPdfGestao(row.number)}
-                        >
-                          PDF gestão
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-compact"
-                          onClick={() => onXlsx(row.number)}
-                        >
-                          XLSX
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-compact"
-                          onClick={() => onEdit(row)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-compact"
-                          onClick={() => onDelete(row)}
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-    </section>
+    <SavedListSection
+      title="Orçamentos salvos"
+      sectionClassName="card span-all saved-budgets"
+      items={savedListItems}
+      loading={loading}
+      emptyNote="Nenhum orçamento salvo ainda. Use Salvar nas Condições."
+      entityLabel="orçamento"
+      logoUrl={`${window.location.origin}${import.meta.env.BASE_URL}liganer_favicon.webp`}
+      editingBanner={
+        editingNumber ? (
+          <p className="editing-banner">
+            Editando orçamento <strong>{editingNumber}</strong>. Use <strong>Atualizar</strong> para
+            gravar as alterações
+          </p>
+        ) : null
+      }
+      onSituacaoChange={(item, situacao) => {
+        const original = items.find(
+          (row) => row.id === item.id || row.number === item.number,
+        );
+        if (original && normalizeBudgetSituacao(original.situacao) !== situacao) {
+          onSituacaoChange(original, situacao);
+        }
+      }}
+      renderActions={(item) => {
+        const original = items.find(
+          (row) => row.id === item.id || row.number === item.number,
+        );
+        if (!original) return null;
+        return (
+          <>
+            <button
+              type="button"
+              className="btn btn-secondary btn-compact"
+              onClick={() => onPdfCliente(original.number)}
+            >
+              PDF cliente
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-compact"
+              onClick={() => onPdfLiganer(original.number)}
+            >
+              PDF Liganer
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-compact"
+              onClick={() => onPdfGestao(original.number)}
+            >
+              PDF gestão
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-compact"
+              onClick={() => onXlsx(original.number)}
+            >
+              XLSX
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-compact"
+              onClick={() => onEdit(original)}
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger btn-compact"
+              onClick={() => onDelete(original)}
+            >
+              Excluir
+            </button>
+          </>
+        );
+      }}
+    />
   );
 }

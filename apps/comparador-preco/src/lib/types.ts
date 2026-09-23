@@ -1,5 +1,9 @@
 /** Constantes e tipos do comparador (planilha Diferença preço e ICMS). */
 
+import type { BudgetSituacao } from '@liganer/shared'
+
+export type { BudgetSituacao }
+
 export const DEFAULT_PIS_COFINS = 0.0925
 
 export type CompareRowInput = {
@@ -56,6 +60,7 @@ export type SavedComparison = {
   createdAt: string
   savedAt: string
   owner?: ComparisonOwner | null
+  situacao?: BudgetSituacao
 }
 
 export type SavedComparisonListItem = {
@@ -67,4 +72,40 @@ export type SavedComparisonListItem = {
   createdAt: string
   itemCount: number
   owner?: ComparisonOwner | null
+  totalKg?: number | null
+  totalRs?: number | null
+  situacao?: BudgetSituacao | null
+}
+
+/** Totais derivados das linhas da comparação. */
+export function comparisonListTotals(rows: CompareRowInput[] | undefined | null): {
+  totalKg: number | null
+  totalRs: number | null
+} {
+  let totalKg = 0
+  let withKg = 0
+  let totalRs = 0
+  let withRs = 0
+  for (const row of rows ?? []) {
+    const qty = typeof row.qty === 'number' && Number.isFinite(row.qty) ? row.qty : null
+    const unit = String(row.unit ?? '')
+      .trim()
+      .toLowerCase()
+    if (qty != null && (unit === 'kg' || unit === 'kgs' || /\bkg\b/.test(unit))) {
+      totalKg += qty
+      withKg += 1
+    }
+    const price =
+      typeof row.clientPrice === 'number' && Number.isFinite(row.clientPrice)
+        ? row.clientPrice
+        : null
+    if (qty != null && price != null) {
+      totalRs += qty * price
+      withRs += 1
+    }
+  }
+  return {
+    totalKg: withKg > 0 ? totalKg : null,
+    totalRs: withRs > 0 ? totalRs : null,
+  }
 }
