@@ -10,7 +10,11 @@ export default defineConfig({
   base: "/orcamento/blanks-slitters/",
   plugins: [react()],
   resolve: {
+    // Evita duas cópias de React (app + packages/shared/node_modules) — hooks quebram (página em branco).
+    dedupe: ["react", "react-dom"],
     alias: {
+      react: path.resolve(__dirname, "node_modules/react"),
+      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
       "@liganer/shared/react": path.join(sharedSrc, "react"),
       "@liganer/shared/saved-list.css": path.join(sharedSrc, "react/saved-list.css"),
       "@liganer/shared": sharedSrc,
