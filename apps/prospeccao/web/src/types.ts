@@ -160,7 +160,6 @@ export const EDITABLE_FIELDS: {
   { key: 'crm', label: 'CRM', kind: 'select', options: CRM_OPTIONS },
   { key: 'vendedor', label: 'Vendedor', kind: 'text' },
   { key: 'fonte', label: 'Fonte', kind: 'text' },
-  { key: 'data_pesquisa', label: 'Data da pesquisa', kind: 'text' },
   { key: 'ultimo_contato', label: 'Último contato', kind: 'date' },
   { key: 'status', label: 'Status', kind: 'select', options: STATUS_OPTIONS },
   { key: 'proximo_contato', label: 'Próximo contato', kind: 'date' },
