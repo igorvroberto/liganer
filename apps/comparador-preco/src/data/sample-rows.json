@@ -1,0 +1,74 @@
+[
+  {
+    "qty": 1600,
+    "unit": "m",
+    "ourProduct": "TUBO RED. I-304 5/8 1,50MM IMP",
+    "ourIcms": 0.18,
+    "factorUsed": 157,
+    "competitor": "",
+    "clientProduct": "",
+    "clientPrice": 15.65,
+    "clientIcms": 0.18,
+    "priceFactor100": 26.07810689
+  },
+  {
+    "qty": 210,
+    "unit": "m",
+    "ourProduct": "TUBO RED. I-304 1 2,00MM IMP",
+    "ourIcms": 0.18,
+    "factorUsed": 157,
+    "competitor": "",
+    "clientProduct": "",
+    "clientPrice": 31.58,
+    "clientIcms": 0.18,
+    "priceFactor100": 56.31542359
+  },
+  {
+    "qty": 600,
+    "unit": "m",
+    "ourProduct": "TUBO RED. I-304 1.1/2 1,20MM IMP",
+    "ourIcms": 0.18,
+    "factorUsed": 157,
+    "competitor": "",
+    "clientProduct": "",
+    "clientPrice": 29.9,
+    "clientIcms": 0.18,
+    "priceFactor100": 53.08028843
+  },
+  {
+    "qty": 150,
+    "unit": "m",
+    "ourProduct": "TUBO RED. I-304 2.1/2 1,50MM IMP",
+    "ourIcms": 0.18,
+    "factorUsed": 157,
+    "competitor": "",
+    "clientProduct": "",
+    "clientPrice": 58.72,
+    "clientIcms": 0.18,
+    "priceFactor100": 111.2538816
+  },
+  {
+    "qty": 60,
+    "unit": "m",
+    "ourProduct": "TUBO SCH10S INOX 304 1.1/2 2,77MM IMP",
+    "ourIcms": 0.18,
+    "factorUsed": 157,
+    "competitor": "",
+    "clientProduct": "",
+    "clientPrice": 53.55,
+    "clientIcms": 0.18,
+    "priceFactor100": 143.8834382
+  },
+  {
+    "qty": 300,
+    "unit": "m",
+    "ourProduct": "TUBO QUAD. I-304 30 X 30 1,50MM IMP",
+    "ourIcms": 0.18,
+    "factorUsed": 157,
+    "competitor": "",
+    "clientProduct": "",
+    "clientPrice": 31.9,
+    "clientIcms": 0.18,
+    "priceFactor100": 51.78588687
+  }
+]
