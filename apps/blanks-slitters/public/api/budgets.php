@@ -220,7 +220,9 @@ if ($method === 'POST') {
 
     $payload['number'] = $number;
     $payload['name'] = $number;
-    $payload['savedAt'] = $now;
+    // Honra savedAt do cliente: edição manda "agora"; só situação mantém o horário anterior.
+    $clientSavedAt = trim((string) ($payload['savedAt'] ?? ''));
+    $payload['savedAt'] = $clientSavedAt !== '' ? $clientSavedAt : $now;
     $payload['source'] = 'remote';
 
     if (isset($existing) && is_array($existing) && !empty($existing['situacao']) && empty($payload['situacao'])) {
