@@ -1,11 +1,21 @@
 import { useMemo, useState } from 'react'
 import type { Lead } from '../types'
+import {
+  CATEGORIA_OPTIONS,
+  CRM_OPTIONS,
+  LINHA_OPTIONS,
+  POTENCIAL_OPTIONS,
+  SITUACAO_OPTIONS,
+  STATUS_OPTIONS,
+} from '../types'
 import { sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
+import { formatLinha, parseLinha } from '../lib/linha'
 
 type Props = {
   leads: Lead[]
   selectedId: string | null
   onSelect: (id: string) => void
+  onPatch: (id: string, patch: Partial<Lead>) => void
   onAdd?: () => void
   onRemove?: (id: string) => void
 }
@@ -30,12 +40,73 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: 'indicacao', label: 'Indicação' },
 ]
 
-function cellText(value: string | undefined): string {
-  const s = (value ?? '').trim()
-  return s || '—'
+function toDateInputValue(raw: string): string {
+  const s = (raw ?? '').trim()
+  if (!s) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (br) return `${br[3]}-${br[2]}-${br[1]}`
+  return ''
 }
 
-export function LeadTable({ leads, selectedId, onSelect, onAdd, onRemove }: Props) {
+function TextCell({
+  value,
+  onChange,
+  ariaLabel,
+  className,
+}: {
+  value: string
+  onChange: (v: string) => void
+  ariaLabel: string
+  className?: string
+}) {
+  return (
+    <td>
+      <input
+        type="text"
+        className={`table-edit-text${className ? ` ${className}` : ''}`}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+      />
+    </td>
+  )
+}
+
+function SelectCell({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+  className,
+}: {
+  value: string
+  options: readonly string[]
+  onChange: (v: string) => void
+  ariaLabel: string
+  className?: string
+}) {
+  const extra =
+    value && !(options as readonly string[]).includes(value) ? [value] : ([] as string[])
+  return (
+    <td className={className}>
+      <select
+        className="table-edit"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+      >
+        {[...options, ...extra].map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+    </td>
+  )
+}
+
+export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemove }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('potencial')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -67,11 +138,11 @@ export function LeadTable({ leads, selectedId, onSelect, onAdd, onRemove }: Prop
         ) : null}
         <span className="muted tiny">
           {leads.length
-            ? `${leads.length} na visão · clique na linha para editar`
+            ? `${leads.length} na visão · edite na tabela ou clique na linha para o painel`
             : 'Nenhum lead com esses filtros'}
         </span>
       </div>
-      <table className="leads-table leads-table-readonly">
+      <table className="leads-table">
         <thead>
           <tr>
             {onRemove ? (
@@ -100,45 +171,151 @@ export function LeadTable({ leads, selectedId, onSelect, onAdd, onRemove }: Prop
           </tr>
         </thead>
         <tbody>
-          {sorted.map((l) => (
-            <tr
-              key={l.id}
-              className={selectedId === l.id ? 'selected' : undefined}
-              onClick={() => onSelect(l.id)}
-              style={{ cursor: 'pointer' }}
-            >
-              {onRemove ? (
-                <td className="col-remove" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    className="btn-remove-row"
-                    onClick={() => onRemove(l.id)}
-                    aria-label={`Remover ${l.empresa}`}
-                    title="Remover lead"
-                  >
-                    ×
-                  </button>
+          {sorted.map((l) => {
+            const linhas = parseLinha(l.linha)
+            const toggleLinha = (opt: string) => {
+              const next = linhas.includes(opt as (typeof LINHA_OPTIONS)[number])
+                ? linhas.filter((x) => x !== opt)
+                : [...linhas, opt]
+              onPatch(l.id, { linha: formatLinha(next) })
+            }
+            return (
+              <tr
+                key={l.id}
+                className={selectedId === l.id ? 'selected' : undefined}
+                onClick={() => onSelect(l.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                {onRemove ? (
+                  <td className="col-remove" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="btn-remove-row"
+                      onClick={() => onRemove(l.id)}
+                      aria-label={`Remover ${l.empresa}`}
+                      title="Remover lead"
+                    >
+                      ×
+                    </button>
+                  </td>
+                ) : null}
+                <SelectCell
+                  value={l.potencial || 'Médio'}
+                  options={POTENCIAL_OPTIONS}
+                  onChange={(v) => onPatch(l.id, { potencial: v })}
+                  ariaLabel={`Potencial de ${l.empresa}`}
+                />
+                <TextCell
+                  value={l.empresa ?? ''}
+                  onChange={(v) => onPatch(l.id, { empresa: v })}
+                  ariaLabel={`Empresa`}
+                  className="table-edit-empresa"
+                />
+                <TextCell
+                  value={l.cnpj ?? ''}
+                  onChange={(v) => onPatch(l.id, { cnpj: v })}
+                  ariaLabel={`CNPJ de ${l.empresa}`}
+                  className="table-edit-cnpj"
+                />
+                <TextCell
+                  value={l.cidade ?? ''}
+                  onChange={(v) => onPatch(l.id, { cidade: v })}
+                  ariaLabel={`Cidade de ${l.empresa}`}
+                />
+                <TextCell
+                  value={l.estado ?? ''}
+                  onChange={(v) => onPatch(l.id, { estado: v })}
+                  ariaLabel={`UF de ${l.empresa}`}
+                  className="table-edit-uf"
+                />
+                <td className="mono-cell cell-dist">
+                  {l.distancia_km_aracatuba || '—'}
                 </td>
-              ) : null}
-              <td>{cellText(l.potencial)}</td>
-              <td className="table-edit-empresa">{cellText(l.empresa)}</td>
-              <td className="mono-cell">{cellText(l.cnpj)}</td>
-              <td>{cellText(l.cidade)}</td>
-              <td>{cellText(l.estado)}</td>
-              <td className="mono-cell cell-dist">{l.distancia_km_aracatuba || '—'}</td>
-              <td>{cellText(l.linha)}</td>
-              <td className="cat-cell">{cellText(l.categoria)}</td>
-              <td>{cellText(l.comprador)}</td>
-              <td>{cellText(l.crm)}</td>
-              <td>{cellText(l.vendedor)}</td>
-              <td>{cellText(l.ultimo_contato)}</td>
-              <td className="col-status">{cellText(l.status)}</td>
-              <td>{cellText(l.proximo_contato)}</td>
-              <td>{cellText(l.ultima_compra)}</td>
-              <td>{cellText(l.situacao)}</td>
-              <td>{cellText(l.indicacao)}</td>
-            </tr>
-          ))}
+                <td className="linha-cell">
+                  <div className="linha-checks linha-checks-table">
+                    {LINHA_OPTIONS.map((opt) => (
+                      <label key={opt} className="linha-check">
+                        <input
+                          type="checkbox"
+                          checked={linhas.includes(opt)}
+                          onChange={() => toggleLinha(opt)}
+                        />
+                        <span>{opt === 'Ferro para construção' ? 'Ferro' : opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                </td>
+                <SelectCell
+                  value={l.categoria || 'Metalúrgica'}
+                  options={CATEGORIA_OPTIONS}
+                  onChange={(v) => onPatch(l.id, { categoria: v })}
+                  ariaLabel={`Categoria de ${l.empresa}`}
+                  className="cat-cell"
+                />
+                <TextCell
+                  value={l.comprador ?? ''}
+                  onChange={(v) => onPatch(l.id, { comprador: v })}
+                  ariaLabel={`Comprador de ${l.empresa}`}
+                />
+                <SelectCell
+                  value={l.crm || 'Sem cadastro'}
+                  options={CRM_OPTIONS}
+                  onChange={(v) => onPatch(l.id, { crm: v })}
+                  ariaLabel={`CRM de ${l.empresa}`}
+                />
+                <TextCell
+                  value={l.vendedor ?? ''}
+                  onChange={(v) => onPatch(l.id, { vendedor: v })}
+                  ariaLabel={`Vendedor de ${l.empresa}`}
+                />
+                <td>
+                  <input
+                    type="date"
+                    className="table-edit-text"
+                    value={toDateInputValue(l.ultimo_contato ?? '')}
+                    onChange={(e) => onPatch(l.id, { ultimo_contato: e.target.value })}
+                    aria-label={`Último contato de ${l.empresa}`}
+                  />
+                </td>
+                <SelectCell
+                  value={l.status || 'Sem retorno'}
+                  options={STATUS_OPTIONS}
+                  onChange={(v) => onPatch(l.id, { status: v })}
+                  ariaLabel={`Status de ${l.empresa}`}
+                  className="col-status"
+                />
+                <td>
+                  <input
+                    type="date"
+                    className="table-edit-text"
+                    value={toDateInputValue(l.proximo_contato ?? '')}
+                    onChange={(e) => onPatch(l.id, { proximo_contato: e.target.value })}
+                    aria-label={`Próximo contato de ${l.empresa}`}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="date"
+                    className="table-edit-text"
+                    value={toDateInputValue(l.ultima_compra ?? '')}
+                    onChange={(e) => onPatch(l.id, { ultima_compra: e.target.value })}
+                    aria-label={`Última compra de ${l.empresa}`}
+                  />
+                </td>
+                <SelectCell
+                  value={l.situacao || 'Qualificado'}
+                  options={SITUACAO_OPTIONS}
+                  onChange={(v) => onPatch(l.id, { situacao: v })}
+                  ariaLabel={`Situação de ${l.empresa}`}
+                />
+                <TextCell
+                  value={l.indicacao ?? ''}
+                  onChange={(v) => onPatch(l.id, { indicacao: v })}
+                  ariaLabel={`Indicação de ${l.empresa}`}
+                />
+              </tr>
+            )
+          })}
         </tbody>
         {onAdd ? (
           <tfoot>

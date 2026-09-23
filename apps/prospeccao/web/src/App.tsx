@@ -278,6 +278,7 @@ export default function App() {
               leads={filtered}
               selectedId={selectedId}
               onSelect={selectLead}
+              onPatch={onPatch}
               onAdd={onAddLead}
               onRemove={onRemoveLead}
             />
