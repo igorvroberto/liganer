@@ -1,0 +1,5 @@
+{
+  "_comment": "Opcional. syncSecret é injetado no deploy quando LEADS_SYNC_SECRET existe. Sem ele, edições ficam só no navegador.",
+  "leadsUrl": "",
+  "leadsLabel": "GitHub"
+}

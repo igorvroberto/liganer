@@ -1,0 +1,18 @@
+# Apache — coloque em /prospeccao/.htaccess na hospedagem
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /prospeccao/
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /prospeccao/index.html [L]
+</IfModule>
+
+# Evita cache agressivo do CSV (leads atualizam via GitHub→FTP)
+<IfModule mod_headers.c>
+  <FilesMatch "leads\.csv|config\.json">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>
