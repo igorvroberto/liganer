@@ -1,16 +1,12 @@
 # Index da raiz de vendas.liganer.com.br
 
-**Onde fica no repo:** pasta `vendas-root/` na raiz deste repositório (não dentro de `src/` nem de `dist/`).
+**Legado neste app.** A fonte oficial da home/login/auth no monorepo é
+[`apps/root-index/`](../../root-index/), publicada por
+[`.github/workflows/deploy-root-index.yml`](../../../.github/workflows/deploy-root-index.yml).
 
-**Onde publica no FTP/HostGator:** raiz do subdomínio
-
-```text
-/vendas.liganer.com.br/index.html
-/vendas.liganer.com.br/liganer_favicon.webp
-```
+Esta pasta `vendas-root/` e o antigo workflow `deploy-vendas-root.yml` foram
+descontinuados para evitar sync concorrente na raiz do domínio.
 
 URL pública: `https://vendas.liganer.com.br/`
 
-**Não** publicar em `/orcamento/blanks-slitters/` — esse caminho é só a calculadora (`deploy-blanks.yml`).
-
-Deploy automático: workflow `Deploy vendas root index` (`.github/workflows/deploy-vendas-root.yml`), no push em `main` que altere `vendas-root/**`, ou via *Run workflow*.
+Docs: [`apps/root-index/AUTH.md`](../../root-index/AUTH.md).

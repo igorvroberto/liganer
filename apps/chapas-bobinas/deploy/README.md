@@ -33,18 +33,16 @@ Prefira **FTPS**. Se o HostGator só aceitar FTP puro, edite `.github/workflows/
 
 **Não cole a senha no chat nem no código.** Só nos Secrets.
 
-### Home simples em `vendas.liganer.com.br/`
+### Home / login / auth em `vendas.liganer.com.br/`
 
-Há um workflow separado: **Deploy root index to vendas.liganer.com.br**.
+A raiz do domínio é publicada pelo **monorepo** (não por este app):
 
-- Fonte: `deploy/root-index/` (`index.html`, `login.html`, `usuarios.html`, `auth/*`, favicon)
+- Fonte oficial: `apps/root-index/` (`index.html`, `login.html`, `usuarios.html`, `auth/*`, favicon, `data/.htaccess`)
+- Workflow: `.github/workflows/deploy-root-index.yml` (raiz do monorepo)
 - Destino FTP: `/vendas.liganer.com.br/`
-- Publica o portal + **login compartilhado** + admin de usuários.
-- Também injeta `/auth/guard.js` nos SPAs irmãos (prospecção, blanks, ACE, comparador) para exigir login.
-- Não mexe no restante de `/orcamento/chapas-bobinas/` nem em `/data/` (usuários).
-- Ver [root-index/AUTH.md](root-index/AUTH.md).
+- Docs: [`apps/root-index/AUTH.md`](../../root-index/AUTH.md)
 
-Roda automaticamente no push da `main` quando `deploy/root-index/` (ou o próprio workflow) muda. Também dá para disparar em **Actions → Run workflow**.
+O inject de `/auth/guard.js` nos SPAs irmãos roda nesse mesmo workflow (um único FTP-Deploy).
 
 ### Atualizar preços (planilha Excel)
 

@@ -1,10 +1,14 @@
 name: Deploy root index to vendas.liganer.com.br
 
+# Publica a home/login/auth da raiz do domínio a partir de apps/root-index/.
+# Um único FTP-Deploy: root-dist + inject-dist mesclados (evita segundo sync
+# que apague login/auth via .ftp-deploy-sync-state.json).
+
 on:
   push:
     branches: [main]
     paths:
-      - 'deploy/root-index/**'
+      - 'apps/root-index/**'
       - 'scripts/inject-vendas-auth-guard.mjs'
       - '.github/workflows/deploy-root-index.yml'
   workflow_dispatch:
@@ -27,14 +31,15 @@ jobs:
 
       - name: Prepare publish folder (root + injected SPA indexes)
         run: |
+          set -euo pipefail
           mkdir -p root-dist/auth root-dist/data
-          cp deploy/root-index/index.html root-dist/index.html
-          cp deploy/root-index/login.html root-dist/login.html
-          cp deploy/root-index/usuarios.html root-dist/usuarios.html
-          cp deploy/root-index/liganer_favicon.webp root-dist/liganer_favicon.webp
-          cp deploy/root-index/auth/*.php root-dist/auth/
-          cp deploy/root-index/auth/guard.js root-dist/auth/guard.js
-          cp deploy/root-index/data/.htaccess root-dist/data/.htaccess
+          cp apps/root-index/index.html root-dist/index.html
+          cp apps/root-index/login.html root-dist/login.html
+          cp apps/root-index/usuarios.html root-dist/usuarios.html
+          cp apps/root-index/liganer_favicon.webp root-dist/liganer_favicon.webp
+          cp apps/root-index/auth/*.php root-dist/auth/
+          cp apps/root-index/auth/guard.js root-dist/auth/guard.js
+          cp apps/root-index/data/.htaccess root-dist/data/.htaccess
           # Inject guard into sibling SPA indexes, then merge into the SAME
           # publish folder. A second FTP-Deploy with a different local-dir
           # reuses .ftp-deploy-sync-state.json and deletes root login/auth.
