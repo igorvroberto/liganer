@@ -1,0 +1,55 @@
+name: CI SPA builds
+
+on:
+  pull_request:
+    paths:
+      - 'apps/ace/**'
+      - 'apps/blanks-slitters/**'
+      - 'apps/chapas-bobinas/**'
+      - 'apps/comparador-preco/**'
+      - 'packages/shared/**'
+      - '.github/workflows/ci-spa-builds.yml'
+      - '.github/workflows/deploy-ace.yml'
+      - '.github/workflows/deploy-blanks-slitters.yml'
+      - '.github/workflows/deploy-chapas-bobinas.yml'
+      - '.github/workflows/deploy-comparador-preco.yml'
+
+concurrency:
+  group: ci-spa-builds-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - ace
+          - blanks-slitters
+          - chapas-bobinas
+          - comparador-preco
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            apps/${{ matrix.app }}/package-lock.json
+            packages/shared/package-lock.json
+
+      - name: Install shared
+        working-directory: packages/shared
+        run: npm ci
+
+      - name: Install app
+        working-directory: apps/${{ matrix.app }}
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/${{ matrix.app }}
+        run: npm run build
