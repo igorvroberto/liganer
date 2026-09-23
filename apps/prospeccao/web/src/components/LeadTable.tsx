@@ -61,7 +61,7 @@ function TextCell({
   className?: string
 }) {
   return (
-    <td>
+    <td onClick={(e) => e.stopPropagation()}>
       <input
         type="text"
         className={`table-edit-text${className ? ` ${className}` : ''}`}
@@ -89,7 +89,7 @@ function SelectCell({
   const extra =
     value && !(options as readonly string[]).includes(value) ? [value] : ([] as string[])
   return (
-    <td className={className}>
+    <td className={className} onClick={(e) => e.stopPropagation()}>
       <select
         className="table-edit"
         value={value}
@@ -138,7 +138,7 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
         ) : null}
         <span className="muted tiny">
           {leads.length
-            ? `${leads.length} na visão · edite na tabela ou clique na linha para o painel`
+            ? `${leads.length} na visão · edite nos campos; clique em Distância (ou fora dos campos) para o painel`
             : 'Nenhum lead com esses filtros'}
         </span>
       </div>
@@ -231,7 +231,7 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
                 <td className="mono-cell cell-dist">
                   {l.distancia_km_aracatuba || '—'}
                 </td>
-                <td className="linha-cell">
+                <td className="linha-cell" onClick={(e) => e.stopPropagation()}>
                   <div className="linha-checks linha-checks-table">
                     {LINHA_OPTIONS.map((opt) => (
                       <label key={opt} className="linha-check">
@@ -268,7 +268,7 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
                   onChange={(v) => onPatch(l.id, { vendedor: v })}
                   ariaLabel={`Vendedor de ${l.empresa}`}
                 />
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   <input
                     type="date"
                     className="table-edit-text"
@@ -284,7 +284,7 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
                   ariaLabel={`Status de ${l.empresa}`}
                   className="col-status"
                 />
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   <input
                     type="date"
                     className="table-edit-text"
@@ -293,7 +293,7 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
                     aria-label={`Próximo contato de ${l.empresa}`}
                   />
                 </td>
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   <input
                     type="date"
                     className="table-edit-text"
