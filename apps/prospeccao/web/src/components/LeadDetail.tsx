@@ -1,5 +1,6 @@
 import type { Lead } from '../types'
 import { EDITABLE_FIELDS, LINHA_OPTIONS } from '../types'
+import { leadOwner } from '../lib/leadOwner'
 import { formatLinha, parseLinha } from '../lib/linha'
 
 type Props = {
@@ -71,6 +72,11 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
         <div className="detail-row edit-row readonly-row">
           <span className="edit-label">Distância (km)</span>
           <p className="readonly-value">{lead.distancia_km_aracatuba || '—'} km de Araçatuba</p>
+        </div>
+
+        <div className="detail-row edit-row readonly-row">
+          <span className="edit-label">Usuário</span>
+          <p className="readonly-value">{leadOwner(lead.indicacao)}</p>
         </div>
 
         <fieldset className="detail-row edit-row linha-fieldset">
