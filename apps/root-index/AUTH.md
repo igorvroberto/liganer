@@ -22,9 +22,10 @@ Cookie de sessão: `LIGANER_VENDAS_SESS`, `path=/` (vale em `/orcamento/*`, `/pr
 
 Em `vendas.liganer.com.br`, as páginas dos apps exigem sessão:
 
-1. **Chapas e bobinas** — `requireVendasLogin()` no boot (`src/main.tsx`) + `<script src="/auth/guard.js">` (chip fixo com Voltar + Sair; o `.session-chip` nativo fica oculto em produção)
-2. **Prospecção / blanks / ACE / comparador / usuários** — `/auth/guard.js` injeta o mesmo chip fixo à direita (fora da seção) com Voltar → `/` e Sair. Deploy num **único** FTP (workflow da raiz do monorepo).
+1. **Fonte canônica** — cada SPA inclui `<script src="/auth/guard.js"></script>` no próprio `index.html` (chapas, ACE, blanks, comparador, prospecção, usuários). O guard monta o chip fixo (nome + e-mail + Voltar → `/` + Sair) e esconde o `.session-chip` nativo do React.
+2. **Chapas e bobinas** — também chama `requireVendasLogin()` no boot (`src/main.tsx`) como reforço.
 3. **Portal** (`/`) — sessão nativa com Voltar + Sair.
+4. **Redeploy safety** — o workflow da raiz ainda pode reinjetar o tag nos `index.html` ao vivo (`scripts/inject-vendas-auth-guard.mjs`) se algum deploy antigo tiver saído sem o script.
 
 Público: `/login.html` e `/auth/*`.
 
