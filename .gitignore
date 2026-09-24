@@ -1,4 +1,3 @@
-inject-dist/
 root-dist/
 **/node_modules/
 **/dist/

@@ -24,9 +24,6 @@ jobs:
       run:
         working-directory: apps/prospeccao
     env:
-      FTP_HOST: ${{ secrets.FTP_SERVER }}
-      FTP_USER: ${{ secrets.FTP_USERNAME }}
-      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
       LEADS_SYNC_SECRET: ${{ secrets.LEADS_SYNC_SECRET }}
       LEADS_GITHUB_TOKEN: ${{ secrets.LEADS_GITHUB_TOKEN }}
       LEADS_GITHUB_REPO: ${{ secrets.LEADS_GITHUB_REPO || 'igorvroberto/liganer' }}

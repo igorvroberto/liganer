@@ -19,9 +19,8 @@ ftp://acesso@liganer.com.br@ftp.liganer.com.br/vendas.liganer.com.br/orcamento/c
 | `FTP_SERVER` | `ftp.liganer.com.br` |
 | `FTP_USERNAME` | `acesso@liganer.com.br` |
 | `FTP_PASSWORD` | *(senha FTP — só no GitHub Secrets)* |
-| `FTP_SERVER_DIR` | `/vendas.liganer.com.br/orcamento/chapas-bobinas/` |
 
-`FTP_SERVER_DIR` deve terminar com `/` e apontar para dentro da pasta do app (onde ficará o `index.html`).
+Destino FTP está fixo no workflow (`.github/workflows/deploy-chapas-bobinas.yml`): `/vendas.liganer.com.br/orcamento/chapas-bobinas/`.
 
 ### Secrets no GitHub
 
@@ -41,8 +40,7 @@ A raiz do domínio é publicada pelo **monorepo** (não por este app):
 - Workflow: `.github/workflows/deploy-root-index.yml` (raiz do monorepo)
 - Destino FTP: `/vendas.liganer.com.br/`
 - Docs: [`apps/root-index/AUTH.md`](../../root-index/AUTH.md)
-
-O inject de `/auth/guard.js` nos SPAs irmãos roda nesse mesmo workflow (um único FTP-Deploy).
+- O deploy da raiz **não** toca nos indexes dos SPAs (`exclude` de `prospeccao/`, `orcamento/`, `comparador-preco/`). O `guard.js` já vai no `index.html` de cada app no build.
 
 ### Atualizar preços (planilha Excel)
 
@@ -88,7 +86,7 @@ A pasta `dist/` sai com `base: /orcamento/chapas-bobinas/`.
 
 ## Checklist
 
-- [ ] Secrets FTP preenchidos no GitHub (`FTP_SERVER_DIR` = `/vendas.liganer.com.br/orcamento/chapas-bobinas/`)
+- [ ] Secrets FTP preenchidos no GitHub (`FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`)
 - [ ] Pasta `orcamento/chapas-bobinas/` existe no host
 - [ ] Workflow verde em Actions após push na `main`
 - [ ] `https://vendas.liganer.com.br/orcamento/chapas-bobinas/` abre com título `Liganer · Orçamento`

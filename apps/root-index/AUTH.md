@@ -25,7 +25,7 @@ Em `vendas.liganer.com.br`, as páginas dos apps exigem sessão:
 1. **Fonte canônica** — cada SPA inclui `<script src="/auth/guard.js"></script>` no próprio `index.html` (chapas, ACE, blanks, comparador, prospecção, usuários). O guard monta o chip fixo (nome + e-mail + Voltar → `/` + Sair) e esconde o `.session-chip` nativo do React.
 2. **Chapas e bobinas** — também chama `requireVendasLogin()` no boot (`src/main.tsx`) como reforço.
 3. **Portal** (`/`) — sessão nativa com Voltar + Sair.
-4. **Não republicar indexes dos SPAs pela raiz** — o deploy da raiz **exclui** `prospeccao/`, `orcamento/` e `comparador-preco/`. Republicar HTML baixado ao vivo causava race com o deploy do SPA (index antigo + asset JS já apagado → tela em branco). Para auditar o guard nos SPAs: `node scripts/inject-vendas-auth-guard.mjs` (só verifica; não faz upload).
+4. **Não republicar indexes dos SPAs pela raiz** — o deploy da raiz **exclui** `prospeccao/`, `orcamento/` e `comparador-preco/`. Republicar HTML baixado ao vivo causava race com o deploy do SPA (index antigo + asset JS já apagado → tela em branco).
 
 Público: `/login.html` e `/auth/*`.
 
