@@ -46,6 +46,23 @@ jobs:
           cd web
           npm ci
           npm run build
+          # Stamp index.html so FTP always reuploads it. After a root-index race
+          # overwrote the live index with a stale hash, .ftp-deploy-sync-state.json
+          # still matched the good local file and skipped the replace forever.
+          python3 -c "
+          from pathlib import Path
+          p = Path('dist/index.html')
+          run = '''${{ github.run_id }}'''
+          html = p.read_text(encoding='utf-8')
+          stamp = f'<!-- deploy:{run} -->'
+          if '<!-- deploy:' in html:
+              import re
+              html = re.sub(r'<!-- deploy:\\d+ -->', stamp, html, count=1)
+          else:
+              html = html.replace('</head>', f'  {stamp}\\n  </head>', 1)
+          p.write_text(html, encoding='utf-8')
+          print('stamped', stamp)
+          "
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
