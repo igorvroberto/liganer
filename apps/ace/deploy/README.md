@@ -19,9 +19,8 @@ ftp://acesso@liganer.com.br@ftp.liganer.com.br/vendas.liganer.com.br/orcamento/a
 | `FTP_SERVER` | `ftp.liganer.com.br` |
 | `FTP_USERNAME` | `acesso@liganer.com.br` |
 | `FTP_PASSWORD` | *(senha FTP — só no GitHub Secrets)* |
-| `FTP_SERVER_DIR` | `/vendas.liganer.com.br/orcamento/ace/` |
 
-`FTP_SERVER_DIR` deve terminar com `/` e apontar para dentro da pasta do app (onde ficará o `index.html`).
+Destino FTP está fixo no workflow (`.github/workflows/deploy-ace.yml`): `/vendas.liganer.com.br/orcamento/ace/`.
 
 ### Secrets no GitHub
 
@@ -94,7 +93,7 @@ A pasta `dist/` sai com `base: /orcamento/ace/`.
 
 ## Checklist
 
-- [ ] Secrets FTP preenchidos no GitHub (`FTP_SERVER_DIR` = `/vendas.liganer.com.br/orcamento/ace/`)
+- [ ] Secrets FTP preenchidos no GitHub (`FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`)
 - [ ] Pasta `orcamento/ace/` existe no host
 - [ ] Workflow verde em Actions após push na `main`
 - [ ] `https://vendas.liganer.com.br/orcamento/ace/` abre com título `Liganer · Orçamento`
