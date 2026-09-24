@@ -9,7 +9,11 @@ import {
   STATUS_OPTIONS,
 } from '../types'
 import { sortLeads, type SortDir, type SortKey } from '../lib/filterLeads'
-import { leadOwner } from '../lib/leadOwner'
+import {
+  indicacaoFromOwnerChoice,
+  leadOwner,
+  usuarioSelectOptions,
+} from '../lib/leadOwner'
 import { formatLinha, parseLinha } from '../lib/linha'
 
 type Props = {
@@ -19,6 +23,9 @@ type Props = {
   onPatch: (id: string, patch: Partial<Lead>) => void
   onAdd?: () => void
   onRemove?: (id: string) => void
+  /** Só Igor (admin) pode reatribuir o dono. */
+  canEditUsuario?: boolean
+  usuarioNames?: string[]
 }
 
 const COLUMNS: { key: SortKey; label: string }[] = [
@@ -109,7 +116,16 @@ function SelectCell({
   )
 }
 
-export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemove }: Props) {
+export function LeadTable({
+  leads,
+  selectedId,
+  onSelect,
+  onPatch,
+  onAdd,
+  onRemove,
+  canEditUsuario = false,
+  usuarioNames = [],
+}: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('potencial')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -317,9 +333,21 @@ export function LeadTable({ leads, selectedId, onSelect, onPatch, onAdd, onRemov
                   onChange={(v) => onPatch(l.id, { situacao: v })}
                   ariaLabel={`Situação de ${l.empresa}`}
                 />
-                <td className="mono-cell cell-usuario" title="Definido automaticamente; não editável">
-                  {leadOwner(l.indicacao)}
-                </td>
+                {canEditUsuario ? (
+                  <SelectCell
+                    value={leadOwner(l.indicacao)}
+                    options={usuarioSelectOptions(usuarioNames, l.indicacao)}
+                    onChange={(v) =>
+                      onPatch(l.id, { indicacao: indicacaoFromOwnerChoice(v) })
+                    }
+                    ariaLabel={`Usuário de ${l.empresa}`}
+                    className="cell-usuario"
+                  />
+                ) : (
+                  <td className="mono-cell cell-usuario" title="Somente Igor pode alterar">
+                    {leadOwner(l.indicacao)}
+                  </td>
+                )}
               </tr>
             )
           })}

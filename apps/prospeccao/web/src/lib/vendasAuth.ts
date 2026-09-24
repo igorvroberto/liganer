@@ -39,3 +39,26 @@ export async function fetchVendasSession(): Promise<VendasSession | null> {
     return null
   }
 }
+
+/** Lista de usuários cadastrados (GET /auth/users.php — qualquer logado). */
+export async function fetchVendasUsers(): Promise<VendasUser[]> {
+  try {
+    const res = await fetch('/auth/users.php', {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return []
+    const data = (await res.json()) as { ok?: boolean; users?: VendasUser[] }
+    if (!Array.isArray(data.users)) return []
+    return data.users
+      .map((u) => ({
+        id: String(u.id || u.email),
+        email: String(u.email || ''),
+        name: String(u.name || u.email || '').trim(),
+      }))
+      .filter((u) => u.name)
+  } catch {
+    return []
+  }
+}

@@ -3,7 +3,7 @@ import { FilterBar } from './components/FilterBar'
 import { LeadDetail } from './components/LeadDetail'
 import { LeadTable } from './components/LeadTable'
 import { filterLeads } from './lib/filterLeads'
-import { defaultIndicacaoForSession, scopeLeadsForSession } from './lib/leadOwner'
+import { defaultIndicacaoForSession, isLeadAdmin, scopeLeadsForSession } from './lib/leadOwner'
 import { loadLeads, type LeadsSource } from './lib/loadLeads'
 import {
   clearLocalLeads,
@@ -14,7 +14,11 @@ import {
   saveLocalLeads,
 } from './lib/persist'
 import { createSyncQueue, loadSyncConfig, type SyncConfig } from './lib/syncApi'
-import { fetchVendasSession, type VendasSession } from './lib/vendasAuth'
+import {
+  fetchVendasSession,
+  fetchVendasUsers,
+  type VendasSession,
+} from './lib/vendasAuth'
 import { EMPTY_FILTERS, raioMaxFromLeads, type Filters, type Lead } from './types'
 import './App.css'
 
@@ -30,11 +34,13 @@ export default function App() {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [session, setSession] = useState<VendasSession | null>(null)
+  const [usuarioNames, setUsuarioNames] = useState<string[]>([])
   const [syncCfg, setSyncCfg] = useState<SyncConfig>({})
   const [syncUi, setSyncUi] = useState<SyncUi>({ state: 'idle' })
   const syncQueue = useRef(createSyncQueue(1200))
 
   const autoSync = Boolean(syncCfg.syncSecret)
+  const canEditUsuario = isLeadAdmin(session)
 
   const onSyncStatus = useCallback((s: 'saving' | 'saved' | 'error', detail?: string) => {
     setSyncUi({ state: s, detail })
@@ -127,7 +133,16 @@ export default function App() {
   )
 
   useEffect(() => {
-    void fetchVendasSession().then(setSession)
+    void fetchVendasSession().then((s) => {
+      setSession(s)
+      if (isLeadAdmin(s)) {
+        void fetchVendasUsers().then((users) => {
+          setUsuarioNames(users.map((u) => u.name))
+        })
+      } else {
+        setUsuarioNames([])
+      }
+    })
   }, [])
 
   useEffect(() => {
@@ -136,13 +151,21 @@ export default function App() {
 
   const onPatch = useCallback(
     (id: string, patch: Partial<Lead>) => {
+      const safePatch =
+        canEditUsuario || !('indicacao' in patch)
+          ? patch
+          : (() => {
+              const { indicacao: _ignored, ...rest } = patch
+              return rest
+            })()
+      if (Object.keys(safePatch).length === 0) return
       setLeads((prev) => {
-        const next = prev.map((l) => (l.id === id ? { ...l, ...patch } : l))
+        const next = prev.map((l) => (l.id === id ? { ...l, ...safePatch } : l))
         queueSync(next)
         return next
       })
     },
-    [queueSync],
+    [queueSync, canEditUsuario],
   )
 
   const selectLead = useCallback((id: string) => {
@@ -294,11 +317,15 @@ export default function App() {
               onPatch={onPatch}
               onAdd={onAddLead}
               onRemove={onRemoveLead}
+              canEditUsuario={canEditUsuario}
+              usuarioNames={usuarioNames}
             />
             <LeadDetail
               lead={selected}
               onClose={() => setSelectedId(null)}
               onPatch={onPatch}
+              canEditUsuario={canEditUsuario}
+              usuarioNames={usuarioNames}
             />
           </div>
         </>
