@@ -1,8 +1,14 @@
 import {
   compareSavedListItemsDefault,
+  deleteBudgetRemote as deleteBudgetRemoteShared,
+  fetchBudgetRemote as fetchBudgetRemoteShared,
+  listBudgetsRemote as listBudgetsRemoteShared,
+  loadSyncConfig,
   normalizeBudgetSituacao,
   pickFiniteNumber,
+  saveBudgetRemote as saveBudgetRemoteShared,
   type SavedListItem,
+  type SyncConfig,
 } from '@liganer/shared'
 import type { BudgetListItem, BudgetRecord, Conditions, ItemRow } from './types'
 
@@ -10,6 +16,8 @@ export {
   BUDGET_SITUACOES,
   normalizeBudgetSituacao,
 } from '@liganer/shared'
+
+export type { SyncConfig }
 
 const STORAGE_KEY = 'liganer-orcamento-draft-v1'
 const SAVED_KEY = 'liganer-orcamento-saved-v1'
@@ -152,138 +160,43 @@ export function compareBudgetListItemsDefault(a: BudgetListItem, b: BudgetListIt
   return compareSavedListItemsDefault(toSavedListItem(a), toSavedListItem(b))
 }
 
-export type SyncConfig = {
-  saveUrl?: string
-  printNumberUrl?: string
-  syncSecret?: string
-}
-
-function budgetsApiUrl(config: SyncConfig): string {
-  return config.saveUrl || `${import.meta.env.BASE_URL}api/budgets.php`
-}
-
 export async function loadConfig(): Promise<SyncConfig> {
-  try {
-    const res = await fetch(`${import.meta.env.BASE_URL}config.json`, { cache: 'no-store' })
-    if (!res.ok) return {}
-    return (await res.json()) as SyncConfig
-  } catch {
-    return {}
-  }
+  return loadSyncConfig(import.meta.env.BASE_URL)
 }
 
 export async function saveBudgetRemote(
   record: BudgetRecord,
   config: SyncConfig,
 ): Promise<{ ok: boolean; number?: string; name?: string; error?: string }> {
-  const url = budgetsApiUrl(config)
-  if (!config.syncSecret) {
-    return { ok: false, error: 'Sync não configurado (sem syncSecret). Salvo só neste navegador.' }
-  }
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Sync-Secret': config.syncSecret,
-      },
-      body: JSON.stringify(record),
-    })
-    const data = (await res.json().catch(() => ({}))) as {
-      number?: string
-      name?: string
-      error?: string
-    }
-    if (!res.ok) return { ok: false, error: data.error || `HTTP ${res.status}` }
-    return { ok: true, number: data.number, name: data.name }
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'Falha de rede' }
-  }
+  return saveBudgetRemoteShared(record, config, import.meta.env.BASE_URL)
 }
 
 export async function fetchBudgetRemote(
   number: string,
   config: SyncConfig,
 ): Promise<{ ok: boolean; record?: BudgetRecord; error?: string }> {
-  const trimmed = String(number ?? '').trim()
-  if (!trimmed) return { ok: false, error: 'Número inválido.' }
-  if (!config.syncSecret) {
-    return { ok: false, error: 'Sync não configurado.' }
+  const result = await fetchBudgetRemoteShared(number, config, import.meta.env.BASE_URL)
+  if (!result.ok) return { ok: false, error: result.error }
+  const data = result.record as BudgetRecord | undefined
+  if (!data || !Array.isArray(data.rows)) {
+    return { ok: false, error: 'Orçamento incompleto no servidor.' }
   }
-  try {
-    const url = new URL(budgetsApiUrl(config), window.location.origin)
-    url.searchParams.set('number', trimmed)
-    const res = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'X-Sync-Secret': config.syncSecret,
-      },
-      cache: 'no-store',
-    })
-    const data = (await res.json().catch(() => ({}))) as BudgetRecord & { error?: string; ok?: boolean }
-    if (!res.ok) return { ok: false, error: data.error || `HTTP ${res.status}` }
-    if (!data || !Array.isArray(data.rows)) {
-      return { ok: false, error: 'Orçamento incompleto no servidor.' }
-    }
-    return { ok: true, record: data }
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'Falha de rede' }
-  }
+  return { ok: true, record: data }
 }
 
 export async function deleteBudgetRemote(
   number: string,
   config: SyncConfig,
 ): Promise<{ ok: boolean; error?: string }> {
-  const trimmed = String(number ?? '').trim()
-  if (!trimmed) return { ok: false, error: 'Número inválido.' }
-  if (!config.syncSecret) {
-    return { ok: false, error: 'Sync não configurado.' }
-  }
-  try {
-    const url = new URL(budgetsApiUrl(config), window.location.origin)
-    url.searchParams.set('number', trimmed)
-    const res = await fetch(url.toString(), {
-      method: 'DELETE',
-      headers: {
-        'X-Sync-Secret': config.syncSecret,
-      },
-    })
-    const data = (await res.json().catch(() => ({}))) as { error?: string }
-    if (!res.ok) return { ok: false, error: data.error || `HTTP ${res.status}` }
-    return { ok: true }
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'Falha de rede' }
-  }
+  return deleteBudgetRemoteShared(number, config, import.meta.env.BASE_URL)
 }
 
 export async function listBudgetsRemote(
   config: SyncConfig,
 ): Promise<{ ok: boolean; items: BudgetListItem[]; error?: string }> {
-  if (!config.syncSecret) {
-    return { ok: false, items: [], error: 'Sync não configurado.' }
-  }
-  try {
-    const res = await fetch(budgetsApiUrl(config), {
-      method: 'GET',
-      headers: {
-        'X-Sync-Secret': config.syncSecret,
-      },
-      cache: 'no-store',
-    })
-    const data = (await res.json().catch(() => ({}))) as {
-      items?: BudgetListItem[]
-      error?: string
-    }
-    if (!res.ok) return { ok: false, items: [], error: data.error || `HTTP ${res.status}` }
-    return { ok: true, items: Array.isArray(data.items) ? data.items : [] }
-  } catch (err) {
-    return {
-      ok: false,
-      items: [],
-      error: err instanceof Error ? err.message : 'Falha de rede',
-    }
-  }
+  const result = await listBudgetsRemoteShared(config, import.meta.env.BASE_URL)
+  if (!result.ok) return { ok: false, items: [], error: result.error }
+  return { ok: true, items: result.items as BudgetListItem[] }
 }
 
 /** Envia orçamentos só locais para o servidor (ainda sem id remoto). */

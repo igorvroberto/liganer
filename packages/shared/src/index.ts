@@ -32,3 +32,23 @@ export {
   exportSituacaoReportPdf,
 } from './report'
 export type { SituacaoReportOptions } from './report'
+export {
+  isVendasHost,
+  normalizeVendasUser,
+  fetchVendasSession,
+  fetchVendasUser,
+  fetchVendasUsers,
+  vendasLoginUrl,
+  requireVendasLogin,
+} from './vendasAuth'
+export type { VendasUser, VendasSession } from './vendasAuth'
+export {
+  budgetsApiUrl,
+  loadSyncConfig,
+  saveBudgetRemote,
+  fetchBudgetRemote,
+  deleteBudgetRemote,
+  listBudgetsRemote,
+  remoteListClientFields,
+} from './budgetsRemote'
+export type { SyncConfig, RemoteBudgetListItem } from './budgetsRemote'

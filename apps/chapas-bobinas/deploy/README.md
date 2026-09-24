@@ -41,6 +41,7 @@ A raiz do domínio é publicada pelo **monorepo** (não por este app):
 - Destino FTP: `/vendas.liganer.com.br/`
 - Docs: [`apps/root-index/AUTH.md`](../../root-index/AUTH.md)
 - O deploy da raiz **não** toca nos indexes dos SPAs (`exclude` de `prospeccao/`, `orcamento/`, `comparador-preco/`). O `guard.js` já vai no `index.html` de cada app no build.
+- Auth/list/sync compartilhados: `@liganer/shared` + `packages/shared/php/budgets.php`
 
 ### Atualizar preços (planilha Excel)
 

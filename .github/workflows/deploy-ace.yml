@@ -45,7 +45,7 @@ jobs:
       - name: Prepare publish folder
         run: |
           mkdir -p dist/api
-          cp deploy/api/budgets.php dist/api/budgets.php
+          cp "$GITHUB_WORKSPACE/packages/shared/php/budgets.php" dist/api/budgets.php
           rm -f dist/config.json
           rm -rf dist/data
 

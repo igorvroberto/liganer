@@ -17,6 +17,15 @@ import {
 } from "./quoteSummary";
 import type { BlankInput } from "./types";
 import { normalizeVendasUser } from "./vendasAuth";
+import {
+  deleteBudgetRemote as deleteBudgetRemoteShared,
+  fetchBudgetRemote as fetchBudgetRemoteShared,
+  listBudgetsRemote as listBudgetsRemoteShared,
+  loadSyncConfig,
+  remoteListClientFields,
+  saveBudgetRemote as saveBudgetRemoteShared,
+  type SyncConfig,
+} from "@liganer/shared";
 
 /** Chave própria — não reutilizar a do chapas-bobinas. */
 const STORAGE_KEY = "liganer-blanks-slitters-draft-v1";
@@ -290,90 +299,58 @@ export function mergeBudgetLists(
 }
 
 export async function loadAppConfig(): Promise<AppConfig> {
-  try {
-    const url = `${import.meta.env.BASE_URL}config.json`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return {};
-    const json = (await res.json()) as AppConfig;
-    return {
-      saveUrl: typeof json.saveUrl === "string" ? json.saveUrl.trim() : "",
-      syncSecret: typeof json.syncSecret === "string" ? json.syncSecret.trim() : "",
-    };
-  } catch {
-    return {};
-  }
+  const cfg = await loadSyncConfig(import.meta.env.BASE_URL);
+  return {
+    saveUrl: cfg.saveUrl ?? "",
+    syncSecret: cfg.syncSecret ?? "",
+  };
 }
 
 export function hasRemoteSync(config: AppConfig): boolean {
-  return Boolean(config.saveUrl?.trim() && config.syncSecret?.trim());
+  return Boolean(config.syncSecret?.trim());
 }
 
-function resolveSaveUrl(config: AppConfig): string {
-  const raw = config.saveUrl?.trim() ?? "";
-  if (!raw) return "";
-  if (/^https?:\/\//i.test(raw)) return raw;
-  const base = import.meta.env.BASE_URL || "/";
-  if (raw.startsWith("/")) return raw;
-  return `${base}${raw.replace(/^\.\//, "")}`;
-}
-
-async function remoteFetch(
-  config: AppConfig,
-  init: RequestInit & { query?: string } = {},
-): Promise<Response> {
-  const url = resolveSaveUrl(config) + (init.query ?? "");
-  const headers = new Headers(init.headers);
-  headers.set("X-Sync-Secret", config.syncSecret ?? "");
-  if (init.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-  return fetch(url, { ...init, headers });
+function asSyncConfig(config: AppConfig): SyncConfig {
+  return {
+    saveUrl: config.saveUrl,
+    syncSecret: config.syncSecret,
+  };
 }
 
 export async function saveBudgetRemote(
   budget: BudgetRecord,
   config: AppConfig,
 ): Promise<{ ok: true; number: string; name: string }> {
-  const res = await remoteFetch(config, {
-    method: "POST",
-    body: JSON.stringify(budget),
-  });
-  const json = (await res.json().catch(() => null)) as {
-    ok?: boolean;
-    number?: string;
-    name?: string;
-    error?: string;
-  } | null;
-  if (!res.ok || !json?.ok || !json.number) {
-    throw new Error(json?.error || "Falha ao salvar orçamento no servidor.");
+  const result = await saveBudgetRemoteShared(budget, asSyncConfig(config), import.meta.env.BASE_URL);
+  if (!result.ok || !result.number) {
+    throw new Error(result.error || "Falha ao salvar orçamento no servidor.");
   }
-  return { ok: true, number: json.number, name: json.name || json.number };
+  return { ok: true, number: result.number, name: result.name || result.number };
 }
 
 export async function listBudgetsRemote(config: AppConfig): Promise<BudgetListItem[]> {
-  const res = await remoteFetch(config, { method: "GET" });
-  const json = (await res.json().catch(() => null)) as {
-    ok?: boolean;
-    items?: Array<Partial<BudgetListItem>>;
-    error?: string;
-  } | null;
-  if (!res.ok || !json?.ok || !Array.isArray(json.items)) {
-    throw new Error(json?.error || "Falha ao listar orçamentos no servidor.");
+  const result = await listBudgetsRemoteShared(asSyncConfig(config), import.meta.env.BASE_URL);
+  if (!result.ok) {
+    throw new Error(result.error || "Falha ao listar orçamentos no servidor.");
   }
-  return json.items
+  return result.items
     .map((row): BudgetListItem | null => {
       const number = String(row.number ?? row.name ?? "").trim();
       if (!number) return null;
+      const { clientName, cnpj } = remoteListClientFields(row);
       return {
         id: String(row.id ?? number),
         number,
         name: budgetDisplayName({ number, name: row.name }),
-        client: String(row.client ?? ""),
-        cnpj: String(row.cnpj ?? ""),
+        client: clientName,
+        cnpj,
         createdAt: String(row.createdAt ?? ""),
         savedAt: String(row.savedAt ?? row.createdAt ?? ""),
         source: "remote",
         owner: normalizeVendasUser(row.owner),
+        totalKg: typeof row.totalKg === "number" ? row.totalKg : null,
+        totalRs: typeof row.totalRs === "number" ? row.totalRs : null,
+        situacao: normalizeBudgetSituacao(row.situacao),
       };
     })
     .filter((row): row is BudgetListItem => row != null);
@@ -383,32 +360,19 @@ export async function fetchBudgetRemote(
   number: string,
   config: AppConfig,
 ): Promise<BudgetRecord> {
-  const res = await remoteFetch(config, {
-    method: "GET",
-    query: `?number=${encodeURIComponent(number)}`,
-  });
-  const json = (await res.json().catch(() => null)) as
-    | (Partial<BudgetRecord> & { ok?: boolean; error?: string })
-    | null;
-  if (!res.ok || !json || json.ok === false) {
-    throw new Error(json?.error || "Falha ao carregar orçamento do servidor.");
+  const result = await fetchBudgetRemoteShared(number, asSyncConfig(config), import.meta.env.BASE_URL);
+  if (!result.ok || !result.record) {
+    throw new Error(result.error || "Falha ao carregar orçamento do servidor.");
   }
-  const budget = normalizeBudget({ ...json, source: "remote" });
+  const budget = normalizeBudget({ ...result.record, source: "remote" });
   if (!budget) throw new Error("Orçamento remoto inválido.");
   return budget;
 }
 
 export async function deleteBudgetRemote(number: string, config: AppConfig): Promise<void> {
-  const res = await remoteFetch(config, {
-    method: "DELETE",
-    query: `?number=${encodeURIComponent(number)}`,
-  });
-  const json = (await res.json().catch(() => null)) as {
-    ok?: boolean;
-    error?: string;
-  } | null;
-  if (!res.ok || !json?.ok) {
-    throw new Error(json?.error || "Falha ao excluir orçamento no servidor.");
+  const result = await deleteBudgetRemoteShared(number, asSyncConfig(config), import.meta.env.BASE_URL);
+  if (!result.ok) {
+    throw new Error(result.error || "Falha ao excluir orçamento no servidor.");
   }
 }
 

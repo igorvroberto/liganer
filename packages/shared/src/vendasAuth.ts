@@ -1,6 +1,5 @@
 /**
- * Auth de vendas.liganer.com.br — cópia alinhada a @liganer/shared/vendasAuth
- * (prospecção ainda não depende do pacote shared).
+ * Auth compartilhado de vendas.liganer.com.br (/auth/me.php, /auth/users.php).
  */
 export type VendasUser = {
   id: string
@@ -14,6 +13,7 @@ export type VendasSession = {
 }
 
 export function isVendasHost(): boolean {
+  if (typeof window === 'undefined') return false
   return window.location.hostname === 'vendas.liganer.com.br'
 }
 
@@ -55,6 +55,7 @@ export async function fetchVendasUser(): Promise<VendasUser | null> {
   return session?.user ?? null
 }
 
+/** Lista de usuários cadastrados (GET /auth/users.php — qualquer logado). */
 export async function fetchVendasUsers(): Promise<VendasUser[]> {
   try {
     const res = await fetch('/auth/users.php', {
@@ -71,14 +72,15 @@ export async function fetchVendasUsers(): Promise<VendasUser[]> {
   }
 }
 
-export function vendasLoginUrl(nextPath = window.location.pathname): string {
+export function vendasLoginUrl(nextPath = '/'): string {
   return `/login.html?next=${encodeURIComponent(nextPath)}`
 }
 
+/** Em vendas.liganer.com.br, redireciona para login se não houver sessão. */
 export async function requireVendasLogin(): Promise<VendasSession | null> {
   const session = await fetchVendasSession()
   if (session) return session
-  if (!isVendasHost()) return null
+  if (typeof window === 'undefined' || !isVendasHost()) return null
   const next = `${window.location.pathname}${window.location.search}${window.location.hash}`
   window.location.replace(vendasLoginUrl(next || '/'))
   return null

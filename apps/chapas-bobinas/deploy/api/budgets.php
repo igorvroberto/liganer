@@ -1,16 +1,23 @@
 <?php
 /**
- * API opcional de persistência para vendas.liganer.com.br/orcamento/
- * Mesmo espírito de /prospeccao/api/leads.php — autenticação por X-Sync-Secret.
+ * API canônica de orçamentos salvos (chapas / ACE / blanks-slitters).
+ * Fonte: packages/shared/php/budgets.php — copiada no deploy para dist/api/.
+ * Auth: header X-Sync-Secret (= config.json syncSecret).
  *
- * POST   — cria ou atualiza (se number já existir) data/orcamento-{numero}.json
+ * POST   — cria ou atualiza (só se number+id baterem) data/orcamento-{numero}.json
  * GET    — lista resumos; com ?number= retorna o JSON completo
  * DELETE — remove orçamento (?number=)
  */
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
+header('Access-Control-Allow-Headers: Content-Type, X-Sync-Secret');
+header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+if ($method === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 if ($method !== 'POST' && $method !== 'GET' && $method !== 'DELETE') {
     http_response_code(405);
     echo json_encode(['ok' => false, 'error' => 'Use GET, POST ou DELETE']);

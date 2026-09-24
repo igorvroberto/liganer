@@ -1,248 +1,230 @@
 <?php
 /**
- * API de orçamentos salvos — blanks/slitters.
- * Auth: header X-Sync-Secret (igual ao sync do chapas).
+ * API canônica de orçamentos salvos (chapas / ACE / blanks-slitters).
+ * Fonte: packages/shared/php/budgets.php — copiada no deploy para dist/api/.
+ * Auth: header X-Sync-Secret (= config.json syncSecret).
  *
- * POST   — cria/atualiza (se number existir no payload e o arquivo existir → update)
- * GET    — lista resumos
- * GET ?number=XXXX — orçamento completo
- * DELETE ?number=XXXX — apaga
+ * POST   — cria ou atualiza (só se number+id baterem) data/orcamento-{numero}.json
+ * GET    — lista resumos; com ?number= retorna o JSON completo
+ * DELETE — remove orçamento (?number=)
  */
-declare(strict_types=1);
-
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+header('Cache-Control: no-store');
 header('Access-Control-Allow-Headers: Content-Type, X-Sync-Secret');
 header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+if ($method === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
-
-function respond(int $status, array $payload): void
-{
-    http_response_code($status);
-    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+if ($method !== 'POST' && $method !== 'GET' && $method !== 'DELETE') {
+    http_response_code(405);
+    echo json_encode(['ok' => false, 'error' => 'Use GET, POST ou DELETE']);
     exit;
 }
 
-$root = dirname(__DIR__);
-$configPath = $root . '/config.json';
-$dataDir = $root . '/data';
-
-if (!is_file($configPath)) {
-    respond(500, ['ok' => false, 'error' => 'config.json ausente no host.']);
-}
-
-$configRaw = file_get_contents($configPath);
-$config = json_decode($configRaw ?: 'null', true);
-if (!is_array($config)) {
-    respond(500, ['ok' => false, 'error' => 'config.json inválido.']);
-}
-
-$expected = trim((string)($config['syncSecret'] ?? ''));
-$provided = trim((string)($_SERVER['HTTP_X_SYNC_SECRET'] ?? ''));
-if ($expected === '' || !hash_equals($expected, $provided)) {
-    respond(401, ['ok' => false, 'error' => 'Não autorizado.']);
-}
-
-if (!is_dir($dataDir) && !mkdir($dataDir, 0755, true) && !is_dir($dataDir)) {
-    respond(500, ['ok' => false, 'error' => 'Não foi possível criar a pasta data/.']);
-}
-
-function budget_path(string $dataDir, string $number): string
-{
-    return $dataDir . '/orcamento-' . $number . '.json';
-}
-
-function sanitize_number(string $number): ?string
-{
-    $number = trim($number);
-    if ($number === '' || !preg_match('/^\d{8}$/', $number)) {
-        return null;
+$secret = getenv('ORCAMENTO_SYNC_SECRET') ?: '';
+$configPath = dirname(__DIR__) . '/config.json';
+if (is_readable($configPath)) {
+    $cfg = json_decode((string) file_get_contents($configPath), true);
+    if (is_array($cfg) && !empty($cfg['syncSecret'])) {
+        $secret = (string) $cfg['syncSecret'];
     }
-    return $number;
 }
 
-function next_server_number(string $dataDir, ?DateTimeImmutable $now = null): string
-{
-    $now = $now ?? new DateTimeImmutable('now');
-    $ymd = $now->format('ymd');
-    $max = 0;
-    foreach (glob($dataDir . '/orcamento-' . $ymd . '*.json') ?: [] as $file) {
-        if (preg_match('/orcamento-(\d{8})\.json$/', basename($file), $m)) {
-            $seq = (int)substr($m[1], 6, 2);
-            if ($seq > $max) {
-                $max = $seq;
-            }
-        }
-    }
-    $next = min(99, $max + 1);
-    return $ymd . str_pad((string)$next, 2, '0', STR_PAD_LEFT);
+$provided = $_SERVER['HTTP_X_SYNC_SECRET'] ?? '';
+if ($secret === '' || !hash_equals($secret, $provided)) {
+    http_response_code(401);
+    echo json_encode(['ok' => false, 'error' => 'Sem permissão']);
+    exit;
 }
 
-function read_budget_file(string $path): ?array
-{
-    if (!is_file($path)) {
-        return null;
-    }
-    $raw = file_get_contents($path);
-    $json = json_decode($raw ?: 'null', true);
-    return is_array($json) ? $json : null;
+$dataDir = dirname(__DIR__) . '/data';
+if (!is_dir($dataDir)) {
+    mkdir($dataDir, 0755, true);
 }
 
-function list_item_from_budget(array $budget, string $fallbackNumber): array
-{
-    $number = trim((string)($budget['number'] ?? $fallbackNumber));
-    $client = $budget['client'] ?? [];
-    $clientName = is_array($client) ? (string)($client['name'] ?? '') : '';
-    $cnpj = is_array($client) ? (string)($client['cnpj'] ?? '') : '';
-    $owner = is_array($budget['owner'] ?? null) ? $budget['owner'] : null;
-    $summary = is_array($budget['summary'] ?? null) ? $budget['summary'] : [];
-    $totalKg = isset($summary['totalKg']) && is_numeric($summary['totalKg'])
-        ? (float) $summary['totalKg']
-        : null;
-    $totalRs = isset($summary['total']) && is_numeric($summary['total'])
-        ? (float) $summary['total']
-        : null;
-    $situacaoRaw = strtolower(trim((string) ($budget['situacao'] ?? 'analise')));
-    if ($situacaoRaw === 'análise' || $situacaoRaw === 'em analise' || $situacaoRaw === 'em análise') {
-        $situacaoRaw = 'analise';
+if ($method === 'DELETE') {
+    $requestedNumber = preg_replace('/\D+/', '', (string) ($_GET['number'] ?? ''));
+    if ($requestedNumber === '') {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Informe number']);
+        exit;
     }
-    if ($situacaoRaw !== 'perdido' && $situacaoRaw !== 'ganho' && $situacaoRaw !== 'analise') {
-        $situacaoRaw = 'analise';
+    $file = $dataDir . '/orcamento-' . $requestedNumber . '.json';
+    if (!is_readable($file)) {
+        http_response_code(404);
+        echo json_encode(['ok' => false, 'error' => 'Orçamento não encontrado']);
+        exit;
     }
-    return [
-        'id' => (string)($budget['id'] ?? $number),
-        'number' => $number,
-        'name' => $number,
-        'client' => $clientName,
-        'cnpj' => $cnpj,
-        'createdAt' => (string)($budget['createdAt'] ?? ''),
-        'savedAt' => (string)($budget['savedAt'] ?? $budget['createdAt'] ?? ''),
-        'source' => 'remote',
-        'owner' => $owner ? [
-            'id' => (string)($owner['id'] ?? $owner['email'] ?? ''),
-            'email' => (string)($owner['email'] ?? ''),
-            'name' => (string)($owner['name'] ?? $owner['email'] ?? ''),
-        ] : null,
-        'totalKg' => $totalKg,
-        'totalRs' => $totalRs,
-        'situacao' => $situacaoRaw,
-    ];
+    if (!unlink($file)) {
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'error' => 'Falha ao excluir']);
+        exit;
+    }
+    echo json_encode(['ok' => true, 'number' => $requestedNumber], JSON_UNESCAPED_UNICODE);
+    exit;
 }
-
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 if ($method === 'GET') {
-    $numberParam = isset($_GET['number']) ? sanitize_number((string)$_GET['number']) : null;
-    if ($numberParam !== null) {
-        $path = budget_path($dataDir, $numberParam);
-        $budget = read_budget_file($path);
-        if ($budget === null) {
-            respond(404, ['ok' => false, 'error' => 'Orçamento não encontrado.']);
+    $requestedNumber = preg_replace('/\D+/', '', (string) ($_GET['number'] ?? ''));
+    if ($requestedNumber !== '') {
+        $file = $dataDir . '/orcamento-' . $requestedNumber . '.json';
+        if (!is_readable($file)) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'error' => 'Orçamento não encontrado']);
+            exit;
         }
-        $budget['ok'] = true;
-        $budget['number'] = $numberParam;
-        $budget['name'] = $numberParam;
-        $budget['source'] = 'remote';
-        respond(200, $budget);
+        $rawFile = file_get_contents($file);
+        $data = json_decode((string) $rawFile, true);
+        if (!is_array($data)) {
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'error' => 'Arquivo inválido']);
+            exit;
+        }
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     $items = [];
     foreach (glob($dataDir . '/orcamento-*.json') ?: [] as $file) {
-        if (!preg_match('/orcamento-(\d{8})\.json$/', basename($file), $m)) {
+        $rawFile = file_get_contents($file);
+        $data = json_decode((string) $rawFile, true);
+        if (!is_array($data)) {
             continue;
         }
-        $budget = read_budget_file($file);
-        if ($budget === null) {
-            continue;
+        $number = isset($data['number']) ? (string) $data['number'] : '';
+        $client = is_array($data['client'] ?? null) ? $data['client'] : [];
+        $createdAt = (string) ($data['createdAt'] ?? $data['savedAt'] ?? '');
+        $savedAt = (string) ($data['savedAt'] ?? $data['createdAt'] ?? '');
+        $name = $number !== '' ? $number : trim((string) ($data['name'] ?? ''));
+        if ($name === '') {
+            $name = '—';
         }
-        $items[] = list_item_from_budget($budget, $m[1]);
+        $owner = is_array($data['owner'] ?? null) ? $data['owner'] : null;
+        $summary = is_array($data['summary'] ?? null) ? $data['summary'] : [];
+        $totalKg = isset($summary['totalKg']) && is_numeric($summary['totalKg'])
+            ? (float) $summary['totalKg']
+            : null;
+        $totalRs = isset($summary['total']) && is_numeric($summary['total'])
+            ? (float) $summary['total']
+            : null;
+        $situacaoRaw = strtolower(trim((string) ($data['situacao'] ?? 'analise')));
+        if ($situacaoRaw === 'análise' || $situacaoRaw === 'em analise' || $situacaoRaw === 'em análise') {
+            $situacaoRaw = 'analise';
+        }
+        if ($situacaoRaw !== 'perdido' && $situacaoRaw !== 'ganho' && $situacaoRaw !== 'analise') {
+            $situacaoRaw = 'analise';
+        }
+        $items[] = [
+            'id' => (string) ($data['id'] ?? basename($file, '.json')),
+            'number' => $number !== '' ? $number : null,
+            'name' => $name,
+            'client' => [
+                'name' => (string) ($client['name'] ?? ''),
+                'cnpj' => (string) ($client['cnpj'] ?? ''),
+            ],
+            'createdAt' => $createdAt !== '' ? $createdAt : null,
+            'savedAt' => $savedAt !== '' ? $savedAt : null,
+            'source' => isset($data['source']) ? (string) $data['source'] : null,
+            'owner' => $owner ? [
+                'id' => (string) ($owner['id'] ?? $owner['email'] ?? ''),
+                'email' => (string) ($owner['email'] ?? ''),
+                'name' => (string) ($owner['name'] ?? $owner['email'] ?? ''),
+            ] : null,
+            'totalKg' => $totalKg,
+            'totalRs' => $totalRs,
+            'situacao' => $situacaoRaw,
+        ];
     }
+
     usort($items, static function (array $a, array $b): int {
-        $ta = (string)($a['createdAt'] ?? $a['savedAt'] ?? '');
-        $tb = (string)($b['createdAt'] ?? $b['savedAt'] ?? '');
+        // Ordem estável por criação (não por última atualização).
+        $ta = (string) ($a['createdAt'] ?? $a['savedAt'] ?? '');
+        $tb = (string) ($b['createdAt'] ?? $b['savedAt'] ?? '');
         $cmp = strcmp($tb, $ta);
         if ($cmp !== 0) {
             return $cmp;
         }
-        return strnatcasecmp((string)($b['number'] ?? ''), (string)($a['number'] ?? ''));
+        $na = (string) ($a['number'] ?? $a['name'] ?? '');
+        $nb = (string) ($b['number'] ?? $b['name'] ?? '');
+        return strnatcasecmp($nb, $na);
     });
-    respond(200, ['ok' => true, 'items' => $items]);
+
+    echo json_encode(['ok' => true, 'items' => $items], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
-if ($method === 'DELETE') {
-    $numberParam = isset($_GET['number']) ? sanitize_number((string)$_GET['number']) : null;
-    if ($numberParam === null) {
-        respond(400, ['ok' => false, 'error' => 'Informe number.']);
-    }
-    $path = budget_path($dataDir, $numberParam);
-    if (is_file($path) && !unlink($path)) {
-        respond(500, ['ok' => false, 'error' => 'Não foi possível excluir.']);
-    }
-    respond(200, ['ok' => true, 'number' => $numberParam]);
+$raw = file_get_contents('php://input');
+$payload = json_decode((string) $raw, true);
+if (!is_array($payload)) {
+    http_response_code(400);
+    echo json_encode(['ok' => false, 'error' => 'JSON inválido']);
+    exit;
 }
 
-if ($method === 'POST') {
-    $raw = file_get_contents('php://input');
-    $payload = json_decode($raw ?: 'null', true);
-    if (!is_array($payload)) {
-        respond(400, ['ok' => false, 'error' => 'JSON inválido.']);
-    }
+$payloadId = trim((string) ($payload['id'] ?? ''));
+$existingNumber = preg_replace('/\D+/', '', (string) ($payload['number'] ?? ''));
+$existingFile = $existingNumber !== '' ? ($dataDir . '/orcamento-' . $existingNumber . '.json') : '';
+$previous = null;
+$updating = false;
 
-    $requested = sanitize_number((string)($payload['number'] ?? ''));
-    $now = (new DateTimeImmutable('now'))->format(DateTimeInterface::ATOM);
-    $path = null;
-    $number = null;
-
-    if ($requested !== null) {
-        $path = budget_path($dataDir, $requested);
-        if (is_file($path)) {
-            $existing = read_budget_file($path) ?? [];
-            $number = $requested;
-            $payload['id'] = (string)($existing['id'] ?? $payload['id'] ?? $number);
-            $payload['createdAt'] = (string)($existing['createdAt'] ?? $payload['createdAt'] ?? $now);
-        } else {
-            // Número pedido ainda não existe — usa como novo se válido.
-            $number = $requested;
-            $path = budget_path($dataDir, $number);
-            $payload['id'] = (string)($payload['id'] ?? $number);
-            $payload['createdAt'] = (string)($payload['createdAt'] ?? $now);
-        }
-    } else {
-        $number = next_server_number($dataDir);
-        $path = budget_path($dataDir, $number);
-        $payload['id'] = (string)($payload['id'] ?? $number);
-        $payload['createdAt'] = (string)($payload['createdAt'] ?? $now);
+// Só atualiza se o number existir E o id for o mesmo registro.
+// Número gerado em outro navegador NÃO pode sobrescrever orçamento alheio.
+if ($existingNumber !== '' && is_readable($existingFile)) {
+    $previous = json_decode((string) file_get_contents($existingFile), true);
+    $previousId = is_array($previous) ? trim((string) ($previous['id'] ?? '')) : '';
+    if ($payloadId !== '' && $previousId !== '' && hash_equals($previousId, $payloadId)) {
+        $updating = true;
     }
-
-    $payload['number'] = $number;
-    $payload['name'] = $number;
-    // Honra savedAt do cliente: edição manda "agora"; só situação mantém o horário anterior.
-    $clientSavedAt = trim((string) ($payload['savedAt'] ?? ''));
-    $payload['savedAt'] = $clientSavedAt !== '' ? $clientSavedAt : $now;
-    $payload['source'] = 'remote';
-
-    if (isset($existing) && is_array($existing) && !empty($existing['situacao']) && empty($payload['situacao'])) {
-        $payload['situacao'] = $existing['situacao'];
-    }
-    $situacaoRaw = strtolower(trim((string) ($payload['situacao'] ?? 'analise')));
-    if ($situacaoRaw === 'análise' || $situacaoRaw === 'em analise' || $situacaoRaw === 'em análise') {
-        $situacaoRaw = 'analise';
-    }
-    if ($situacaoRaw !== 'perdido' && $situacaoRaw !== 'ganho' && $situacaoRaw !== 'analise') {
-        $situacaoRaw = 'analise';
-    }
-    $payload['situacao'] = $situacaoRaw;
-
-    $encoded = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-    if ($encoded === false || file_put_contents($path, $encoded . "\n", LOCK_EX) === false) {
-        respond(500, ['ok' => false, 'error' => 'Falha ao gravar orçamento.']);
-    }
-
-    respond(200, ['ok' => true, 'number' => $number, 'name' => $number]);
 }
 
-respond(405, ['ok' => false, 'error' => 'Método não permitido.']);
+if ($updating) {
+    $number = $existingNumber;
+    if (is_array($previous) && !empty($previous['createdAt']) && empty($payload['createdAt'])) {
+        $payload['createdAt'] = $previous['createdAt'];
+    }
+    if (is_array($previous) && !empty($previous['owner']) && empty($payload['owner'])) {
+        $payload['owner'] = $previous['owner'];
+    }
+    if (is_array($previous) && !empty($previous['situacao']) && empty($payload['situacao'])) {
+        $payload['situacao'] = $previous['situacao'];
+    }
+} else {
+    $stamp = date('ymd');
+    $counterFile = $dataDir . '/counter-' . $stamp . '.txt';
+    $next = 1;
+    if (is_readable($counterFile)) {
+        $next = ((int) file_get_contents($counterFile)) + 1;
+    }
+    file_put_contents($counterFile, (string) $next, LOCK_EX);
+    $number = $stamp . str_pad((string) $next, 2, '0', STR_PAD_LEFT);
+}
+
+$payload['number'] = $number;
+$payload['name'] = $number;
+// Honra savedAt do cliente: edição manda "agora"; só situação mantém o horário anterior.
+$clientSavedAt = trim((string) ($payload['savedAt'] ?? ''));
+$payload['savedAt'] = $clientSavedAt !== '' ? $clientSavedAt : date('c');
+if (empty($payload['createdAt'])) {
+    $payload['createdAt'] = $payload['savedAt'];
+}
+$situacaoRaw = strtolower(trim((string) ($payload['situacao'] ?? 'analise')));
+if ($situacaoRaw === 'análise' || $situacaoRaw === 'em analise' || $situacaoRaw === 'em análise') {
+    $situacaoRaw = 'analise';
+}
+if ($situacaoRaw !== 'perdido' && $situacaoRaw !== 'ganho' && $situacaoRaw !== 'analise') {
+    $situacaoRaw = 'analise';
+}
+$payload['situacao'] = $situacaoRaw;
+$file = $dataDir . '/orcamento-' . $number . '.json';
+file_put_contents($file, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX);
+
+echo json_encode([
+    'ok' => true,
+    'number' => $number,
+    'id' => $payload['id'] ?? $number,
+    'name' => $number,
+    'updated' => $updating,
+], JSON_UNESCAPED_UNICODE);
