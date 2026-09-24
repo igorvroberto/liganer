@@ -7,7 +7,7 @@ import {
 import type { QuoteClientInfo } from "./quoteClient";
 import type { QuoteConditions, QuoteSummary } from "./quoteSummary";
 import type { BlankInput } from "./types";
-import type { VendasUser } from "./vendasAuth";
+import type { VendasUser } from "@liganer/shared";
 
 export type { BudgetSituacao };
 

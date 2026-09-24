@@ -40,6 +40,7 @@ A raiz do domínio é publicada pelo **monorepo** (não por este app):
 - Workflow: `.github/workflows/deploy-root-index.yml` (raiz do monorepo)
 - Destino FTP: `/vendas.liganer.com.br/`
 - Docs: [`apps/root-index/AUTH.md`](../../root-index/AUTH.md)
+- Auth/list/sync compartilhados: `@liganer/shared` + `packages/shared/php/budgets.php`
 
 ### Login compartilhado e dono do orçamento
 

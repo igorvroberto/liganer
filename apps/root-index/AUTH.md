@@ -23,7 +23,7 @@ Cookie de sessão: `LIGANER_VENDAS_SESS`, `path=/` (vale em `/orcamento/*`, `/pr
 Em `vendas.liganer.com.br`, as páginas dos apps exigem sessão:
 
 1. **Fonte canônica** — cada SPA inclui `<script src="/auth/guard.js"></script>` no próprio `index.html` (chapas, ACE, blanks, comparador, prospecção, usuários). O guard monta o chip fixo (nome + e-mail + Voltar → `/` + Sair) e esconde o `.session-chip` nativo do React.
-2. **Chapas e bobinas** — também chama `requireVendasLogin()` no boot (`src/main.tsx`) como reforço.
+2. **Orçamentos (chapas / ACE / blanks)** — `requireVendasLogin()` no boot (`src/main.tsx`) via `@liganer/shared` (`packages/shared/src/vendasAuth.ts`).
 3. **Portal** (`/`) — sessão nativa com Voltar + Sair.
 4. **Não republicar indexes dos SPAs pela raiz** — o deploy da raiz **exclui** `prospeccao/`, `orcamento/` e `comparador-preco/`. Republicar HTML baixado ao vivo causava race com o deploy do SPA (index antigo + asset JS já apagado → tela em branco).
 
