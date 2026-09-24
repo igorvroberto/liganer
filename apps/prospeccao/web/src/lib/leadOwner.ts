@@ -27,6 +27,29 @@ export function scopeLeadsForSession(leads: Lead[], session: VendasSession | nul
   return leads.filter((l) => canViewLead(l, session))
 }
 
+/** Valor a gravar em `indicacao` a partir da opção do select. */
+export function indicacaoFromOwnerChoice(ownerName: string): string {
+  const name = ownerName.trim()
+  if (!name || name === DEFAULT_LEAD_OWNER) return ''
+  return name
+}
+
+/** Opções do select Usuário (nomes cadastrados + dono atual se ainda não estiver na lista). */
+export function usuarioSelectOptions(
+  registeredNames: string[],
+  currentIndicacao?: string | null,
+): string[] {
+  const names = new Set<string>()
+  names.add(DEFAULT_LEAD_OWNER)
+  for (const n of registeredNames) {
+    const t = n.trim()
+    if (t) names.add(t)
+  }
+  const current = leadOwner(currentIndicacao)
+  if (current) names.add(current)
+  return [...names].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+}
+
 /** Valor a gravar em `indicacao` para um lead novo deste usuário. */
 export function defaultIndicacaoForSession(session: VendasSession | null): string {
   if (!session || isLeadAdmin(session)) return ''

@@ -4,11 +4,12 @@ declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
 
 liganer_auth_json_headers();
-liganer_auth_require_admin();
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 if ($method === 'GET') {
+    // Qualquer logado pode listar nomes (ex.: dono do lead na prospecção).
+    liganer_auth_require_user();
     $items = [];
     foreach (liganer_auth_users() as $user) {
         $items[] = liganer_auth_public_user($user);
@@ -16,6 +17,8 @@ if ($method === 'GET') {
     echo json_encode(['ok' => true, 'users' => $items], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
+liganer_auth_require_admin();
 
 $raw = file_get_contents('php://input');
 $payload = json_decode((string) $raw, true);

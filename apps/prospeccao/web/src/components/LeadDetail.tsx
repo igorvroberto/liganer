@@ -1,12 +1,18 @@
 import type { Lead } from '../types'
 import { EDITABLE_FIELDS, LINHA_OPTIONS } from '../types'
-import { leadOwner } from '../lib/leadOwner'
+import {
+  indicacaoFromOwnerChoice,
+  leadOwner,
+  usuarioSelectOptions,
+} from '../lib/leadOwner'
 import { formatLinha, parseLinha } from '../lib/linha'
 
 type Props = {
   lead: Lead | null
   onClose: () => void
   onPatch: (id: string, patch: Partial<Lead>) => void
+  canEditUsuario?: boolean
+  usuarioNames?: string[]
 }
 
 function toDateInputValue(raw: string): string {
@@ -18,11 +24,18 @@ function toDateInputValue(raw: string): string {
   return ''
 }
 
-export function LeadDetail({ lead, onClose, onPatch }: Props) {
+export function LeadDetail({
+  lead,
+  onClose,
+  onPatch,
+  canEditUsuario = false,
+  usuarioNames = [],
+}: Props) {
   if (!lead) return null
 
   const wa = lead.whatsapp?.replace(/\D/g, '')
   const linhas = parseLinha(lead.linha)
+  const ownerOptions = usuarioSelectOptions(usuarioNames, lead.indicacao)
 
   const toggleLinha = (opt: string) => {
     const next = linhas.includes(opt as (typeof LINHA_OPTIONS)[number])
@@ -74,10 +87,28 @@ export function LeadDetail({ lead, onClose, onPatch }: Props) {
           <p className="readonly-value">{lead.distancia_km_aracatuba || '—'} km de Araçatuba</p>
         </div>
 
-        <div className="detail-row edit-row readonly-row">
-          <span className="edit-label">Usuário</span>
-          <p className="readonly-value">{leadOwner(lead.indicacao)}</p>
-        </div>
+        {canEditUsuario ? (
+          <label className="detail-row edit-row">
+            <span className="edit-label">Usuário</span>
+            <select
+              value={leadOwner(lead.indicacao)}
+              onChange={(e) =>
+                onPatch(lead.id, { indicacao: indicacaoFromOwnerChoice(e.target.value) })
+              }
+            >
+              {ownerOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <div className="detail-row edit-row readonly-row">
+            <span className="edit-label">Usuário</span>
+            <p className="readonly-value">{leadOwner(lead.indicacao)}</p>
+          </div>
+        )}
 
         <div className="detail-row edit-row readonly-row">
           <span className="edit-label">Data da criação</span>

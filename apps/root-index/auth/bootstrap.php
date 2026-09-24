@@ -80,6 +80,18 @@ function liganer_auth_require_admin(): array
     return $user;
 }
 
+/** Qualquer usuário logado (lista pública de nomes, etc.). */
+function liganer_auth_require_user(): array
+{
+    $user = liganer_auth_user();
+    if ($user === null) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'error' => 'Faça login.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    return $user;
+}
+
 function liganer_auth_users_path(): string
 {
     return dirname(__DIR__) . '/data/users.json';
