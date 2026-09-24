@@ -1,54 +1,49 @@
 #!/usr/bin/env node
 /**
- * Downloads live SPA index.html files from vendas.liganer.com.br and injects
- * /auth/guard.js so sibling apps require the shared login.
+ * Verifica se os SPAs em vendas.liganer.com.br já carregam /auth/guard.js.
+ *
+ * NÃO grava nem faz upload de index.html. O deploy do root-index não deve
+ * republicar indexes dos SPAs (race: HTML antigo + JS novo apagado → blank).
+ * O guard é embutido no index de cada app no build.
+ *
+ * Uso manual: node scripts/inject-vendas-auth-guard.mjs
  */
-import { mkdir, writeFile } from 'node:fs/promises'
-import path from 'node:path'
-
 const ORIGIN = 'https://vendas.liganer.com.br'
-const OUT_ROOT = path.resolve('inject-dist')
-const GUARD_TAG = '<script src="/auth/guard.js"></script>'
+const GUARD_NEEDLE = '/auth/guard.js'
 
 const TARGETS = [
   'prospeccao',
   'orcamento/blanks-slitters',
   'orcamento/ace',
+  'orcamento/chapas-bobinas',
   'comparador-preco',
 ]
 
-function injectGuard(html) {
-  if (html.includes('/auth/guard.js')) return { html, changed: false }
-  if (/<\/head>/i.test(html)) {
-    return {
-      html: html.replace(/<\/head>/i, `    ${GUARD_TAG}\n  </head>`),
-      changed: true,
-    }
-  }
-  return {
-    html: `${GUARD_TAG}\n${html}`,
-    changed: true,
-  }
-}
-
 async function main() {
-  let changedCount = 0
+  let missing = 0
   for (const target of TARGETS) {
     const url = `${ORIGIN}/${target}/`
     const res = await fetch(url, { redirect: 'follow' })
     if (!res.ok) {
       console.warn(`skip ${target}: HTTP ${res.status}`)
+      missing += 1
       continue
     }
-    const original = await res.text()
-    const { html, changed } = injectGuard(original)
-    const outDir = path.join(OUT_ROOT, target)
-    await mkdir(outDir, { recursive: true })
-    await writeFile(path.join(outDir, 'index.html'), html, 'utf8')
-    console.log(`${changed ? 'patched' : 'already-guarded'}: ${target}/index.html`)
-    if (changed) changedCount += 1
+    const html = await res.text()
+    if (html.includes(GUARD_NEEDLE)) {
+      console.log(`ok: ${target}/ (guard present)`)
+    } else {
+      console.error(`missing guard: ${target}/`)
+      missing += 1
+    }
   }
-  console.log(`done; files ready under ${OUT_ROOT} (${changedCount} patched)`)
+  if (missing > 0) {
+    console.error(
+      `fail: ${missing} target(s) without guard — embuta <script src="/auth/guard.js"> no index do SPA e redeploy.`,
+    )
+    process.exit(1)
+  }
+  console.log('done; all targets have guard.js')
 }
 
 main().catch((err) => {
