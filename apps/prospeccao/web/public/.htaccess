@@ -11,8 +11,9 @@ DirectoryIndex index.html
 </IfModule>
 
 # Evita cache agressivo do CSV (leads atualizam via GitHub→FTP)
+# e do index.html (hash do JS muda a cada build; HTML stale = tela em branco)
 <IfModule mod_headers.c>
-  <FilesMatch "leads\.csv|config\.json">
+  <FilesMatch "leads\.csv|config\.json|index\.html">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
   </FilesMatch>
 </IfModule>
